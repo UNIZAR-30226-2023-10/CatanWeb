@@ -1,9 +1,8 @@
-import EjemploInsertar from "./EjemploInsertar"
-import EjemploModificar from "./EjemploModificar"
-import EjemploObtener from "./EjemploObtener"
+import PaginaInicio from "./PaginaInicio"
+import Registro from "./Registro"
 
-export {
-    EjemploInsertar,
-    EjemploModificar,
-    EjemploObtener
+
+export { 
+    PaginaInicio, 
+    Registro 
 }

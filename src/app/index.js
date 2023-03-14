@@ -1,22 +1,22 @@
 import React from 'react'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-
-import { NavBar } from '../components'
-
+import { Routes, Route } from 'react-router-dom'
 
 import 'bootstrap/dist/css/bootstrap.min.css'
+import '../style/App.css'
+
+import { PaginaInicio, Registro } from '../pages/'
+
 
 function App() {
     return (
-        <Router>
-            <NavBar />
+        <div classname="app">
             <Routes>
-                <Route path="/ejemplo/insertar" exact component="{EjemploInsertar}" />
-                <Route path="/ejemplo/modificar/:id" exact component="{EjemploModificar}" />
-                <Route path="/ejemplo/obtener" exact component="{EjemploObtener}" />
+                <Route exact path="/" element={<PaginaInicio />} />
+                <Route exact path="/registro" element={<Registro />} />
             </Routes>
-        </Router>
+        </div>
     )
 }
 
 export default App;
+
