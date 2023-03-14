@@ -1,15 +1,15 @@
-.App {
+.Home {
   text-align: center;
 }
 
-.App-logo {
+.Home-logo {
   height: 40vmin;
   pointer-events: none;
   -webkit-filter: drop-shadow(7px 7px 7px #222);
   filter: drop-shadow(7px 7px 7px #222);
 }
 
-.App-header {
+.Home-header {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -18,9 +18,10 @@
   color: white;
 }
 
-.App-link {
+.Home-link {
   color: #61dafb;
 }
+
 
 /* Loading animation */
 :root {
@@ -35,6 +36,7 @@
 }
 
 .loading {
+  margin-top: 100px;
   --spacer: calc(var(--loading-spinner-size) * var(--loading-spinner-gap) + var(--loading-spinner-size)); /* [3] */
   position: relative;
   width: var(--loading-spinner-wrapper);

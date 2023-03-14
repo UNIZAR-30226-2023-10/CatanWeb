@@ -6,16 +6,12 @@ import './Common.css'
 
 function Login() {
     return (
-        <div className='Login-header | Main-Header'>
+        <div className='Login-header | Common-Header'>
             <div className='Login-container'>
                 <img src={logo} className="Login-logo" alt="logo" />
                 <div className='Login-form'>
-                    <button className='Login-button'>
-                        <Link to='/'>Volver pa tras</Link>
-                    </button>
-                    <button className='Login-button'>
-                        <Link to='/main'>Iniciar sesión</Link>
-                    </button>
+                    <Link className='Common-button' to='/'>Volver pa' tras</Link>
+                    <Link className='Common-button' to='/main'>Iniciar sesión</Link>
                 </div>
             </div>
 
