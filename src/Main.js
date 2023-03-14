@@ -22,7 +22,7 @@ function Main() {
                         <Link className="Common-button | Main-button" style={{backgroundColor: 'gray', cursor: 'not-allowed'}} to="/main">
                             Continuar
                         </Link>                
-                        <Link className="Common-button | Main-button" onClick={() => handleClick("new-game")}>
+                        <Link className="Common-button | Main-button" onClick={() => handleClick("new-game")} to="/newGame">
                             Nueva partida
                         </Link>                
                         <Link className="Common-button | Main-button" style={{backgroundColor: 'gray', cursor: 'not-allowed'}} to="/main">
