@@ -1,6 +1,7 @@
 import Home  from './Home' 
 import Login from './Login'
 import Main  from './Main'
+import Game  from './Game'
 import {
   BrowserRouter as Router,
   Routes,
@@ -13,7 +14,8 @@ function App() {
             <Routes>
                 <Route path="/" element={<Home />}/>
                 <Route path="/login" element={<Login />}/> 
-                <Route path="/main" element={<Main />}/>
+                <Route path="/main"  element={<Main />}/>
+                <Route path="/game"  element={<Game />}/>
             </Routes>
         </Router>
     );
