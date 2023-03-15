@@ -9,20 +9,12 @@ function Login() {
         <div className='Login-header | Common-Header'>
             <div className='Login-container'>
                 <img src={logo} className="Login-logo" alt="logo" />
-                <form>
-                <div className="cover">
-                    <h1>Log In</h1>
-                    <input type="text" placeholder="EMAIL" />
-                    <input type="password" placeholder="PASSWORD" />
-                    <Link to='/register' className='linkado'>
-                        <a>Register here</a>
-                    </Link>
-                    <Link to='/main' className='login-btn'>
-                            <a className='linkado'>Log In</a>
-                    </Link>
+                <div className='Login-form'>
+                    <Link className='Common-button' to='/'>Volver pa' tras</Link>
+                    <Link className='Common-button' to='/main'>Iniciar sesión</Link>
                 </div>
-                </form>
             </div>
+
         </div>
     )
 }
