@@ -1,27 +1,28 @@
-.Login-logo {
+
+.Register-logo {
     height: 25vmin;
     pointer-events: none;
     -webkit-filter: drop-shadow(7px 7px 7px #222);
     filter: drop-shadow(7px 7px 7px #222);
 }
 
-.Login-header {
+.Register-header {
     display: flex;
     justify-content: center;
     align-items: flex-end;
 }
 
-.Login-container {
+.Register-container {
     margin: 0px 20px 20px 0px;
     min-height: calc(100vh-20px);
     display: flex;
     justify-content: flex-end;
     align-items: center;
-    transform: translateY(-35%);
+    transform: translateY(-10%);
     flex-direction: column;
 }
 
-.Login-form {
+.Register-form {
     width: 400px;
     height: 500px;
     background-color: rgba(255,197,129,1);
@@ -47,10 +48,10 @@ a:link {
     text-decoration: none;
 }
 
-.cover {
+.Register-cover {
     background-color: rgba(255,197,129,0.5);
     width: 30em;
-    height: 21em;
+    height: 33em;
     position: relative;
     border-radius: 0.5em;
     display: flex;
@@ -73,7 +74,7 @@ input {
     color: rgb(89, 33, 11)
 }
 
-.login-btn { 
+.Register-btn { 
     width: 40%;
     height: 3em;
     background-color: rgba(255,168,53,1) !important;
@@ -93,4 +94,4 @@ input {
     font-weight: bold;
 }
 
-.login-btn:hover {transform: scale(1.03);}
+.Register-btn:hover {transform: scale(1.03);}
