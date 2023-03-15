@@ -1,5 +1,5 @@
 import './Common.css'
-import './MainDos.css'
+import './Main.css'
 import {useState} from 'react'
 import {Link} from 'react-router-dom'
 import logo from './Catan-logo-1.png'
