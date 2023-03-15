@@ -1,19 +1,15 @@
 .Game-header {
-    width: 100vw;
-    height: 100vh;
-    background-color: rgb(41, 145, 193);
-    display:flex;
-    flex-direction: column;
-    justify-content: center;
+    display: flex;
     align-items: center;
-    background-image: url('images/game/ocean.png');
+    justify-content: center;
+    flex-direction: column;
 }
 
 .Game-board {
-    width: 100vh ;
-    height: 100vh;
+    width: 70vh ;
+    height: 70vh;
     margin: 20px;
-    padding: 20px;
+    padding: 30px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -45,14 +41,42 @@
 }
 
 .Game-board-number {
+    width: calc(100% - 60px);
+    height: calc(100% - 60px);
+    border-radius: 50%;
+    background-color: #ccaa66;
+    line-height: calc(100% + 15px);
+    text-align: center;
+}
+
+.Game-board-resources {
     width: calc(100% - 90px);
     height: calc(100% - 90px);
     border-radius: 50%;
     background-color: #ccaa66;
     line-height: calc(100% + 35px);
     text-align: center;
-}
+  }
 
+.Game-board-rec {
+    width: 50%;
+    height: calc((100%-20px)/5);
+    margin-top: -13px;
+    display: flex;
+    justify-content: center;
+}
 .Game-board-is-red {
     color: red;
 }
+
+.Game-board-statics {
+    width: 200px;
+    height: 110px;
+    background-color: #b14700;
+    line-height: calc(100% + 35px);
+    text-align: center;
+  }
+
+  .Game-board-statics-name {
+    margin-bottom: -20px;
+  }
