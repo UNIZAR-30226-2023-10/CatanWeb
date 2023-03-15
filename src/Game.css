@@ -6,4 +6,53 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    background-image: url('images/game/ocean.png');
+}
+
+.Game-board {
+    width: 100vh ;
+    height: 100vh;
+    margin: 20px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #9e8668b7;
+    border-radius: 10px;
+}
+
+.Game-board-row {
+    width: 100%;
+    height: calc((100%-20px)/5);
+    margin-top: -13px;
+    display: flex;
+    justify-content: center;
+}
+
+.Game-board-cell {
+    width: calc((100%-20px)/5);
+    height: 100%;
+    background-image: url('./images/game/forest.png');
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-filter: drop-shadow(7px 0px 0px #000000);
+    filter: drop-shadow(7px 7px 0px #222);
+}
+
+.Game-board-number {
+    width: calc(100% - 90px);
+    height: calc(100% - 90px);
+    border-radius: 50%;
+    background-color: #ccaa66;
+    line-height: calc(100% + 35px);
+    text-align: center;
+}
+
+.Game-board-is-red {
+    color: red;
 }
