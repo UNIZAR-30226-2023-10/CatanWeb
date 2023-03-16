@@ -1,8 +1,8 @@
 import React from 'react';
 import {Link} from 'react-router-dom'
-import logo from './Catan-logo-1.png'
-import './Login.css'
-import './Common.css'
+import logo from '../Catan-logo-1.png'
+import '../styles/Login.css'
+import '../styles/Common.css'
 
 function Login() {
     return (

@@ -1,6 +1,6 @@
-import './Home.css'
-import './Common.css'
-import logo from './Catan-logo-1.png'
+import '../styles/Home.css'
+import '../styles/Common.css'
+import logo from '../Catan-logo-1.png'
 import {Link} from 'react-router-dom'
 
 function Home() {

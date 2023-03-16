@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import './NewGame.css';
-import './Common.css'
-import logo from './Catan-logo-1.png'
+import '../styles/NewGame.css';
+import '../styles/Common.css'
+import logo from '../Catan-logo-1.png'
 import { Link } from 'react-router-dom';
 
 function NewGame() {

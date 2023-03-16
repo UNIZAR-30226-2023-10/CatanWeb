@@ -1,15 +1,14 @@
-import Home  from './Home' 
-import Login from './Login'
-import Main  from './Main'
-import Game  from './Game'
-import NewGame  from './NewGame'
+import { BrowserRouter as Router, Routes, Route, } from 'react-router-dom';
+
 import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-} from 'react-router-dom';
-import Register from './Register'
-import JoinGame from './JoinGame'
+    Home,
+    Login,
+    Main,
+    Game,
+    NewGame,
+    Register,
+    JoinGame
+} from "../pages"
 
 function App() {
     return (
