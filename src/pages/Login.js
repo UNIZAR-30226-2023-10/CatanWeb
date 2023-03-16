@@ -50,8 +50,8 @@ function Login() {
                 <form id='logFormId' onSubmit={handleSubmit} className='login-form'>
                     <div className="cover">
                         <h1>Log In</h1>
-                        <input type="text" placeholder="EMAIL" name='email' id='email'/>
-                        <input type="password" placeholder="PASSWORD" name='password' id='password'/>
+                        <input type="text" placeholder="EMAIL" name='email' id='email' required />
+                        <input type="password" placeholder="PASSWORD" name='password' id='password' required />
                         <Link to='/register' className='linkado'>
                             <a>Register here</a>
                         </Link>
