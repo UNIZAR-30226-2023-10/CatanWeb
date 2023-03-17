@@ -29,7 +29,7 @@
 .Game-board-cell {
     width: calc((100%-20px)/5);
     height: 100%;
-    background-image: url('./images/game/forest.png');
+    background-image: url('../images/game/forest.png');
     background-position: center;
     background-repeat: no-repeat;
     background-size: contain;

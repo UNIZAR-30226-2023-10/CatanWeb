@@ -1,0 +1,74 @@
+.Main-Header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.Main-logo {
+    height: 15vmin;
+    pointer-events: none;
+    -webkit-filter: drop-shadow(7px 7px 7px #222);
+    filter: drop-shadow(7px 7px 7px #222);
+}
+
+.Main-menu {
+    width: 80vw;
+    height: 80vh;
+    background-color: rgba(0, 0, 0, 0.448);
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.Main-btn { 
+    width: 80%;
+    height: 4em;
+    background-color: rgba(255,168,53,1) !important;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: 0.5s;
+    border-radius: 0.25em;
+    cursor: pointer;
+    font-weight: bold;
+    border: 2px solid rgb(121, 46, 16);
+    text-decoration: none;
+}
+.Main-cover {
+    background-color: rgba(255,197,129,0.5);
+    width: 30em;
+    height: 25em;
+    position: relative;
+    border-radius: 0.5em;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-around;
+    color: rgb(89, 33, 11)
+}
+
+.Main-header {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+}
+
+.Main-container {
+    margin: 0px 20px 20px 0px;
+    min-height: calc(100vh-20px);
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    transform: translateY(-10%);
+    flex-direction: column;
+}
+
+.linkado {
+    color: rgb(89, 33, 11);
+    font-weight: bold;
+    text-decoration: none;
+}
+

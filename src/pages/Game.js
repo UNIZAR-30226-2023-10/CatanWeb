@@ -1,5 +1,5 @@
-import './Game.css'
-import './Common.css'
+import '../styles/Game.css'
+import '../styles/Common.css'
 
 function Game() {
     return (

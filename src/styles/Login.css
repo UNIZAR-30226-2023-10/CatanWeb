@@ -1,3 +1,4 @@
+
 .Login-logo {
     height: 25vmin;
     pointer-events: none;
@@ -65,7 +66,7 @@ input {
     border-width: 2px;
     border-color: rgb(121, 46, 16);
     background-color: rgb(255,197,129);
-    height: 4em;
+    height: 3em;
     width: 80%;
     border-radius: 0.25em;
     text-align: center;
