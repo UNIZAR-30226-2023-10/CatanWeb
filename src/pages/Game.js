@@ -1,6 +1,6 @@
 import '../styles/Game.css'
 import '../styles/Common.css'
-
+// hola buenos dias
 function Game() {
     return (
         <div className="Game-header | Common-Header" >
