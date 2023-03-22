@@ -7,7 +7,8 @@ import {
     Game,
     NewGame,
     Register,
-    JoinGame
+    JoinGame,
+
 } from "../pages"
 
 function App() {

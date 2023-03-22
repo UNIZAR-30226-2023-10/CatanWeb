@@ -49,7 +49,7 @@ function JoinGame() {
                 <form id='joinGameId' onSubmit={handleSubmit} className='JoinGame-form'>
                     <div className="JoinGame-cover">
                         <h1>INSERT GAME CODE:</h1>
-                        <input type="text" placeholder="" name='gamecode' id='gamecode' />
+                        <input className='input-joinGame' type="text" placeholder="" name='gamecode' id='gamecode' />
                         <button type='submit' className='Register-btn'>
                             <a className='linkado'>JOIN GAME</a>
                         </button>
