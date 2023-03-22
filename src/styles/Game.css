@@ -80,3 +80,44 @@
   .Game-board-statics-name {
     margin-bottom: -20px;
   }
+
+  .Game-board-statics-player1 {
+    width: 200px;
+    height: 110px;
+    background-color: #b14700;
+    line-height: calc(100% + 35px);
+    text-align: center;
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+  .Game-board-statics-player2 {
+    width: 200px;
+    height: 110px;
+    background-color: #b14700;
+    line-height: calc(100% + 35px);
+    text-align: center;
+    position: absolute;
+    top: 0;
+    right: 0;
+  }
+  .Game-board-statics-player3 {
+    width: 200px;
+    height: 110px;
+    background-color: #b14700;
+    line-height: calc(100% + 35px);
+    text-align: center;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+  }
+  .Game-board-statics-player4 {
+    width: 200px;
+    height: 110px;
+    background-color: #b14700;
+    line-height: calc(100% + 35px);
+    text-align: center;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+  }

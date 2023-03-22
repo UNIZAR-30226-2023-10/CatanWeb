@@ -3,7 +3,7 @@ import '../styles/Common.css'
 function Game() {
     return (
         <div className="Game-header | Common-Header" >
-            <div className='Game-board-statics'>
+            <div className='Game-board-statics-player1'>
                 <div className='Game-board-statics-name'>
                         USUARIO1&nbsp;&nbsp;&nbsp;&nbsp;Recursos:X
                     </div>
@@ -15,7 +15,7 @@ function Game() {
                     </div>
                 </div>  
             <div className='Game-board-row'>
-            <div className='Game-board-statics'>
+            <div className='Game-board-statics-player2'>
                 <div className='Game-board-statics-name'>
                         USUARIO2&nbsp;&nbsp;&nbsp;&nbsp;Recursos:X
                     </div>
@@ -96,7 +96,7 @@ function Game() {
                     </div>
                     
                 </div>
-                <div className='Game-board-statics'>
+                <div className='Game-board-statics-player3'>
                 <div className='Game-board-statics-name'>
                         USUARIO3&nbsp;&nbsp;&nbsp;&nbsp;Recursos:X
                     </div>
@@ -130,7 +130,7 @@ function Game() {
                 X
                     <div className='Game-board-resources-name'>Piedra</div>
                 </div> 
-                <div className='Game-board-statics'>
+                <div className='Game-board-statics-player4'>
                 <div className='Game-board-statics-name'>
                         USUARIO2&nbsp;&nbsp;&nbsp;&nbsp;Recursos:X
                     </div>
