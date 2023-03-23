@@ -4,10 +4,11 @@
   "proxy": "http://localhost:8080",
   "private": true,
   "dependencies": {
+    "@pixi/react": "^7.0.3",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
-    "pixi.js": "^7.2.1",
+    "pixi.js": "^7.2.2",
     "react": "^18.2.0",
     "react-bootstrap": "^2.7.2",
     "react-dom": "^18.2.0",

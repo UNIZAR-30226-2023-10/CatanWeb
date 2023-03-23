@@ -48,7 +48,6 @@
 .Game-board-cell-selected {
     width: calc((100%-20px)/5);
     height: 100%;
-    background-image: url('../images/game/desert.png');
     background-position: center;
     background-repeat: no-repeat;
     background-size: contain;

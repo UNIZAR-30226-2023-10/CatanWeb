@@ -12,7 +12,7 @@ function Home() {
                 <Link className="Common-button" to="/login">
                     PLAY!
                 </Link>
-                <div class="loading">
+                <div className="loading">
                     <span></span>
                     <span></span>
                     <span></span>
