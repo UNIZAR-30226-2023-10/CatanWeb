@@ -11,6 +11,7 @@ import Ocean from '../images/game/ocean.png'
 import Road from '../images/game/camino.png'
 import { Stage, Graphics, Sprite } from '@pixi/react';
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { BackgroundSystem } from 'pixi.js'
 
 function random(min, max) {
     return Math.floor(Math.random() * max) + min;
@@ -88,6 +89,27 @@ function Game() {
         }
     }, [selected_point, nodes])
 
+
+    const draw_UI = useCallback((g) => {
+        let user_rectangle = new PIXI.Graphics()
+        user_rectangle.beginFill(0xd6b487)
+        user_rectangle.drawRoundedRect(20, 20, 250, 100, 5)
+        user_rectangle.endFill()
+        g.addChild(user_rectangle)
+        user_rectangle.beginFill(0xd6b487)
+        user_rectangle.drawRoundedRect(930, 20, 250, 100, 5)
+        user_rectangle.endFill()
+        g.addChild(user_rectangle)
+        user_rectangle.beginFill(0xd6b487)
+        user_rectangle.drawRoundedRect(20, 555, 250, 100, 5)
+        user_rectangle.endFill()
+        g.addChild(user_rectangle)
+        user_rectangle.beginFill(0xd6b487)
+        user_rectangle.drawRoundedRect(930, 555, 250, 100, 5)
+        user_rectangle.endFill()
+        g.addChild(user_rectangle)
+    }, [])
+
     useEffect(() => {
         if (selected_point !== null) {
             //set_select_road(null)
@@ -130,7 +152,6 @@ function Game() {
                 <Sprite image={Mountain} x={appWidth/2 + 1.5*cell_hor_offset} y={appHeight/2 + cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
                 <Sprite image={Ocean} x={appWidth/2 + 2.5*cell_hor_offset} y={appHeight/2 + cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
                 
-
                 <Sprite image={Ocean} x={appWidth/2 - 2*cell_hor_offset} y={appHeight/2 + 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
                 <Sprite image={Forest} x={appWidth/2 - cell_hor_offset} y={appHeight/2 + 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
                 <Sprite image={Farmland} x={appWidth/2} y={appHeight/2 + 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
@@ -144,6 +165,7 @@ function Game() {
                 
                 <Graphics draw={draw_nodes} />
                 <Graphics draw={draw_roads} />
+                <Graphics draw={draw_UI} />
             </Stage>
         </div>
     );
