@@ -20,15 +20,22 @@ function ncoor_toString(coords) {
     return coords.x.toString() + "," + coords.y.toString()
 }
 
-const borders       = [[3,7],[2,8],[2,8],[1,9],[1,9],[0,10],[0,10],[1,9],[1,9],[2,8],[2,8],[3,7]];
-const roads_borders = [
-    [[2,7],[1,8],[0,9],[0,9],[1,8],[2,7]],
-    [[2]]
-]
+function create_road(id, x, y, selected_point, set_selected_point) {
+    let road = new PIXI.Graphics()
+    road.id  = id
+    road.beginFill(selected_point && selected_point.id === road.id ? 0x0b04cf : 0x6f5c9c)
+    road.drawRoundedRect(x, y, 17, 17, 5)
+    road.endFill()
+    road.interactive = true
+    road.on("pointertap", () => {set_selected_point({id:id, type:'Road'})})
+    return road
+}
+
+const borders = [[3,7],[2,8],[2,8],[1,9],[1,9],[0,10],[0,10],[1,9],[1,9],[2,8],[2,8],[3,7]];
 function Game() {
     const appWidth = 1200, appHeight = 675
     const cell_hor_offset = 115, cell_ver_offset = 100;
-    const [selected_node, set_selected_node] = useState(null);
+    const [selected_point, set_selected_point] = useState(null);
     const nodes = useMemo(() => new Set(), []);
     const draw_nodes = useCallback((g) => {
         let start_width = 320;
@@ -36,64 +43,57 @@ function Game() {
             for (let j = borders[i][0]; j <= borders[i][1]; j+=2) {
                 let node = new PIXI.Graphics(), id = `${i},${j}`
                 node.id = id
-                node.beginFill(selected_node === id ? 0xffff00 : 0xffffff)
+                node.beginFill(selected_point && selected_point.id === id ? 0xffff00 : 0xffffff)
                 node.drawCircle(start_width + (j*(cell_hor_offset-4)/2), 76 + (24 * (i%2)) + (Math.floor(i/2) * cell_ver_offset), 15)
                 node.endFill()
                 node.interactive = true
-                node.on("pointertap", () => set_selected_node(id))
+                node.on("pointertap", () => set_selected_point({id:id, type:'Node'}))
                 g.addChild(node)
                 nodes.add(id)
             }
         }
-    }, [selected_node, nodes]);
+    }, [selected_point, nodes]);
 
     const draw_roads = useCallback((g) => {
-        for (let i = 0; i < 6; i++) {
-            for (let j = 0; j < 10; j++) {
-                let road = new PIXI.Graphics()
-                road.beginFill(0x00ff00)
-                road.drawRoundedRect(335 + (57*j), 80 + (100*i), 17, 17, 5)
-                road.endFill()
-                g.addChild(road)
+        let arr_nodes = [...nodes], n = [0, arr_nodes.length-1]
+        for (let i = 0; i < 3; i++) {
+            for (let j = 0; j < (3+i); j++) {
+                // Upper part:
+                let coords = arr_nodes[n[0]].split(','), x = parseInt(coords[0]), y = parseInt(coords[1])
+                // -- Road(x+1,y-1)
+                g.addChild(create_road(`${coords}:${ncoor_toString({x:x+1, y:y-1})}`, 448+(113*j)-(57*i), 78+100*i, selected_point, set_selected_point))
+                // -- Road(x+1,y+1)
+                g.addChild(create_road(`${coords}:${ncoor_toString({x:x+1, y:y+1})}`, 505+(113*j)-(57*i), 78+100*i, selected_point, set_selected_point))
+                n[0]++
+                // Bottom part:
+                coords = arr_nodes[n[1]].split(','); x = parseInt(coords[0]); y = parseInt(coords[1])
+                // -- Road(x-1,y+1)
+                g.addChild(create_road(`${ncoor_toString({x:x-1, y:y+1})}:${coords}`, 730-(112*j)+(57*i), 78+(101*(5-i)), selected_point, set_selected_point))
+                // -- Road(x-1,y-1)
+                g.addChild(create_road(`${ncoor_toString({x:x-1, y:y-1})}:${coords}`, 673-(112*j)+(57*i), 78+(101*(5-i)), selected_point, set_selected_point))
+                n[1]--
+            }
+            for (let j = 0; j < (4+i); j++) {
+                // Upper part:
+                let coords = arr_nodes[n[0]].split(','), x = parseInt(coords[0]), y = parseInt(coords[1])
+                // -- Road(x+1,y)
+                g.addChild(create_road(`${coords}:${ncoor_toString({x:x+1, y:y})}`, 419+(115*j)-(58*i), 129+(100*i), selected_point, set_selected_point))
+                n[0]++
+                // Bottom part:
+                coords = arr_nodes[n[1]].split(','); x = parseInt(coords[0]); y = parseInt(coords[1])
+                // -- Road(x-1,y)
+                g.addChild(create_road(`${ncoor_toString({x:x-1, y:y})}:${coords}`, 419+(115*j)-(58*i), 129+(100*(4-i)), selected_point, set_selected_point))
+                n[1]--
             }
         }
-        for (let i = 0; i < 5; i++) {
-            for (let j = 0; j < 11; j++) {
-                let road = new PIXI.Graphics()
-                road.beginFill(0x00ff00)
-                road.drawRoundedRect(305 + (57.5*j), 125 + (100*i), 17, 17, 5)
-                road.endFill()
-                g.addChild(road)
-            }
-        }
-        //for (let i in [...nodes]) {
-            //let road = new PIXI.Graphics()
-            //road.beginFill(0x00ff00)
-            /*
-            let road = new PIXI.Graphics()
-            road.beginFill(0x00ff00)
-            let coords = ncoor.split(","), x = parseInt(coords[0]), y = parseInt(coords[1])
-            if (x % 2 === 0) {
-                if (y-1 >= borders[x+1][0]) {
-                    console.log(y)
-                }
-                if (y+1 <= borders[x+1][1]) {
-                    //edges.add(ncoor+":"+ncoor_toString({x:x+1,y:y+1}))
-                    //road.drawRoundedRect(449 + (1.5*cell_hor_offset*x), 80, 17, 17, 5)
-                }
-            } else if (x+1 < 12) {
-                //edges.add(ncoor+":"+ncoor_toString({x:x+1, y:y}))
-            }
-            */
-            //road.drawRoundedRect(roads_pos[i][0], roads_pos[i][1], 17, 17, 5)
-            //road.endFill()
-            //g.addChild(road)
-        //}
-    }, [nodes])
+    }, [selected_point, nodes])
 
     useEffect(() => {
-        console.log("Circle selected:", selected_node);
-    }, [selected_node]);
+        if (selected_point !== null) {
+            //set_select_road(null)
+            console.log("Selected point", selected_point);
+        }
+    }, [selected_point]);
     return (
         <div className="Game-header | Common-Header">
             <Stage width={appWidth} height={appHeight}>
