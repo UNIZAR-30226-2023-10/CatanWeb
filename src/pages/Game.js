@@ -29,7 +29,7 @@ function create_road(id, x, y, selected_point, set_selected_point) {
     road.on("pointertap", () => {set_selected_point({id:id, type:'Road'})})
     return road
 }
-
+// Hola
 const borders = [[3,7],[2,8],[2,8],[1,9],[1,9],[0,10],[0,10],[1,9],[1,9],[2,8],[2,8],[3,7]];
 
 function Game() {
