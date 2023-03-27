@@ -60,8 +60,8 @@ function Login() {
               <p style={{ color: 'red' }}> {errorMessage} </p>
             )}
 
-            <input type="text" placeholder="EMAIL" name='email' id='email' required />
-            <input type="password" placeholder="PASSWORD" name='password' id='password' required />
+            <input className='input-login' type="text" placeholder="EMAIL" name='email' id='email' required />
+            <input className='input-login' type="password" placeholder="PASSWORD" name='password' id='password' required />
             <Link to='/register' className='linkado'>
               <a>Register here</a>
             </Link>

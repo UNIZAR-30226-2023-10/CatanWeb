@@ -1,5 +1,3 @@
-import '../styles/Game.css'
-import '../styles/Common.css'
 import * as PIXI from 'pixi.js'
 import Desert from '../images/game/desert.png'
 import Farmland from '../images/game/farmland.png'
@@ -33,6 +31,7 @@ function create_road(id, x, y, selected_point, set_selected_point) {
 }
 
 const borders = [[3,7],[2,8],[2,8],[1,9],[1,9],[0,10],[0,10],[1,9],[1,9],[2,8],[2,8],[3,7]];
+
 function Game() {
     const appWidth = 1200, appHeight = 675
     const cell_hor_offset = 115, cell_ver_offset = 100;
@@ -129,7 +128,7 @@ function Game() {
                 <Sprite image={Forest} x={appWidth/2} y={appHeight/2 - 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
                 <Sprite image={Hill} x={appWidth/2 + cell_hor_offset} y={appHeight/2 - 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
                 <Sprite image={Ocean} x={appWidth/2 + 2*cell_hor_offset} y={appHeight/2 - 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                
+
                 <Sprite image={Ocean} x={appWidth/2 - 2.5*cell_hor_offset} y={appHeight/2 - cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
                 <Sprite image={Forest} x={appWidth/2 - 1.5*cell_hor_offset} y={appHeight/2 - cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
                 <Sprite image={Mountain} x={appWidth/2 - 0.5*cell_hor_offset} y={appHeight/2 - cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />

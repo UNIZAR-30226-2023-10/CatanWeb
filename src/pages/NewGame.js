@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 function NewGame() {
     
     const [empezarHabilitado, setEmpezarHabilitado] = useState(false);
-    const [jugadores, setJugadores] = useState(['Esperando', 'Esperando', 'Esperando']);
+    const [jugadores, setJugadores] = useState(['Esperando jugador', 'Esperando jugador', 'Esperando jugador']);
 
     function handleNuevoClick() {
         setJugadores(['Menganito', 'Fulanito', 'Jose']);
@@ -15,8 +15,9 @@ function NewGame() {
     }
     return (
         <div className="Main-Header | Common-Header">
+             <img src={logo} className="newGame-logo" alt="logo" />
             <div className='pantalla-container'>
-                <img src={logo} className="Main-logo" alt="logo" />
+                <h2>GAME CODE:  223454</h2>
                 <div className='usuario-container'>
                     Rael
                 </div>
@@ -30,10 +31,10 @@ function NewGame() {
                     {jugadores[2]}
                 </div>
                 
-                <button className='empezar-button' disabled={!empezarHabilitado}>
+                <button className='newGame-btn' disabled={!empezarHabilitado}>
                     {empezarHabilitado ? (
-                        <Link to="/Game">Empezar</Link>) : (
-                            <span className="empezar-button disabled">Empezar
+                        <Link to="/Game" className='linkado' >Empezar</Link>) : (
+                            <span className="disabled">Esperando
                             </span>)
                     }
                 </button>

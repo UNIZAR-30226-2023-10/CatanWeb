@@ -61,17 +61,19 @@ a:link {
     color: rgb(89, 33, 11)
 }
 
-input {
+.input-joinGame {
     border-style: solid;
     border-width: 2px;
     border-color: rgb(121, 46, 16);
     background-color: rgb(255,197,129);
-    height: 4em;
+    height: 3.5em;
     width: 80%;
     border-radius: 0.25em;
     text-align: center;
-    padding: 1em;
+    padding: 0em;
     color: rgb(89, 33, 11);
+    font-size: large;
+    font-weight: bold;
 }
 
 .JoinGame-btn { 

@@ -13,5 +13,5 @@ export {
     Game,
     NewGame,
     Register,
-    JoinGame
+    JoinGame,
 }
