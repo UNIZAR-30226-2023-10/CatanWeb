@@ -7,11 +7,12 @@ function Home() {
     return (
         <div className="Home">
             <header className="Home-header | Common-Header">
+                <Link to='/game'>A jugar directamente.</Link>
                 <img src={logo} className="Home-logo" alt="logo" />
                 <Link className="Common-button" to="/login">
                     PLAY!
                 </Link>
-                <div class="loading">
+                <div className="loading">
                     <span></span>
                     <span></span>
                     <span></span>

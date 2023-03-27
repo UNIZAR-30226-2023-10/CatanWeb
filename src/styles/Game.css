@@ -21,7 +21,7 @@
 .Game-board-row {
     width: 100%;
     height: calc((100%-20px)/5);
-    margin-top: -13px;
+    margin-top: 13px;
     display: flex;
     justify-content: center;
 }
@@ -30,6 +30,24 @@
     width: calc((100%-20px)/5);
     height: 100%;
     background-image: url('../images/game/forest.png');
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-filter: drop-shadow(7px 0px 0px #000000);
+    filter: drop-shadow(7px 7px 0px #222);
+}
+
+.Game-canvas {
+    width: 1200px;
+    height: 675px;
+}
+
+.Game-board-cell-selected {
+    width: calc((100%-20px)/5);
+    height: 100%;
     background-position: center;
     background-repeat: no-repeat;
     background-size: contain;
