@@ -3,13 +3,19 @@ import { Link, useNavigate } from 'react-router-dom'
 import logo from '../Catan-logo-1.png'
 import '../styles/Register.css'
 import '../styles/Common.css'
+import * as operations from '../services/operations.js'
+import axios from 'axios';
+
 
 function Register() {
 
   const [errorMessage, setErrorMessage] = useState("")
   const navigate = useNavigate()
 
-
+  const usuario = {
+    name: "",
+    accessToken: "",
+  }
 
   function handleSubmit(event) {
     event.preventDefault(); // Evita que el formulario se envíe de manera predeterminada
@@ -21,29 +27,36 @@ function Register() {
     const formData = new FormData(form); // Crea una instancia de FormData para los valores de los campos de entrada
     const plainFormData = Object.fromEntries(formData.entries());
     const formDataJsonString = JSON.stringify(plainFormData);
+    console.log(plainFormData);
+    console.log(formDataJsonString);
+    
+    var username = plainFormData.username;
+    var email = plainFormData.email;
+    var password = plainFormData.password;
+    var confirm_password = plainFormData.confirm_password;
 
-    // Enviar los datos del formulario a través de una solicitud
-    fetch('/api/register', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: formDataJsonString
-    })
-      .then(response => {
-        if (response.ok) {
-          return response.json();
-        } else {
-          return response.json().then(err => { throw new Error(err.errors.message) })
-        }
+    // Invoco operacion register del archivo operations donde están definidas las operaciones de axios
+   axios
+      .post("/api/register", {
+        username,
+        email,
+        password,
+        confirm_password,
       })
-      .then(data => {
-        navigate("/main")
-      })
-      .catch(error => {
+      .then((response) => {
+        if (response.data.accessToken) {
+          usuario.name = response.data.username;
+          usuario.accessToken = response.data.accessToken;
+          localStorage.setItem("user", JSON.stringify(usuario));
+          navigate('/main');
+          } else {
+            return response.json().then(err => { throw new Error(err.error.message) })
+          }
+      }).catch((error) => {
+        console.log(error.response.data);
         setErrorMessage(error.toString())
-      });
-  }
+    });
+}
 
   return (
     <div className='Register-header | Common-Header'>

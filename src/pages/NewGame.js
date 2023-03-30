@@ -12,6 +12,7 @@ function NewGame() {
     function handleNuevoClick() {
         setJugadores(['Menganito', 'Fulanito', 'Jose']);
         setEmpezarHabilitado(true);
+
     }
     return (
         <div className="Main-Header | Common-Header">

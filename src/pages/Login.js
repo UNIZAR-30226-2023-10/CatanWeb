@@ -3,11 +3,18 @@ import { Link, useNavigate  } from 'react-router-dom'
 import logo from '../Catan-logo-1.png'
 import '../styles/Login.css'
 import '../styles/Common.css'
+import * as operations from '../services/operations.js'
+import axios from 'axios';
 
 function Login() {
 
   const [errorMessage, setErrorMessage] = useState("")
   const navigate = useNavigate()
+
+  const usuario = {
+    name: "",
+    accessToken: "",
+  }
 
 
   function handleSubmit(event) {
@@ -21,27 +28,36 @@ function Login() {
     const plainFormData = Object.fromEntries(formData.entries());
     const formDataJsonString = JSON.stringify(plainFormData);
 
-    // Enviar los datos del formulario a través de una solicitud
-    fetch('/api/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: formDataJsonString
-    })
-      .then(response => {
-        if (response.ok) {
-          return response.json();
-        } else {
-          return response.json().then(err => { throw new Error(err.error.message) })
-        }
+    var email = plainFormData.email;
+    var password = plainFormData.password;
+    /*try {
+      operations.login(plainFormData.email, plainFormData.password)
+      .then(() => {
+        navigate('/main');
       })
-      .then(data => {
-          navigate("/main")
-      })
-      .catch(error => {
-        setErrorMessage(error.toString())
-      });
+    } catch (error) {
+      // Aquí manejas el error, por ejemplo mostrando un mensaje en pantalla
+      console.log(error.message);
+    }
+    */axios
+        .post("/api/login", {
+          email,
+          password,
+        })
+        .then((response) => {
+          if (response.data.accessToken) {
+            console.log(response.data)
+            usuario.name = response.data.username;
+            usuario.accessToken = response.data.accessToken;
+            localStorage.setItem("user", JSON.stringify(usuario));
+            navigate('/main');
+          } else {
+            return response.json().then(err => { throw new Error(err.error.message) })
+          }
+        }).catch((error) => {
+            console.log(error.response.data);
+            setErrorMessage(error.toString())
+        });
   }
 
 
@@ -49,9 +65,6 @@ function Login() {
     <div className='Login-header | Common-Header'>
       <div className='Login-container'>
         <img src={logo} className="Login-logo" alt="logo" />
-        <div>
-          <Link to='/main'>HOOOOOOOOOOOOOOOOOOOOOOOOOOOOL</Link>
-        </div>
         <form id='logFormId' onSubmit={handleSubmit} className='login-form'>
           <div className="cover">
             <h1>Log In</h1>

@@ -3,9 +3,39 @@ import '../styles/Main.css'
 import {useState} from 'react'
 import {Link} from 'react-router-dom'
 import logo from '../Catan-logo-1.png'
+import axios from 'axios';
+import authHeader from '../services/authHeader'
+
+const storage = require('./Storage');
 
 function Main() {
+
+    const [errorMessage, setErrorMessage] = useState("")
+
+    console.log(authHeader());
+    function handleNewGame(event) {
+        event.preventDefault(); // Evita que el formulario se envíe de manera predeterminada
+        axios
+            .post("/api/game/create", {
+                headers : authHeader(), // se envia mal
+            })
+            .then((response) => {
+              if (response.data.codigo_partida) {
+                console.log(response.data.codigo_partida);
+                localStorage.setItem("gamecode", JSON.stringify(response.data.codigo_partida)); // codigo partida a local storage
+              } else {
+                return response.json().then(err => { throw new Error(err.error.message) })
+              }
+            }).catch((error) => {
+                console.log(error.response.data);
+                setErrorMessage(error.toString())
+            });
+    }
+
+    console.log(localStorage.getItem("user"));
+
     return (
+        
         <div className="Main-Header | Common-Header">
             <div className='Main-container'>
                 <img src={logo} className="Main-logo" alt="logo" />
@@ -13,7 +43,7 @@ function Main() {
                     <Link to='/login' className='Main-btn'>
                         <a className='linkado'>Volver pa' tras</a>
                     </Link>
-                    <Link to='/newGame' className='Main-btn'>
+                    <Link to='/newGame' onClick={handleNewGame} className='Main-btn'>
                         <a className='linkado'>New game</a>
                     </Link>
                     <Link to='/' className='Main-btn'>
@@ -22,7 +52,9 @@ function Main() {
                     <Link to='/joinGame' className='Main-btn'>
                         <a className='linkado'>Join Game</a>
                     </Link>
-
+                    {errorMessage && (
+                        <p style={{ color: 'red' }}> {errorMessage} </p>
+                    )}
                 </div>
             </div> 
         </div>
