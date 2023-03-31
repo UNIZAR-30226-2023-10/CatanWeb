@@ -1,11 +1,11 @@
-import http from "axios";
+import axios from '../services/axs';
 import { Navigate } from "react-router-dom";
 const authHeader = require('./authHeader')
 const Routes = require('./routes')
 
 const GameService  = {
     create(){
-        http.post(Routes.create, {headers: authHeader()}).then(
+        axios.post(Routes.create, {headers: authHeader()}).then(
             (response) => {
                 return response.data
             },
@@ -16,7 +16,7 @@ const GameService  = {
         )
     },
     join(codigo_partida){
-        http.post(Routes.join, {headers: authHeader()}).then(
+        axios.post(Routes.join, {headers: authHeader()}).then(
             (response) => {
                 return response.data
             },
@@ -27,7 +27,7 @@ const GameService  = {
         )
     },
     start(codigo_partida){
-        http.post(Routes.start, {headers: authHeader()}).then(
+        axios.post(Routes.start, {headers: authHeader()}).then(
             (response) => {
                 return response.data
             },

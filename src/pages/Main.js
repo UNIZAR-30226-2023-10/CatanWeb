@@ -4,33 +4,35 @@ import {useState} from 'react'
 import {Link} from 'react-router-dom'
 import logo from '../Catan-logo-1.png'
 import axios from '../services/axs';
-import authHeader from '../services/authHeader'
+// import authHeader from '../services/authHeader'
 
 const storage = require('./Storage');
+const GameService = require('../services/game.service')
 
 function Main() {
 
     const [errorMessage, setErrorMessage] = useState("")
 
-    console.log(authHeader());
+    // console.log(authHeader());
     function handleNewGame(event) {
         event.preventDefault(); // Evita que el formulario se envíe de manera predeterminada
-        axios
-            .post("/game/create",{}, {
-                headers : authHeader(), // se envia mal
-                mode : 'cors'
-            })
-            .then((response) => {
-              if (response.data.codigo_partida) {
-                console.log(response.data.codigo_partida);
-                localStorage.setItem("gamecode", JSON.stringify(response.data.codigo_partida)); // codigo partida a local storage
-              } else {
-                return response.json().then(err => { throw new Error(err.error.message) })
-              }
-            }).catch((error) => {
-                console.log(error.response.data);
-                setErrorMessage(error.toString())
-            });
+        GameService.create()
+        // axios
+        //     .post("/game/create",{}, {
+        //         headers : authHeader(), // se envia mal
+        //         mode : 'cors'
+        //     })
+        //     .then((response) => {
+        //       if (response.data.codigo_partida) {
+        //         console.log(response.data.codigo_partida);
+        //         localStorage.setItem("gamecode", JSON.stringify(response.data.codigo_partida)); // codigo partida a local storage
+        //       } else {
+        //         return response.json().then(err => { throw new Error(err.error.message) })
+        //       }
+        //     }).catch((error) => {
+        //         console.log(error.response.data);
+        //         setErrorMessage(error.toString())
+        //     });
     }
 
     console.log(localStorage.getItem("user"));
