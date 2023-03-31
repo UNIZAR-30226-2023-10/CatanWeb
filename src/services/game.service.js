@@ -1,11 +1,28 @@
-import axios from '../services/axs';
-import { Navigate } from "react-router-dom";
-const authHeader = require('./authHeader')
+const {http} = require('./axs');
+const {authHeader} = require('./authHeader')
 const Routes = require('./routes')
 
 const GameService  = {
-    create(){
-        axios.post(Routes.create, {headers: authHeader()}).then(
+
+
+    async create(){
+        console.log('routes create : ' +Routes.create)
+        let x = await http.post(Routes.create, {},{headers: authHeader()}).then(
+            (response) => {
+                // console.log(response.data.codigo_partida)
+                return response.data
+                
+            },
+            (error) => {
+                console.log(error)
+                return {}
+            }
+        )
+
+        return x
+    },
+    async join(codigo_partida){
+        http.post(Routes.join, {},{headers: authHeader()}).then(
             (response) => {
                 return response.data
             },
@@ -15,19 +32,8 @@ const GameService  = {
             }
         )
     },
-    join(codigo_partida){
-        axios.post(Routes.join, {headers: authHeader()}).then(
-            (response) => {
-                return response.data
-            },
-            (error) => {
-                console.log(error)
-                return {}
-            }
-        )
-    },
-    start(codigo_partida){
-        axios.post(Routes.start, {headers: authHeader()}).then(
+    async start(codigo_partida){
+        http.post(Routes.start, {},{headers: authHeader()}).then(
             (response) => {
                 return response.data
             },
@@ -40,4 +46,4 @@ const GameService  = {
 
 }
 
-module.exports = GameService
+export {GameService}
