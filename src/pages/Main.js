@@ -3,7 +3,7 @@ import '../styles/Main.css'
 import {useState} from 'react'
 import {Link} from 'react-router-dom'
 import logo from '../Catan-logo-1.png'
-import axios from 'axios';
+import axios from '../services/axs';
 import authHeader from '../services/authHeader'
 
 const storage = require('./Storage');
@@ -16,8 +16,9 @@ function Main() {
     function handleNewGame(event) {
         event.preventDefault(); // Evita que el formulario se envíe de manera predeterminada
         axios
-            .post("/api/game/create", {
+            .post("/game/create",{}, {
                 headers : authHeader(), // se envia mal
+                mode : 'cors'
             })
             .then((response) => {
               if (response.data.codigo_partida) {
