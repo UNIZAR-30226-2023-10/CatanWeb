@@ -21,8 +21,8 @@ const GameService  = {
 
         return x
     },
-    async join(codigo_partida){
-        http.post(Routes.join, {},{headers: authHeader()}).then(
+    async join(gameCode){
+        let x = await http.post(Routes.join, {codigo_partida: gameCode},{headers: authHeader()}).then(
             (response) => {
                 return response.data
             },
@@ -31,6 +31,7 @@ const GameService  = {
                 return {}
             }
         )
+        return x
     },
     async start(codigo_partida){
         http.post(Routes.start, {},{headers: authHeader()}).then(

@@ -1,27 +1,35 @@
 import React , { useState }from 'react';
-import {Link} from 'react-router-dom'
+import {json, Link} from 'react-router-dom'
 import logo from '../Catan-logo-1.png'
 import '../styles/JoinGame.css'
 import '../styles/Common.css'
 import axios from 'axios';
+import io from 'socket.io-client';
+
+const {GameService} = require('../services/game.service')
+const {authHeader}  = require('../services/authHeader');
 
 function JoinGame() {
 
-        //const form = document.getElementById('joinGameId'); // Obtiene la referencia del formulario que se envió
-        //const formData = new FormData(form); // Crea una instancia de FormData para los valores de los campos de entrada
-        //const plainFormData = Object.fromEntries(formData.entries());
-       
-        //var gameCode = plainFormData.gameCode;
-      
+
+
+
         // Enviar los datos del formulario a través de una solicitud
         const [errorMessage, setErrorMessage] = useState("")
-        
-        function handleJoinGame(event) {
-          event.prevetDefault();
-        axios
-            .post("/api/game/create", {
-               
-               // pasar token gameCode
+
+        async function handleJoinGame(event) {
+          event.preventDefault();
+          const form = document.getElementById('JoinGameId'); // Obtiene la referencia del formulario que se envió
+          const formData = new FormData(form); // Crea una instancia de FormData para los valores de los campos de entrada
+          const plainFormData = Object.fromEntries(formData.entries());
+          var gamecode = plainFormData.gamecode;
+          console.log(gamecode);
+
+          let data = await GameService.join(gamecode);
+          console.log(data)
+                  /*axios
+            .post("/api/game/join", {
+               codigo_partida : gameCode,
             })
             .then((response) => {
               if (response) { // si respuesta correcta
@@ -33,13 +41,14 @@ function JoinGame() {
                 console.log(error.response.data);
                 setErrorMessage(error.toString())
             });
+          */
     }
 
     return (
         <div className='JoinGame-header | Common-Header'>
             <div className='JoinGame-container'>
                 <img src={logo} className="JoinGame-logo" alt="logo" />
-                <form id='joinGameId' onSubmit={handleJoinGame} className='JoinGame-form'>
+                <form id='JoinGameId' onSubmit={handleJoinGame} className='JoinGame-form'>
                     <div className="JoinGame-cover">
                         <h1>INSERT GAME CODE:</h1>
                         {errorMessage && (

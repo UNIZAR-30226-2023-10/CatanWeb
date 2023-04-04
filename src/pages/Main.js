@@ -1,8 +1,9 @@
 import '../styles/Common.css'
 import '../styles/Main.css'
 import {useState} from 'react'
-import {Link} from 'react-router-dom'
+import { Link, useNavigate  } from 'react-router-dom'
 import logo from '../Catan-logo-1.png'
+//import io from 'socket.io-client';
 // import {axios} from '../services/axs';
 // import authHeader from '../services/authHeader'
 
@@ -12,15 +13,24 @@ const {http} = require('../services/axs');
 const {GameService} = require('../services/game.service')
 
 function Main() {
+    const navigate = useNavigate()
+    const [errorMessage, setErrorMessage] = useState("");
+   // const socket = io('http://localhost:8080/');
 
-    const [errorMessage, setErrorMessage] = useState("")
+    const jugadores = {
+        jugador2: "Esperando jugadores",
+        jugador3: "Esperando jugadores",
+        jugador4: "Esperando jugadores",
+      }
+    localStorage.setItem("nombreJugadores", JSON.stringify(jugadores));
 
     // console.log(authHeader());
     async function handleNewGame(event) {
         event.preventDefault(); // Evita que el formulario se envíe de manera predeterminada
         let data = await GameService.create()
+        localStorage.setItem("gameToken", JSON.stringify(data.codigo_partida));
         console.log(data)
-       
+        navigate('/newGame');
         // http.post("/game/create",{}, {
         //          headers : authHeader(),  //  se envia mal
         //          mode : 'cors'
@@ -37,8 +47,6 @@ function Main() {
         //          setErrorMessage(error.toString())
         //      });
     }
-
-    console.log(localStorage.getItem("user"));
 
     return (
         
