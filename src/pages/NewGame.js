@@ -10,15 +10,25 @@ const {authHeader}  = require('../services/authHeader');
 
 function NewGame() {
 
-    const socket = io('http://localhost:8080/');
+   
     const codigoPartidaJSON = localStorage.getItem("gameToken");
     const codigoPartida = JSON.parse(codigoPartidaJSON);
-    
-    socket.emit('joinGame',authHeader(), codigoPartida);
-
     const userJSON = localStorage.getItem("user");
     const user = JSON.parse(userJSON);
     const userName = user.name;
+
+
+    const socket = io('http://localhost:8080/');
+    socket.on('error', (err)=> {console.log(err)})
+    socket.on('new_player', (x) => {
+        console.log(x.id)
+    })
+
+    
+    socket.emit('joinGame', user.accessToken, codigoPartida);
+    
+
+    
     
     const nombreJugadoresJSON = localStorage.getItem("nombreJugadores");
     const nombreJugadores = JSON.parse(nombreJugadoresJSON);
