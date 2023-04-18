@@ -47,9 +47,9 @@ function Login() {
         .then((response) => {
           if (response.data.accessToken) {
             console.log(response.data)
-            usuario.name = response.data.username;
-            usuario.accessToken = response.data.accessToken;
-            localStorage.setItem("user", JSON.stringify(usuario));
+            usuario.name = response.data.username; //
+            usuario.accessToken = response.data.accessToken;//
+            localStorage.setItem("user", JSON.stringify(usuario));//
             navigate('/main');
           } else {
             return response.json().then(err => { throw new Error(err.error.message) })

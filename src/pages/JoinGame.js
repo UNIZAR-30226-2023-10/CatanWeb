@@ -1,5 +1,5 @@
 import React , { useState }from 'react';
-import {json, Link} from 'react-router-dom'
+import {json, Link, useNavigate} from 'react-router-dom'
 import logo from '../Catan-logo-1.png'
 import '../styles/JoinGame.css'
 import '../styles/Common.css'
@@ -13,9 +13,25 @@ function JoinGame() {
 
 
 
+        const navigate = useNavigate()
+
+        const userJSON = localStorage.getItem("user");
+        const user = JSON.parse(userJSON);
+        const userName = user.name;
 
         // Enviar los datos del formulario a través de una solicitud
         const [errorMessage, setErrorMessage] = useState("")
+
+        const socket = io('http://localhost:8080/');
+        socket.on('error', (err)=> {console.log(err)})
+        socket.on('new_player', (x) => {
+            console.log(x.id)
+          })
+
+    
+      // socket.emit('joinGame', user.accessToken, codigoPartida);
+
+
 
         async function handleJoinGame(event) {
           event.preventDefault();
@@ -27,6 +43,34 @@ function JoinGame() {
 
           let data = await GameService.join(gamecode);
           console.log(data)
+          socket.emit('joinGame', user.accessToken, gamecode);
+          //console.log(data.status);
+          if (data.status == 'sussces'){
+            const nombreJugadoresJSON = localStorage.getItem("nombreJugadores");
+            const nombreJugadores = JSON.parse(nombreJugadoresJSON);
+            
+            if (data.jugadores[0] != null){
+              //console.log('entro')
+              nombreJugadores.jugador2 = data.jugadores[0];
+              //console.log( nombreJugadores.jugadores2);
+              console.log( data.jugadores[0]);
+            }
+            if (data.jugadores[1] != null){
+              nombreJugadores.jugador3 = data.jugadores[1];
+              //console.log( nombreJugadores.jugadores3);
+              console.log( data.jugadores[1]);
+            }
+            if (data.jugadores[2] != null){
+              nombreJugadores.jugador4 = data.jugadores[2];
+              // console.log( nombreJugadores.jugadores4);
+              console.log( data.jugadores[2]);
+            }
+            console.log(nombreJugadores);
+            localStorage.setItem("nombreJugadores", JSON.stringify(nombreJugadores));
+            
+            navigate('/waitingroom');
+          }
+
                   /*axios
             .post("/api/game/join", {
                codigo_partida : gameCode,

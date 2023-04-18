@@ -8,6 +8,7 @@ import {
     NewGame,
     Register,
     JoinGame,
+    SalaDeEspera,
 
 } from "../pages"
 
@@ -22,6 +23,7 @@ function App() {
                 <Route path="/newGame"  element={<NewGame />}/>
                 <Route path="/register" element={<Register />}/> 
                 <Route path="/joinGame"  element={<JoinGame />}/>
+                <Route path="/waitingroom"  element={<SalaDeEspera />}/>
             </Routes>
         </Router>
     );

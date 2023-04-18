@@ -1,16 +1,10 @@
 import React, { useState } from 'react';
-import '../styles/NewGame.css';
-import '../styles/Common.css'
-import logo from '../Catan-logo-1.png'
-import { Link } from 'react-router-dom';
-import io from 'socket.io-client';
+import logo from '../Catan-logo-1.png';
+import { Link, useNavigate } from 'react-router-dom';
 
-const {authHeader}  = require('../services/authHeader');
+function SalaDeEspera() {
 
 
-function NewGame() {
-
-   
     const codigoPartidaJSON = localStorage.getItem("gameToken");
     const codigoPartida = JSON.parse(codigoPartidaJSON);
     const userJSON = localStorage.getItem("user");
@@ -18,34 +12,24 @@ function NewGame() {
     const userName = user.name;
 
 
-    const socket = io('http://localhost:8080/');
-    socket.on('error', (err)=> {console.log(err)})
-    socket.on('new_player', (x) => {
-        console.log(x.id)
-    })
-
-    console.log(codigoPartida);
-    socket.emit('joinGame', user.accessToken, codigoPartida);
-    
-
-    
-    
     const nombreJugadoresJSON = localStorage.getItem("nombreJugadores");
     const nombreJugadores = JSON.parse(nombreJugadoresJSON);
     const jugador2 = nombreJugadores.jugador2;
     const jugador3 = nombreJugadores.jugador3;
     const jugador4 = nombreJugadores.jugador4;
+    console.log(jugador2);
 
     const [empezarHabilitado, setEmpezarHabilitado] = useState(false);
     const [jugadores, setJugadores] = useState(['Esperando jugador', 'Esperando jugador', 'Esperando jugador']);
 
     function handleNuevoClick() {
+        setJugadores(['Menganito', 'Fulanito', 'Jose']);
         setEmpezarHabilitado(true);
 
     }
     return (
         <div className="Main-Header | Common-Header">
-             <img src={logo} className="newGame-logo" alt="logo" />
+            <img src={logo} className="newGame-logo" alt="logo" />
             <div className='pantalla-container'>
                 <h2>GAME CODE:  {codigoPartida} </h2>
                 <div className='usuario-container'>
@@ -60,13 +44,12 @@ function NewGame() {
                 <div className={` ${jugador4 === 'Esperando jugadores' ? 'esperando-container' : 'usuario-container'}`}>
                     {jugador4}
                 </div>
-                
+
                 <button className='newGame-btn' disabled={!empezarHabilitado}>
                     {empezarHabilitado ? (
-                        <Link to="/Game" className='linkado' >Empezar</Link>) : (
-                            <span className="disabled">Esperando
-                            </span>)
-                    }
+                        <Link to="/Game" className='linkado'>Empezar</Link>) : (
+                        <span className="disabled">Esperando
+                        </span>)}
                 </button>
                 <button className='lleno-button' onClick={handleNuevoClick} disabled={empezarHabilitado}>
                     Llenar Sala
@@ -76,4 +59,4 @@ function NewGame() {
     );
 }
 
-export default NewGame;
+export default SalaDeEspera;

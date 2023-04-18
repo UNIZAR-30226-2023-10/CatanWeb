@@ -5,6 +5,7 @@ import Game  from '../pages/Game'
 import NewGame  from '../pages/NewGame'
 import Register from '../pages/Register'
 import JoinGame from '../pages/JoinGame'
+import SalaDeEspera from '../pages/SalaDeEspera'
 
 export {
     Home,
@@ -14,4 +15,5 @@ export {
     NewGame,
     Register,
     JoinGame,
+    SalaDeEspera,
 }
