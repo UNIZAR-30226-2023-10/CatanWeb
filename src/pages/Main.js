@@ -17,12 +17,18 @@ function Main() {
     const [errorMessage, setErrorMessage] = useState("");
    // const socket = io('http://localhost:8080/');
 
-    const jugadores = {
+   const userJSON = localStorage.getItem("user");
+   const user = JSON.parse(userJSON);
+   const userName = user.name;
+
+    const nombreJugadores = {
+        jugador1: userName,
         jugador2: "Esperando jugadores",
         jugador3: "Esperando jugadores",
         jugador4: "Esperando jugadores",
+        numJugadores: 0,
       }
-    localStorage.setItem("nombreJugadores", JSON.stringify(jugadores));
+    localStorage.setItem("nombreJugadores", JSON.stringify(nombreJugadores));
 
     // console.log(authHeader());
     async function handleNewGame(event) {
@@ -30,22 +36,9 @@ function Main() {
         let data = await GameService.create()
         localStorage.setItem("gameToken", JSON.stringify(data.codigo_partida));
         console.log(data)
-        navigate('/newGame');
-        // http.post("/game/create",{}, {
-        //          headers : authHeader(),  //  se envia mal
-        //          mode : 'cors'
-        //      })
-        //      .then((response) => {
-        //        if (response.data.codigo_partida) {
-        //         console.log(response.data.codigo_partida);
-        //         localStorage.setItem("gamecode", JSON.stringify(response.data.codigo_partida));  // codigo partida a local storage
-        //        } else {
-        //          return response.json().then(err => { throw new Error(err.error.message) })
-        //        }
-        //      }).catch((error) => {
-        //          console.log(error.response.data);
-        //          setErrorMessage(error.toString())
-        //      });
+        if (data.status == 'success'){
+            navigate('/newGame');
+        }
     }
 
     return (

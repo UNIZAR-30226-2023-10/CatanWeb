@@ -14,9 +14,10 @@ function SalaDeEspera() {
 
     const nombreJugadoresJSON = localStorage.getItem("nombreJugadores");
     const nombreJugadores = JSON.parse(nombreJugadoresJSON);
-    const jugador2 = nombreJugadores.jugador2;
-    const jugador3 = nombreJugadores.jugador3;
-    const jugador4 = nombreJugadores.jugador4;
+    let jugador1 = nombreJugadores.jugador1;
+    let jugador2 = nombreJugadores.jugador2;
+    let jugador3 = nombreJugadores.jugador3;
+    let jugador4 = nombreJugadores.jugador4;
     console.log(jugador2);
 
     const [empezarHabilitado, setEmpezarHabilitado] = useState(false);
@@ -33,7 +34,7 @@ function SalaDeEspera() {
             <div className='pantalla-container'>
                 <h2>GAME CODE:  {codigoPartida} </h2>
                 <div className='usuario-container'>
-                    {userName}
+                    {jugador1}
                 </div>
                 <div className={` ${jugador2 === 'Esperando jugadores' ? 'esperando-container' : 'usuario-container'}`}>
                     {jugador2}

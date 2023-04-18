@@ -10,46 +10,58 @@ const {authHeader}  = require('../services/authHeader');
 
 function NewGame() {
 
-   
     const codigoPartidaJSON = localStorage.getItem("gameToken");
     const codigoPartida = JSON.parse(codigoPartidaJSON);
     const userJSON = localStorage.getItem("user");
     const user = JSON.parse(userJSON);
-    const userName = user.name;
-
-
+    // const userName = user.name;
+    
     const socket = io('http://localhost:8080/');
-    socket.on('error', (err)=> {console.log(err)})
-    socket.on('new_player', (x) => {
-        console.log(x.id)
-    })
-
-    console.log(codigoPartida);
     socket.emit('joinGame', user.accessToken, codigoPartida);
-    
 
-    
-    
     const nombreJugadoresJSON = localStorage.getItem("nombreJugadores");
     const nombreJugadores = JSON.parse(nombreJugadoresJSON);
-    const jugador2 = nombreJugadores.jugador2;
-    const jugador3 = nombreJugadores.jugador3;
-    const jugador4 = nombreJugadores.jugador4;
+    let jugador1 = nombreJugadores.jugador1;
+    let jugador2 = nombreJugadores.jugador2;
+    let jugador3 = nombreJugadores.jugador3;
+    let jugador4 = nombreJugadores.jugador4;
 
-    const [empezarHabilitado, setEmpezarHabilitado] = useState(false);
-    const [jugadores, setJugadores] = useState(['Esperando jugador', 'Esperando jugador', 'Esperando jugador']);
 
-    function handleNuevoClick() {
-        setEmpezarHabilitado(true);
+    socket.on('error', (err)=> {console.log(err)})
 
-    }
+    socket.on('new_player', (data) => {
+        console.log(data)
+        console.log('dentro new player')
+        const nombreJugadoresJSON = localStorage.getItem("nombreJugadores");
+        const nombreJugadores = JSON.parse(nombreJugadoresJSON);
+        console.log(nombreJugadores)
+        if (nombreJugadores.numJugadores === 0) {
+            nombreJugadores.jugador2 = data.username;
+            nombreJugadores.numJugadores = 1;
+            console.log('dentro 0 jugadores');
+            jugador2 = nombreJugadores.jugador2;
+            
+        }
+        else if (nombreJugadores.numJugadores === 1) {
+            nombreJugadores.jugador3 = data.username;
+            nombreJugadores.numJugadores = 2;
+            console.log('dentro 1 jugadores');
+        }
+        else if (nombreJugadores.numJugadores === 2) {
+            nombreJugadores.jugador4 = data.username;
+            nombreJugadores.numJugadores = 3;
+            console.log('dentro 2 jugadores');
+        }
+        localStorage.setItem("nombreJugadores", JSON.stringify(nombreJugadores));
+    })
+
     return (
         <div className="Main-Header | Common-Header">
              <img src={logo} className="newGame-logo" alt="logo" />
             <div className='pantalla-container'>
                 <h2>GAME CODE:  {codigoPartida} </h2>
                 <div className='usuario-container'>
-                    {userName}
+                    {jugador1}
                 </div>
                 <div className={` ${jugador2 === 'Esperando jugadores' ? 'esperando-container' : 'usuario-container'}`}>
                     {jugador2}
@@ -61,14 +73,10 @@ function NewGame() {
                     {jugador4}
                 </div>
                 
-                <button className='newGame-btn' disabled={!empezarHabilitado}>
-                    {empezarHabilitado ? (
-                        <Link to="/Game" className='linkado' >Empezar</Link>) : (
-                            <span className="disabled">Esperando
-                            </span>)
-                    }
+                <button className='newGame-btn'>
+                        <Link to="/Game" className='linkado' >Empezar</Link>
                 </button>
-                <button className='lleno-button' onClick={handleNuevoClick} disabled={empezarHabilitado}>
+                <button className='lleno-button'>
                     Llenar Sala
                 </button>
             </div>

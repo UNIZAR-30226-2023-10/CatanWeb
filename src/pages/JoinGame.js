@@ -28,11 +28,6 @@ function JoinGame() {
             console.log(x.id)
           })
 
-    
-      // socket.emit('joinGame', user.accessToken, codigoPartida);
-
-
-
         async function handleJoinGame(event) {
           event.preventDefault();
           const form = document.getElementById('JoinGameId'); // Obtiene la referencia del formulario que se envió
@@ -45,6 +40,7 @@ function JoinGame() {
           console.log(data)
           socket.emit('joinGame', user.accessToken, gamecode);
           //console.log(data.status);
+
           if (data.status == 'sussces'){
             const nombreJugadoresJSON = localStorage.getItem("nombreJugadores");
             const nombreJugadores = JSON.parse(nombreJugadoresJSON);
@@ -70,24 +66,7 @@ function JoinGame() {
             
             navigate('/waitingroom');
           }
-
-                  /*axios
-            .post("/api/game/join", {
-               codigo_partida : gameCode,
-            })
-            .then((response) => {
-              if (response) { // si respuesta correcta
-                console.log(response.data)
-              } else {
-                return response.json().then(err => { throw new Error(err.error.message) })
-              }
-            }).catch((error) => {
-                console.log(error.response.data);
-                setErrorMessage(error.toString())
-            });
-          */
-    }
-
+        }
     return (
         <div className='JoinGame-header | Common-Header'>
             <div className='JoinGame-container'>
