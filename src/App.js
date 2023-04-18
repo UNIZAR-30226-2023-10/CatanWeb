@@ -23,7 +23,6 @@ function App() {
         setActiveMenu(menu);
     }
 
-    const navigate = useNavigate()
     const [errorMessage, setErrorMessage] = useState("")
     const handleLoginSubmit = (event) => {
 
@@ -97,7 +96,7 @@ function App() {
             }
         })
         .then(data => {
-            navigate("/main")
+            
         })
         .catch(error => {
             setErrorMessage(error.toString())
