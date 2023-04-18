@@ -1,0 +1,86 @@
+.JoinGame-logo {
+    height: 25vmin;
+    pointer-events: none;
+    -webkit-filter: drop-shadow(7px 7px 7px #222);
+    filter: drop-shadow(7px 7px 7px #222);
+}
+
+.JoinGame-header {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+}
+
+.JoinGame-container {
+    margin: 0px 20px 20px 0px;
+    min-height: calc(100vh-20px);
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    transform: translateY(-35%);
+    flex-direction: column;
+}
+
+.JoinGamee-form {
+    width: 400px;
+    height: 500px;
+    background-color: rgba(255,197,129,1);
+    border-radius: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    opacity: 0.6;
+}
+
+
+.JoinGame-cover {
+    background-color: rgba(255,197,129,0.5);
+    width: 30em;
+    height: 17em;
+    position: relative;
+    border-radius: 0.5em;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-around;
+    color: rgb(89, 33, 11)
+}
+
+.input-joinGame {
+    border-style: solid;
+    border-width: 2px;
+    border-color: rgb(121, 46, 16);
+    background-color: rgb(255,197,129);
+    height: 3.5em;
+    width: 80%;
+    border-radius: 0.25em;
+    text-align: center;
+    padding: 0em;
+    color: rgb(89, 33, 11);
+    font-size: large;
+    font-weight: bold;
+}
+
+.JoinGame-btn { 
+    width: 40%;
+    height: 3em;
+    background-color: rgba(255,168,53,1) !important;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: 0.5s;
+    border-radius: 0.25em;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: large;
+    border: 2px solid rgb(121, 46, 16);
+    text-decoration: none;
+}
+
+.linkado {
+    color: rgb(89, 33, 11);
+    font-weight: bold;
+}
+
+.JoinGame-btn:hover {transform: scale(1.03);}
