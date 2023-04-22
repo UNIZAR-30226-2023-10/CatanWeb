@@ -141,6 +141,11 @@ form {
   background-color: rgb(69, 46, 29, 0.6);
 }
 
+#game-code {
+  margin: 0px;
+  padding: 0px;
+}
+
 .flex-column-center-center {
   display: flex;
   flex-direction: column;
