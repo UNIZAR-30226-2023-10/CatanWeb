@@ -16,6 +16,18 @@ const GameService = {
             }
         )
         return x
+    },
+    async join(gameCode){
+        let x = await http.post(Routes.join, {codigo_partida: gameCode}, {headers: authHeader()}).then(
+            (response) => {
+                return response.data
+            },
+            (error) => {
+                //console.log(error)
+                return {}
+            }
+        )
+        return x
     }
 }
 

@@ -31,8 +31,9 @@ function App() {
     //    }, 5000);
     //})
 
-    const [activeMenu, setActiveMenu] = useState('login')
+    const [activeMenu, setActiveMenu] = useState(JSON.parse(sessionStorage.getItem('active-menu')) || 'login')
     const handleMenuChange = (menu) => {
+        sessionStorage.setItem('active-menu', JSON.stringify(menu))
         setActiveMenu(menu);
     }
 
@@ -61,8 +62,8 @@ function App() {
         const plainFormData = Object.fromEntries(formData.entries());
     
         // Enviar los datos del formulario a través de una solicitud
-        var email    = plainFormData.email;
-        var password = plainFormData.password;
+        let email    = plainFormData.email;
+        let password = plainFormData.password;
         axios.post('http://localhost:8080/api/login', {
             email,
             password
@@ -106,10 +107,10 @@ function App() {
         // Crea un diccionario con los campos del formulario.
         const plainFormData = Object.fromEntries(formData.entries());
 
-        var username         = plainFormData.username;
-        var email            = plainFormData.email;
-        var password         = plainFormData.password;
-        var confirm_password = plainFormData.confirm_password;
+        let username         = plainFormData.username;
+        let email            = plainFormData.email;
+        let password         = plainFormData.password;
+        let confirm_password = plainFormData.confirm_password;
         if (password !== confirm_password) {
             setErrorMessage("Passwords must coincide.")
             return
@@ -142,38 +143,86 @@ function App() {
     // ========================================================================
     // MAIN MENU STATE
     // ========================================================================
+    // New game action:
     const [socket, setSocket] = useState(null)
     async function handleSubmit_NewGame(event) {
         // Evita que el formulario se envíe de manera predeterminada
         event.preventDefault();
-
         let data = await GameService.create()
-        console.log("NEW GAME: ", data)
-        sessionStorage.setItem('game-token', JSON.stringify(data.codigo_partida))
-        sessionStorage.setItem('players', JSON.stringify([
-            JSON.parse(sessionStorage.getItem('user')).name,
-            null,
-            null,
-            null,
-            1
-        ]))
         if (data.status === 'success') {
+            console.log("NEW GAME: ", data)
+            sessionStorage.setItem('game-token', JSON.stringify(data.codigo_partida))
+            sessionStorage.setItem('players', JSON.stringify([
+                JSON.parse(sessionStorage.getItem('user')).name,
+                null,
+                null,
+                null,
+                1
+            ]))
+            // Creacion y configuracion del nuevo socket:
+            let socket = io('http://localhost:8080/')
+            socket.on('error', (err) => { console.log('SOCKET ERROR: ', err)})
+            socket.on('new_player', (socket_data) => {
+                console.log("SOCKET NEW PLAYER DATA: ", socket_data)
+                const players = JSON.parse(sessionStorage.getItem('players'))
+                if (players[4] < 4) {
+                    players[players[4]] = data.username
+                    players[4]++
+                    sessionStorage.setItem('players', JSON.stringify(players))
+                }
+            })
+            setSocket(socket)
+            // Cambiar al conexto del Game lobby:
             handleMenuChange('game-lobby')
-            return setSocket(io('http://localhost:8080/'))
         }
-        return null 
+    }
+    // Join game action:
+    const [gamecodeInput, setGamecodeInput] = useState('');
+    const handleChange = (event) => {
+      const input = event.target.value;
+      const numbers = /^[0-9]*$/; // expresión regular para solo aceptar números
+      if (input.match(numbers) && input.length <= 6) {
+        setGamecodeInput(input);
+      }
+    };
+    async function handleSubmit_JoinGame(event) {
+
+        // Evita que el formulario se envíe de manera predeterminada
+        event.preventDefault();
+
+        // Aquí se pueden agregar otras validaciones de entrada antes de enviar el formulario
+        // Si algo no es válido, se puede detener la ejecución de esta función o mostrar un mensaje de error
+
+        // Obtiene la referencia del formulario que se envió
+        const form = document.getElementById('join-game');
+        // Crea una instancia de FormData para los valores de los campos de entrada
+        const formData = new FormData(form);
+        // Crea un diccionario con los campos del formulario.
+        const plainFormData = Object.fromEntries(formData.entries());
+
+        let gamecode = plainFormData.gamecode, data = await GameService.join(gamecode)
+        console.log("JOINING GAME DATA: ", data)
+        if (data.status === 'success' && data.jugadores.length < 4) {
+            // Creacion y configuracion del nuevo socket:
+            let socket   = io('http://localhost:8080/')
+            socket.on('error', (err) => { console.log('SOCKET ERROR:', err) })
+            socket.on('new_player', (socket_data) => { console.log('SOCKET NEW PLAYER DATA:', socket_data) })
+            socket.emit('joinGame', JSON.parse(sessionStorage.getItem('user')).accessToken, gamecode)
+            setSocket(socket)
+            // Configuración de los nuevos jugadores:
+            const players = [ null, null, null, null, 1 ]
+            let i;
+            for (i = 0; i < data.jugadores.length && i < 4; i++) {
+                players[i] = data.jugadores[i]
+                players[4]++
+            }
+            players[i] = JSON.parse(sessionStorage.getItem('user')).name
+            sessionStorage.setItem('players', JSON.stringify(players));
+            // Cambiar al conexto del Game lobby:
+            setActiveMenu('game-lobby')
+        }
     }
 
-    //let socket;
-    //if (activeMenu === 'game-lobby') {
-    //    socket = io('http://localhost:8080/')
-    //    socket.emit('joinGame', JSON.parse(sessionStorage.getItem('user')).accessToken, JSON.parse(sessionStorage.getItem('game-token')))
-    //    socket.on('error', (err) => { console.log('SOCKET ERROR: ', err) })
-    //    socket.on('new_player', (data) => {
-    //        console.log('SOCKET NEW PLAYER: ', data)
-    //        
-    //    })
-    //}
 
     // ========================================================================
     // GAME-LOBBY STATE
@@ -293,8 +342,8 @@ function App() {
 
                     {activeMenu === 'join-game' && (
                         <div className='common-content-container | flex-column-center-center'>
-                            <form className='flex-column-center-center'>
-                                <input className='common-input' type="text" placeholder="Game code" name='gamecode' id='gamecode' required />
+                            <form id='join-game' className='flex-column-center-center' onSubmit={handleSubmit_JoinGame}>
+                                <input name='gamecode' id='gamecode' className='common-input' type="text" placeholder="Game code" value={gamecodeInput} maxLength={6} onChange={handleChange} required />
                                 <button className='common-button | common-button-activated' type='submit'>Join</button>
                             </form>
                             <button className='common-button | common-button-activated' onClick={() => handleMenuChange('main-menu')}>Return</button>
