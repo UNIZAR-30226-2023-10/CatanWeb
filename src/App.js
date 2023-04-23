@@ -206,17 +206,15 @@ function App() {
             // Creacion y configuracion del nuevo socket:
             let socket   = io('http://localhost:8080/')
             socket.on('error', (err) => { console.log('SOCKET ERROR:', err) })
-            socket.on('new_player', (socket_data) => { console.log('SOCKET NEW PLAYER DATA:', socket_data) })
+            socket.on('new_player', (socket_data) => { console.log('SOCKET NEW PLAYER JOINED:', socket_data) })
             socket.emit('joinGame', JSON.parse(sessionStorage.getItem('user')).accessToken, gamecode)
             setSocket(socket)
             // Configuración de los nuevos jugadores:
             const players = [ null, null, null, null, 1 ]
-            let i;
-            for (i = 0; i < data.jugadores.length && i < 4; i++) {
+            for (let i = 0; i < data.jugadores.length && i < 4; i++) {
                 players[i] = data.jugadores[i]
                 players[4]++
             }
-            players[i] = JSON.parse(sessionStorage.getItem('user')).name
             sessionStorage.setItem('players', JSON.stringify(players));
             // Cambiar al conexto del Game lobby:
             setActiveMenu('game-lobby')
