@@ -145,54 +145,53 @@ function App() {
     // ========================================================================
     // New game action:
     const [socket, setSocket] = useState(null)
+    const [lobby, setLobby]   = useState([ null, null, null, null, 1 ]);
     async function handleSubmit_NewGame(event) {
-        // Evita que el formulario se envíe de manera predeterminada
+        // Evita que el formublanklario se envíe de manera predeterminada
         event.preventDefault();
         let data = await GameService.create()
         if (data.status === 'success') {
             console.log("NEW GAME: ", data)
+
+            const lobby = [JSON.parse(sessionStorage.getItem('user')).name, null, null, null, 1]
+            setLobby(lobby)
+            
             sessionStorage.setItem('game-token', JSON.stringify(data.codigo_partida))
-            sessionStorage.setItem('players', JSON.stringify([
-                JSON.parse(sessionStorage.getItem('user')).name,
-                null,
-                null,
-                null,
-                1
-            ]))
+            sessionStorage.setItem('players', JSON.stringify(lobby))
+
             // Creacion y configuracion del nuevo socket:
             let socket = io('http://localhost:8080/')
             socket.on('error', (err) => { console.log('SOCKET ERROR: ', err)})
             socket.on('new_player', (socket_data) => {
-                console.log("SOCKET NEW PLAYER DATA: ", socket_data)
-                const players = JSON.parse(sessionStorage.getItem('players'))
-                if (players[4] < 4) {
-                    players[players[4]] = data.username
-                    players[4]++
-                    sessionStorage.setItem('players', JSON.stringify(players))
-                }
+                setLobby(prevStatus => {
+                    const nextStatus = [...prevStatus]
+                    nextStatus[nextStatus[4]++] = socket_data.username;
+                    sessionStorage.setItem('players', JSON.stringify(nextStatus))
+                    return nextStatus
+                })
             })
+            socket.emit('joinGame', JSON.parse(sessionStorage.getItem('user')).accessToken, data.codigo_partida)
             setSocket(socket)
             // Cambiar al conexto del Game lobby:
             handleMenuChange('game-lobby')
         }
     }
+
     // Join game action:
     const [gamecodeInput, setGamecodeInput] = useState('');
     const handleChange = (event) => {
-      const input = event.target.value;
-      const numbers = /^[0-9]*$/; // expresión regular para solo aceptar números
-      if (input.match(numbers) && input.length <= 6) {
-        setGamecodeInput(input);
-      }
+        const input = event.target.value;
+        const numbers = /^[0-9]*$/; // expresión regular para solo aceptar números
+        if (input.match(numbers) && input.length <= 6) {
+            setGamecodeInput(input);
+        }
     };
+
+    //console.log(JSON.parse(sessionStorage.getItem('players')))
     async function handleSubmit_JoinGame(event) {
 
         // Evita que el formulario se envíe de manera predeterminada
         event.preventDefault();
-
-        // Aquí se pueden agregar otras validaciones de entrada antes de enviar el formulario
-        // Si algo no es válido, se puede detener la ejecución de esta función o mostrar un mensaje de error
-
         // Obtiene la referencia del formulario que se envió
         const form = document.getElementById('join-game');
         // Crea una instancia de FormData para los valores de los campos de entrada
@@ -201,21 +200,31 @@ function App() {
         const plainFormData = Object.fromEntries(formData.entries());
 
         let gamecode = plainFormData.gamecode, data = await GameService.join(gamecode)
+        sessionStorage.setItem('game-token', JSON.stringify(gamecode))
         console.log("JOINING GAME DATA: ", data)
-        if (data.status === 'success' && data.jugadores.length < 4) {
+        if (data.status === 'success') {
             // Creacion y configuracion del nuevo socket:
             let socket   = io('http://localhost:8080/')
             socket.on('error', (err) => { console.log('SOCKET ERROR:', err) })
-            socket.on('new_player', (socket_data) => { console.log('SOCKET NEW PLAYER JOINED:', socket_data) })
+            socket.on('new_player', (socket_data) => {
+                setLobby(prevStatus => {
+                    console.log(prevStatus)
+                    const nextStatus = [...prevStatus]
+                    nextStatus[nextStatus[4]++] = socket_data.username;
+                    sessionStorage.setItem('players', JSON.stringify(nextStatus))
+                    return nextStatus
+                })
+            })
             socket.emit('joinGame', JSON.parse(sessionStorage.getItem('user')).accessToken, gamecode)
             setSocket(socket)
             // Configuración de los nuevos jugadores:
-            const players = [ null, null, null, null, 1 ]
-            for (let i = 0; i < data.jugadores.length && i < 4; i++) {
+            const players = [ null, null, null, null, data.jugadores.length ]
+            for (let i = 0; i < players[4]; i++) {
                 players[i] = data.jugadores[i]
-                players[4]++
             }
             sessionStorage.setItem('players', JSON.stringify(players));
+            setLobby(players)
+            console.log("ME HE UNIDO: ", players)
             // Cambiar al conexto del Game lobby:
             setActiveMenu('game-lobby')
         }
@@ -225,7 +234,7 @@ function App() {
     // ========================================================================
     // GAME-LOBBY STATE
     // ========================================================================
-
+    //console.log(socket)
     return (
         <div className='common-header'>
             {errorMessage && (
@@ -235,9 +244,9 @@ function App() {
             <div className='common-container | flex-column-center-center'>
                 <img src={logo} className='common-logo' alt='catan-logo'></img>
                     {
-                     // =======================================================
-                     // LOGIN STATE
-                     // =======================================================
+                    // =======================================================
+                    // LOGIN STATE
+                    // =======================================================
                     }
                     {activeMenu === 'login' && (
                         <div className='common-content-container | flex-column-center-center'>
@@ -287,54 +296,55 @@ function App() {
                         <div className='common-content-container | flex-column-center-center'>
                             <h2 id='game-code'>{JSON.parse(sessionStorage.getItem('game-token'))}</h2>
                             <div className='waiting-player | flex-column-center-center'>
-                                {JSON.parse(sessionStorage.getItem('players'))[0] === null ? (
+                                {lobby[0] === null ? (
                                     <section>
                                         <svg className="spinner" viewBox="0 0 16 18">
                                             <path className="path" fill="none" strokeWidth="2" d="M7.21487 1.2868C7.88431 0.9044 8.73031 0.9044 9.39974 1.2868L9.40283 1.28856L14.4613 4.20761C15.1684 4.598 15.5746 5.33558 15.5746 6.11465V8.99996V11.8853C15.5746 12.6507 15.1632 13.3848 14.4617 13.7721L9.37973 16.7132C8.71029 17.0956 7.86428 17.0956 7.19485 16.7132L7.19088 16.7109L2.11279 13.772C1.40602 13.3816 1 12.6441 1 11.8653V8.98995V6.11465C1 5.31458 1.44381 4.59039 2.10827 4.21051L7.21487 1.2868Z" />
                                         </svg>
                                     </section>
                                 ) : (
-                                    <div>Player 1: {JSON.parse(sessionStorage.getItem('players'))[0]}</div>
+                                    <div>Player 1: {lobby[0]}</div>
                                 )}
                             </div>
 
                             <div className='waiting-player | flex-column-center-center'>
-                                {JSON.parse(sessionStorage.getItem('players'))[1] === null ? (
+                                {lobby[1] === null ? (
                                     <section>
                                         <svg className="spinner" viewBox="0 0 16 18">
                                             <path className="path" fill="none" strokeWidth="2" d="M7.21487 1.2868C7.88431 0.9044 8.73031 0.9044 9.39974 1.2868L9.40283 1.28856L14.4613 4.20761C15.1684 4.598 15.5746 5.33558 15.5746 6.11465V8.99996V11.8853C15.5746 12.6507 15.1632 13.3848 14.4617 13.7721L9.37973 16.7132C8.71029 17.0956 7.86428 17.0956 7.19485 16.7132L7.19088 16.7109L2.11279 13.772C1.40602 13.3816 1 12.6441 1 11.8653V8.98995V6.11465C1 5.31458 1.44381 4.59039 2.10827 4.21051L7.21487 1.2868Z" />
                                         </svg>
                                     </section>
                                 ) : (
-                                    <div>Player 2: {JSON.parse(sessionStorage.getItem('players'))[1]}</div>
+                                    <div>Player 2: {lobby[1]}</div>
                                 )}
                             </div>
 
                             <div className='waiting-player | flex-column-center-center'>
-                                {JSON.parse(sessionStorage.getItem('players'))[2] === null ? (
+                                {lobby[2] === null ? (
                                     <section>
                                         <svg className="spinner" viewBox="0 0 16 18">
                                             <path className="path" fill="none" strokeWidth="2" d="M7.21487 1.2868C7.88431 0.9044 8.73031 0.9044 9.39974 1.2868L9.40283 1.28856L14.4613 4.20761C15.1684 4.598 15.5746 5.33558 15.5746 6.11465V8.99996V11.8853C15.5746 12.6507 15.1632 13.3848 14.4617 13.7721L9.37973 16.7132C8.71029 17.0956 7.86428 17.0956 7.19485 16.7132L7.19088 16.7109L2.11279 13.772C1.40602 13.3816 1 12.6441 1 11.8653V8.98995V6.11465C1 5.31458 1.44381 4.59039 2.10827 4.21051L7.21487 1.2868Z" />
                                         </svg>
                                     </section>
                                 ) : (
-                                    <div>Player 3: {JSON.parse(sessionStorage.getItem('players'))[2]}</div>
+                                    <div>Player 3: {lobby[2]}</div>
                                 )}
                             </div>
 
                             <div className='waiting-player | flex-column-center-center'>
-                                {JSON.parse(sessionStorage.getItem('players'))[3] === null ? (
+                                {lobby[3] === null ? (
                                     <section>
                                         <svg className="spinner" viewBox="0 0 16 18">
                                             <path className="path" fill="none" strokeWidth="2" d="M7.21487 1.2868C7.88431 0.9044 8.73031 0.9044 9.39974 1.2868L9.40283 1.28856L14.4613 4.20761C15.1684 4.598 15.5746 5.33558 15.5746 6.11465V8.99996V11.8853C15.5746 12.6507 15.1632 13.3848 14.4617 13.7721L9.37973 16.7132C8.71029 17.0956 7.86428 17.0956 7.19485 16.7132L7.19088 16.7109L2.11279 13.772C1.40602 13.3816 1 12.6441 1 11.8653V8.98995V6.11465C1 5.31458 1.44381 4.59039 2.10827 4.21051L7.21487 1.2868Z" />
                                         </svg>
                                     </section>
                                 ) : (
-                                    <div>Player 4: {JSON.parse(sessionStorage.getItem('players'))[3]}</div>
+                                    <div>Player 4: {lobby[3]}</div>
                                 )}
                             </div>
+
                             <button className='common-button | common-button-activated'>Play</button>
-                            <button className='common-button | common-button-activated' onClick={() => handleMenuChange('main-menu')}>Return</button>
+                            <button className='common-button | common-button-activated' onClick={() => { handleMenuChange('main-menu')} }>Return</button>
                         </div>
                     )}
 
