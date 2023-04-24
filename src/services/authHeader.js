@@ -10,4 +10,4 @@
     }
   }
 
-  export {authHeader}
+export { authHeader }

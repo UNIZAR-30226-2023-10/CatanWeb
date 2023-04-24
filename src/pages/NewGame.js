@@ -3,7 +3,8 @@ import '../styles/NewGame.css';
 import '../styles/Common.css'
 import logo from '../Catan-logo-1.png'
 import { Link } from 'react-router-dom';
-import io from 'socket.io-client';
+// import { socket } from '../services/socket';
+const socket = require('../services/socket')
 
 const {authHeader}  = require('../services/authHeader');
 
@@ -16,7 +17,6 @@ function NewGame() {
     const user = JSON.parse(userJSON);
     // const userName = user.name;
     
-    const socket = io('http://localhost:8080/');
     socket.emit('joinGame', user.accessToken, codigoPartida);
 
     const nombreJugadoresJSON = localStorage.getItem("nombreJugadores");

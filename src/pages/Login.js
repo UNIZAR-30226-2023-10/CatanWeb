@@ -5,6 +5,7 @@ import '../styles/Login.css'
 import '../styles/Common.css'
 import * as operations from '../services/operations.js'
 import axios from 'axios';
+const Storage = require('../services/userInfo.js')
 
 function Login() {
 
@@ -47,10 +48,11 @@ function Login() {
         .then((response) => {
           if (response.data.accessToken) {
             console.log(response.data)
-            usuario.name = response.data.username; //
+            usuario.username = response.data.username; //
             usuario.accessToken = response.data.accessToken;//
-            localStorage.setItem("user", JSON.stringify(usuario));//
-            navigate('/main');
+            Storage.setUserInfo(usuario.username, usuario)//
+            console.log(Storage.getUserInfo(usuario.username))
+            navigate('/main?username=' + usuario.username);
           } else {
             return response.json().then(err => { throw new Error(err.error.message) })
           }

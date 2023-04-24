@@ -4,7 +4,7 @@ import logo from '../Catan-logo-1.png'
 import '../styles/JoinGame.css'
 import '../styles/Common.css'
 import axios from 'axios';
-import io from 'socket.io-client';
+import socket from '../services/socket';
 
 const {GameService} = require('../services/game.service')
 const {authHeader}  = require('../services/authHeader');
@@ -22,7 +22,6 @@ function JoinGame() {
         // Enviar los datos del formulario a través de una solicitud
         const [errorMessage, setErrorMessage] = useState("")
 
-        const socket = io('http://localhost:8080/');
         socket.on('error', (err)=> {console.log(err)})
         socket.on('new_player', (x) => {
             console.log(x.id)

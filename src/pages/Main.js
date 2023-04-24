@@ -1,11 +1,12 @@
 import '../styles/Common.css'
 import '../styles/Main.css'
 import {useState} from 'react'
-import { Link, useNavigate  } from 'react-router-dom'
+import { Link, useNavigate , useSearchParams  } from 'react-router-dom'
 import logo from '../Catan-logo-1.png'
 //import io from 'socket.io-client';
 // import {axios} from '../services/axs';
 // import authHeader from '../services/authHeader'
+const Storage = require('../services/userInfo.js')
 
 const storage = require('./Storage');
 const {authHeader}  = require('../services/authHeader');
@@ -13,16 +14,19 @@ const {http} = require('../services/axs');
 const {GameService} = require('../services/game.service')
 
 function Main() {
+    const [searchParams, setSearchParams] = useSearchParams()
+    const username = searchParams.get("username")
     const navigate = useNavigate()
     const [errorMessage, setErrorMessage] = useState("");
    // const socket = io('http://localhost:8080/');
+    //    const user = JSON.parse(userJSON);
+   
 
-   const userJSON = localStorage.getItem("user");
-   const user = JSON.parse(userJSON);
-   const userName = user.name;
-
+    let user = Storage.getUserInfo(username)
+    console.log(username)
+    console.log(user)
     const nombreJugadores = {
-        jugador1: userName,
+        jugador1: user,
         jugador2: "Esperando jugadores",
         jugador3: "Esperando jugadores",
         jugador4: "Esperando jugadores",
