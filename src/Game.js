@@ -1,11 +1,11 @@
 import * as PIXI from 'pixi.js'
-import Desert from '../images/game/desert.png'
-import Farmland from '../images/game/farmland.png'
-import Forest from '../images/game/forest.png'
-import Hill from '../images/game/hill.png'
-import Mountain from '../images/game/mountain.png'
-import Pasture from '../images/game/pasture.png'
-import Ocean from '../images/game/ocean.png'
+import Desert from './images/desert.png'
+import Farmland from './images/farmland.png'
+import Forest from './images/forest.png'
+import Hill from './images/hill.png'
+import Mountain from './images/mountain.png'
+import Pasture from './images/pasture.png'
+import Ocean from './images/ocean.png'
 import { Stage, Graphics, Sprite } from '@pixi/react';
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -27,10 +27,16 @@ function create_road(id, x, y, selected_point, set_selected_point) {
     road.on("pointertap", () => {set_selected_point({id:id, type:'Road'})})
     return road
 }
-// Hola
 const borders = [[3,7],[2,8],[2,8],[1,9],[1,9],[0,10],[0,10],[1,9],[1,9],[2,8],[2,8],[3,7]];
+const color_1 = 0xd60000
+const color_2 = 0x06b300
+const color_3 = 0x005bb5
+const color_4 = 0xd4b700
 
 function Game() {
+
+    console.log(sessionStorage.getItem('players'))
+
     const appWidth = 1200, appHeight = 675
     const cell_hor_offset = 115, cell_ver_offset = 100;
     const [selected_point, set_selected_point] = useState(null);
@@ -86,25 +92,30 @@ function Game() {
         }
     }, [selected_point, nodes])
 
-
     const draw_UI = useCallback((g) => {
         let user_rectangle = new PIXI.Graphics()
-        user_rectangle.beginFill(0xd6b487)
-        user_rectangle.drawRoundedRect(20, 20, 250, 100, 5)
+        user_rectangle.beginFill(color_1)
+        user_rectangle.drawRoundedRect(-20, 20, 250, 50, 5)
         user_rectangle.endFill()
-        g.addChild(user_rectangle)
-        user_rectangle.beginFill(0xd6b487)
-        user_rectangle.drawRoundedRect(930, 20, 250, 100, 5)
+        //g.addChild(user_rectangle)
+        user_rectangle.beginFill(color_2)
+        user_rectangle.drawRoundedRect(-20, 80, 250, 50, 5)
         user_rectangle.endFill()
-        g.addChild(user_rectangle)
-        user_rectangle.beginFill(0xd6b487)
-        user_rectangle.drawRoundedRect(20, 555, 250, 100, 5)
+        //g.addChild(user_rectangle)
+        user_rectangle.beginFill(color_3)
+        user_rectangle.drawRoundedRect(-20, 140, 250, 50, 5)
         user_rectangle.endFill()
-        g.addChild(user_rectangle)
-        user_rectangle.beginFill(0xd6b487)
-        user_rectangle.drawRoundedRect(930, 555, 250, 100, 5)
+        //g.addChild(user_rectangle)
+        user_rectangle.beginFill(color_4)
+        user_rectangle.drawRoundedRect(-20, 200, 250, 50, 5)
         user_rectangle.endFill()
+
+        user_rectangle.beginFill(0xffffff);
+        user_rectangle.drawCircle(1100, 570, 70);
+        user_rectangle.endFill();
+        //g.addChild(circle);
         g.addChild(user_rectangle)
+
     }, [])
 
     useEffect(() => {
@@ -114,7 +125,7 @@ function Game() {
         }
     }, [selected_point]);
     return (
-        <div className="Game-header | Common-Header">
+        <div id="game-header">
             <Stage width={appWidth} height={appHeight}>
                 <Sprite image={Ocean} x={appWidth/2 - 1.5*cell_hor_offset} y={appHeight/2 - 3*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
                 <Sprite image={Ocean} x={appWidth/2 - 0.5*cell_hor_offset} y={appHeight/2 - 3*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />

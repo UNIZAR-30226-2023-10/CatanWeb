@@ -1,6 +1,7 @@
 import './styles/Home.css'
 import axios from 'axios'
 import io from 'socket.io-client';
+import Game from "./Game.js"
 import logo from './Catan-logo-4.png'
 import React, { useState } from 'react'
 
@@ -48,7 +49,6 @@ function App() {
 
         // Aquí se pueden agregar otras validaciones de entrada antes de enviar el formulario
         // Si algo no es válido, se puede detener la ejecución de esta función o mostrar un mensaje de error
-    
         const user = {
             name: '',
             accessToken: ''
@@ -153,7 +153,7 @@ function App() {
         if (data.status === 'success') {
             console.log("NEW GAME: ", data)
 
-            const lobby = [JSON.parse(sessionStorage.getItem('user')).name, null, null, null, 1]
+            const lobby = [JSON.parse(sessionStorage.getItem('user')).name, null, null, null, 1, 'host']
             setLobby(lobby)
             
             sessionStorage.setItem('game-token', JSON.stringify(data.codigo_partida))
@@ -187,9 +187,7 @@ function App() {
         }
     };
 
-    //console.log(JSON.parse(sessionStorage.getItem('players')))
     async function handleSubmit_JoinGame(event) {
-
         // Evita que el formulario se envíe de manera predeterminada
         event.preventDefault();
         // Obtiene la referencia del formulario que se envió
@@ -201,6 +199,7 @@ function App() {
 
         let gamecode = plainFormData.gamecode, data = await GameService.join(gamecode)
         sessionStorage.setItem('game-token', JSON.stringify(gamecode))
+        setLobby([null, null, null, null, 0, 'guest'])
         console.log("JOINING GAME DATA: ", data)
         if (data.status === 'success') {
             // Creacion y configuracion del nuevo socket:
@@ -230,24 +229,20 @@ function App() {
         }
     }
 
-
     // ========================================================================
     // GAME-LOBBY STATE
     // ========================================================================
     //console.log(socket)
     return (
-        <div className='common-header'>
-            {errorMessage && (
-                <p style={{color: 'red'}}> {errorMessage} </p>
-            )}
+        <div>
+        {activeMenu !== 'game' ?
+            <div className='common-header'>
+                {errorMessage && (
+                    <p style={{color: 'red'}}> {errorMessage} </p>
+                )}
 
-            <div className='common-container | flex-column-center-center'>
-                <img src={logo} className='common-logo' alt='catan-logo'></img>
-                    {
-                    // =======================================================
-                    // LOGIN STATE
-                    // =======================================================
-                    }
+                <div className='common-container | flex-column-center-center'>
+                    <img src={logo} className='common-logo' alt='catan-logo'></img>
                     {activeMenu === 'login' && (
                         <div className='common-content-container | flex-column-center-center'>
                             <div id='Home-up-form' className='flex-column-center-center'>
@@ -342,8 +337,9 @@ function App() {
                                     <div>Player 4: {lobby[3]}</div>
                                 )}
                             </div>
-
-                            <button className='common-button | common-button-activated'>Play</button>
+                            {lobby[5] === 'host' && (
+                                <button className={lobby[4] < 4 ? 'common-button | common-button-deactivated' : 'common-button | common-button-activated'} onClick={() => { handleMenuChange('game')}}>Play</button>
+                            )}
                             <button className='common-button | common-button-activated' onClick={() => { handleMenuChange('main-menu')} }>Return</button>
                         </div>
                     )}
@@ -357,7 +353,11 @@ function App() {
                             <button className='common-button | common-button-activated' onClick={() => handleMenuChange('main-menu')}>Return</button>
                         </div>
                     )}
+                </div>
             </div>
+            :
+            <Game />
+        }
         </div>
     )
 }

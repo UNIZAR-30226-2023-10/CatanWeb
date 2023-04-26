@@ -47,7 +47,7 @@ form {
 
 .common-container {
   width: 30vmax;
-  height: 100vmin;
+  height: 100vh;
   margin-right: 50px;
   background: rgb(244,0,0);
   background: linear-gradient(180deg, rgba(145, 0, 0, 0.95) 0%, rgba(121,9,9,0.95) 38%, rgba(0,0,0,0.95) 100%);
@@ -144,6 +144,27 @@ form {
 #game-code {
   margin: 0px;
   padding: 0px;
+}
+
+#game-header {
+  background-image: url('./images/game-bg.jpg');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  min-height: 100vh;
+  font-family: 'EB Garamond', serif;
+  image-rendering: crisp-edges;
+  image-rendering: -moz-crisp-edges;          /* Firefox */
+  image-rendering: -o-crisp-edges;            /* Opera */
+  image-rendering: -webkit-optimize-contrast; /* Webkit (non-standard naming)*/
+  -ms-interpolation-mode: nearest-neighbor;
+  overflow: auto;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;  
 }
 
 .flex-column-center-center {
