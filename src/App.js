@@ -214,6 +214,11 @@ function App() {
                     return nextStatus
                 })
             })
+            socket.on('redirectToGame', () => {
+                console.log("Despues de redirectToGame")
+                handleMenuChange('game') // Redirigir a la página de juego
+            });
+  
             socket.emit('joinGame', JSON.parse(sessionStorage.getItem('user')).accessToken, gamecode)
             setSocket(socket)
             // Configuración de los nuevos jugadores:
@@ -338,7 +343,7 @@ function App() {
                                 )}
                             </div>
                             {lobby[5] === 'host' && (
-                                <button className={lobby[4] < 4 ? 'common-button | common-button-deactivated' : 'common-button | common-button-activated'} onClick={() => { handleMenuChange('game')}}>Play</button>
+                                <button className={lobby[4] < 4 ? 'common-button | common-button-deactivated' : 'common-button | common-button-activated'} onClick={() => {socket.emit('startGame',JSON.parse(sessionStorage.getItem('game-token'))); console.log("Empiezo startGame"); handleMenuChange('game'); }}>Play</button>
                             )}
                             <button className='common-button | common-button-activated' onClick={() => { handleMenuChange('main-menu')} }>Return</button>
                         </div>
