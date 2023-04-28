@@ -6,6 +6,8 @@ import Hill from './images/hill.png'
 import Mountain from './images/mountain.png'
 import Pasture from './images/pasture.png'
 import Ocean from './images/ocean.png'
+import './styles/boton.css'
+//import Dado1 from './images/Dice01.png'
 import { Stage, Graphics, Sprite } from '@pixi/react';
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -34,13 +36,58 @@ const color_3 = 0x005bb5
 const color_4 = 0xd4b700
 
 function Game() {
-
-    console.log(sessionStorage.getItem('players'))
+    const players = JSON.parse(sessionStorage.getItem('players'))
+    const user = JSON.parse(sessionStorage.getItem('user'))
+    console.log(players[0])
+    console.log(players[1])
+    console.log(players[2])
+    console.log(players[3])
+    console.log('Users:', user)
 
     const appWidth = 1200, appHeight = 675
     const cell_hor_offset = 115, cell_ver_offset = 100;
     const [selected_point, set_selected_point] = useState(null);
     const nodes = useMemo(() => new Set(), []);
+    const user1 = new PIXI.Text(players[0], {
+        fontFamily: "Arial",
+        fontSize: 20,
+        fill: 0xffffff,
+        align: "center"
+    });
+    user1.anchor.set(0.5); // Establece el anclaje en el punto medio horizontal y vertical
+    user1.position.set(105, 45); // Establece la posición del texto dentro del rectángulo
+
+    const user2 = new PIXI.Text(players[1], {
+        fontFamily: "Arial",
+        fontSize: 20,
+        fill: 0xffffff,
+        align: "center"
+    });
+
+    user2.anchor.set(0.5); // Establece el anclaje en el punto medio horizontal y vertical
+    user2.position.set(105, 105); // Establece la posición del texto dentro del rectángulo
+
+    const user3 = new PIXI.Text(players[2], {
+        fontFamily: "Arial",
+        fontSize: 20,
+        fill: 0xffffff,
+        align: "center"
+    });
+
+    user3.anchor.set(0.5); // Establece el anclaje en el punto medio horizontal y vertical
+    user3.position.set(105, 165); // Establece la posición del texto dentro del rectángulo
+
+    const user4 = new PIXI.Text(players[3], {
+        fontFamily: "Arial",
+        fontSize: 20,
+        fill: 0xffffff,
+        align: "center"
+    });
+
+    user4.anchor.set(0.5); // Establece el anclaje en el punto medio horizontal y vertical
+    user4.position.set(105, 225); // Establece la posición del texto dentro del rectángulo
+
+
     const draw_nodes = useCallback((g) => {
         let start_width = 320;
         for (let i = 0; i < 12; i++) {
@@ -96,26 +143,52 @@ function Game() {
         let user_rectangle = new PIXI.Graphics()
         user_rectangle.beginFill(color_1)
         user_rectangle.drawRoundedRect(-20, 20, 250, 50, 5)
+        user_rectangle.addChild(user1)
         user_rectangle.endFill()
-        //g.addChild(user_rectangle)
-        user_rectangle.beginFill(color_2)
-        user_rectangle.drawRoundedRect(-20, 80, 250, 50, 5)
-        user_rectangle.endFill()
-        //g.addChild(user_rectangle)
-        user_rectangle.beginFill(color_3)
-        user_rectangle.drawRoundedRect(-20, 140, 250, 50, 5)
-        user_rectangle.endFill()
-        //g.addChild(user_rectangle)
-        user_rectangle.beginFill(color_4)
-        user_rectangle.drawRoundedRect(-20, 200, 250, 50, 5)
-        user_rectangle.endFill()
+        g.addChild(user_rectangle)
+        let user_rectangle2 = new PIXI.Graphics()
+        user_rectangle2.beginFill(color_2)
+        user_rectangle2.drawRoundedRect(-20, 80, 250, 50, 5)
+        user_rectangle2.addChild(user2)
+        user_rectangle2.endFill()
+        g.addChild(user_rectangle2)
+        let user_rectangle3 = new PIXI.Graphics()
+        user_rectangle3.beginFill(color_3)
+        user_rectangle3.drawRoundedRect(-20, 140, 250, 50, 5)
+        user_rectangle3.addChild(user3)
+        user_rectangle3.endFill()
+        g.addChild(user_rectangle3)
+        let user_rectangle4 = new PIXI.Graphics()
+        user_rectangle4.beginFill(color_4)
+        user_rectangle4.drawRoundedRect(-20, 200, 250, 50, 5)
+        user_rectangle4.addChild(user4)
+        user_rectangle4.endFill()
+        g.addChild(user_rectangle4)
 
         user_rectangle.beginFill(0xffffff);
         user_rectangle.drawCircle(1100, 570, 70);
         user_rectangle.endFill();
         //g.addChild(circle);
-        g.addChild(user_rectangle)
+        
 
+    }, [])
+
+    const draw_Dice = useCallback((g) => {
+        let dice1 = new PIXI.Graphics();
+        dice1.lineStyle(2, 0x000000, 1);
+        dice1.beginFill(0xffffff);
+        dice1.drawRoundedRect(905,10, 100, 100, 20);
+        dice1.beginFill(0x000000);
+        dice1.endFill(); 
+        g.addChild(dice1);
+
+        let dice2 = new PIXI.Graphics();
+        dice2.lineStyle(2, 0x000000, 1);
+        dice2.beginFill(0xffffff);
+        dice2.drawRoundedRect(1010,10, 100, 100, 20);
+        dice2.beginFill(0x000000);
+        dice2.endFill();
+        g.addChild(dice2);
     }, [])
 
     useEffect(() => {
@@ -174,6 +247,7 @@ function Game() {
                 <Graphics draw={draw_nodes} />
                 <Graphics draw={draw_roads} />
                 <Graphics draw={draw_UI} />
+                <Graphics draw={draw_Dice} />
             </Stage>
         </div>
     );
