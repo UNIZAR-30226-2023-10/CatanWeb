@@ -1,19 +1,22 @@
 import * as PIXI from 'pixi.js'
+import Ocean from './images/ocean.png'
 import Desert from './images/desert.png'
 import Farmland from './images/farmland.png'
 import Forest from './images/forest.png'
 import Hill from './images/hill.png'
 import Mountain from './images/mountain.png'
 import Pasture from './images/pasture.png'
-import Ocean from './images/ocean.png'
 import './styles/boton.css'
+import { Texture } from 'pixi.js';
 //import Dado1 from './images/Dice01.png'
 import { Stage, Graphics, Sprite } from '@pixi/react';
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-
+import React, { useCallback, useMemo, useState, useContext } from "react";
+import { SocketContext } from './App';
+/*
 function random(min, max) {
     return Math.floor(Math.random() * max) + min;
 }
+*/
 
 function ncoor_toString(coords) {
     return coords.x.toString() + "," + coords.y.toString()
@@ -35,58 +38,29 @@ const color_2 = 0x06b300
 const color_3 = 0x005bb5
 const color_4 = 0xd4b700
 
+
 function Game() {
-    const players = JSON.parse(sessionStorage.getItem('players'))
+    const socket = useContext(SocketContext);
+    console.log(socket)
+    let game = null
+    socket.emit('updateActive')
+
+    socket.on('update', (gameUpdate) => {
+        sessionStorage.setItem('game', JSON.stringify(gameUpdate))
+        game = JSON.parse(sessionStorage.getItem('game'))
+        //console.log(game.board.biomes[0])
+    })
+
+    game = JSON.parse(sessionStorage.getItem('game'))
+
+        
+
     const user = JSON.parse(sessionStorage.getItem('user'))
-    console.log(players[0])
-    console.log(players[1])
-    console.log(players[2])
-    console.log(players[3])
-    console.log('Users:', user)
 
     const appWidth = 1200, appHeight = 675
     const cell_hor_offset = 115, cell_ver_offset = 100;
     const [selected_point, set_selected_point] = useState(null);
     const nodes = useMemo(() => new Set(), []);
-    const user1 = new PIXI.Text(players[0], {
-        fontFamily: "Arial",
-        fontSize: 20,
-        fill: 0xffffff,
-        align: "center"
-    });
-    user1.anchor.set(0.5); // Establece el anclaje en el punto medio horizontal y vertical
-    user1.position.set(105, 45); // Establece la posición del texto dentro del rectángulo
-
-    const user2 = new PIXI.Text(players[1], {
-        fontFamily: "Arial",
-        fontSize: 20,
-        fill: 0xffffff,
-        align: "center"
-    });
-
-    user2.anchor.set(0.5); // Establece el anclaje en el punto medio horizontal y vertical
-    user2.position.set(105, 105); // Establece la posición del texto dentro del rectángulo
-
-    const user3 = new PIXI.Text(players[2], {
-        fontFamily: "Arial",
-        fontSize: 20,
-        fill: 0xffffff,
-        align: "center"
-    });
-
-    user3.anchor.set(0.5); // Establece el anclaje en el punto medio horizontal y vertical
-    user3.position.set(105, 165); // Establece la posición del texto dentro del rectángulo
-
-    const user4 = new PIXI.Text(players[3], {
-        fontFamily: "Arial",
-        fontSize: 20,
-        fill: 0xffffff,
-        align: "center"
-    });
-
-    user4.anchor.set(0.5); // Establece el anclaje en el punto medio horizontal y vertical
-    user4.position.set(105, 225); // Establece la posición del texto dentro del rectángulo
-
 
     const draw_nodes = useCallback((g) => {
         let start_width = 320;
@@ -140,7 +114,48 @@ function Game() {
     }, [selected_point, nodes])
 
     const draw_UI = useCallback((g) => {
+        const players = JSON.parse(sessionStorage.getItem('players'))
         let user_rectangle = new PIXI.Graphics()
+
+        const user1 = new PIXI.Text(players[0], {
+            fontFamily: "Arial",
+            fontSize: 20,
+            fill: 0xffffff,
+            align: "center"
+        });
+        user1.anchor.set(0.5); // Establece el anclaje en el punto medio horizontal y vertical
+        user1.position.set(105, 45); // Establece la posición del texto dentro del rectángulo
+    
+        const user2 = new PIXI.Text(players[1], {
+            fontFamily: "Arial",
+            fontSize: 20,
+            fill: 0xffffff,
+            align: "center"
+        });
+    
+        user2.anchor.set(0.5); // Establece el anclaje en el punto medio horizontal y vertical
+        user2.position.set(105, 105); // Establece la posición del texto dentro del rectángulo
+    
+        const user3 = new PIXI.Text(players[2], {
+            fontFamily: "Arial",
+            fontSize: 20,
+            fill: 0xffffff,
+            align: "center"
+        });
+    
+        user3.anchor.set(0.5); // Establece el anclaje en el punto medio horizontal y vertical
+        user3.position.set(105, 165); // Establece la posición del texto dentro del rectángulo
+    
+        const user4 = new PIXI.Text(players[3], {
+            fontFamily: "Arial",
+            fontSize: 20,
+            fill: 0xffffff,
+            align: "center"
+        });
+
+        user4.anchor.set(0.5); // Establece el anclaje en el punto medio horizontal y vertical
+        user4.position.set(105, 225); // Establece la posición del texto dentro del rectángulo
+
         user_rectangle.beginFill(color_1)
         user_rectangle.drawRoundedRect(-20, 20, 250, 50, 5)
         user_rectangle.addChild(user1)
@@ -191,52 +206,67 @@ function Game() {
         g.addChild(dice2);
     }, [])
 
-    useEffect(() => {
-        if (selected_point !== null) {
-            //set_select_road(null)
-            console.log("Selected point", selected_point);
+    function biome(id){
+        if(game!==null){
+            console.log(game.board.biomes[id])
+            if(game.board.biomes[id].type === 'Farmland'){
+                return Farmland
+            }else if (game.board.biomes[id].type === 'Forest'){
+                return Forest
+            }else if (game.board.biomes[id].type === 'Hill'){
+                return Hill
+            }else if (game.board.biomes[id].type === 'Mountain'){
+                return Mountain
+            }else if (game.board.biomes[id].type === 'Pasture'){
+                return Pasture
+            }else {
+                return Desert
+            }
+        }else{
+            return Desert
         }
-    }, [selected_point]);
+    }
+
     return (
         <div id="game-header">
             <Stage width={appWidth} height={appHeight}>
-                <Sprite image={Ocean} x={appWidth/2 - 1.5*cell_hor_offset} y={appHeight/2 - 3*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={Ocean} x={appWidth/2 - 0.5*cell_hor_offset} y={appHeight/2 - 3*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={Ocean} x={appWidth/2 + 0.5*cell_hor_offset} y={appHeight/2 - 3*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={Ocean} x={appWidth/2 + 1.5*cell_hor_offset} y={appHeight/2 - 3*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={Ocean}   x={appWidth/2 - 1.5*cell_hor_offset} y={appHeight/2 - 3*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={Ocean}   x={appWidth/2 - 0.5*cell_hor_offset} y={appHeight/2 - 3*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={Ocean}   x={appWidth/2 + 0.5*cell_hor_offset} y={appHeight/2 - 3*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={Ocean}   x={appWidth/2 + 1.5*cell_hor_offset} y={appHeight/2 - 3*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
                 
-                <Sprite image={Ocean} x={appWidth/2 - 2*cell_hor_offset} y={appHeight/2 - 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={Farmland} x={appWidth/2 - cell_hor_offset} y={appHeight/2 - 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={Forest} x={appWidth/2} y={appHeight/2 - 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={Hill} x={appWidth/2 + cell_hor_offset} y={appHeight/2 - 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={Ocean} x={appWidth/2 + 2*cell_hor_offset} y={appHeight/2 - 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={Ocean}   x={appWidth/2 - 2*cell_hor_offset} y={appHeight/2 - 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={biome(0)}    x={appWidth/2 - cell_hor_offset} y={appHeight/2 - 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={biome(1)}  x={appWidth/2} y={appHeight/2 - 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={biome(2)}    x={appWidth/2 + cell_hor_offset} y={appHeight/2 - 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={Ocean}   x={appWidth/2 + 2*cell_hor_offset} y={appHeight/2 - 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
 
-                <Sprite image={Ocean} x={appWidth/2 - 2.5*cell_hor_offset} y={appHeight/2 - cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={Forest} x={appWidth/2 - 1.5*cell_hor_offset} y={appHeight/2 - cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={Mountain} x={appWidth/2 - 0.5*cell_hor_offset} y={appHeight/2 - cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={Desert} x={appWidth/2 + 0.5*cell_hor_offset} y={appHeight/2 - cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={Pasture} x={appWidth/2 + 1.5*cell_hor_offset} y={appHeight/2 - cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={Ocean} x={appWidth/2 + 2.5*cell_hor_offset} y={appHeight/2 - cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={Ocean}   x={appWidth/2 - 2.5*cell_hor_offset} y={appHeight/2 - cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={biome(3)}  x={appWidth/2 - 1.5*cell_hor_offset} y={appHeight/2 - cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={biome(4)} x={appWidth/2 - 0.5*cell_hor_offset} y={appHeight/2 - cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={biome(5)}  x={appWidth/2 + 0.5*cell_hor_offset} y={appHeight/2 - cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={biome(6)} x={appWidth/2 + 1.5*cell_hor_offset} y={appHeight/2 - cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={Ocean}   x={appWidth/2 + 2.5*cell_hor_offset} y={appHeight/2 - cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
                 
-                <Sprite image={Ocean} x={appWidth/2 - 3*cell_hor_offset} y={appHeight/2} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={Hill} x={appWidth/2 - 2*cell_hor_offset} y={appHeight/2} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={Hill} x={appWidth/2 - cell_hor_offset} y={appHeight/2} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={Forest} x={appWidth/2} y={appHeight/2} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={Farmland} x={appWidth/2 + cell_hor_offset} y={appHeight/2} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={Mountain} x={appWidth/2 + 2*cell_hor_offset} y={appHeight/2} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={Ocean}   x={appWidth/2 - 3*cell_hor_offset} y={appHeight/2} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={biome(7)}    x={appWidth/2 - 2*cell_hor_offset} y={appHeight/2} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={biome(8)}    x={appWidth/2 - cell_hor_offset} y={appHeight/2} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={biome(9)}  x={appWidth/2} y={appHeight/2} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={biome(10)} x={appWidth/2 + cell_hor_offset} y={appHeight/2} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={biome(11)} x={appWidth/2 + 2*cell_hor_offset} y={appHeight/2} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
                 <Sprite image={Ocean} x={appWidth/2 + 3*cell_hor_offset} y={appHeight/2} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
                 
                 <Sprite image={Ocean} x={appWidth/2 - 2.5*cell_hor_offset} y={appHeight/2 + cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={Pasture} x={appWidth/2 - 1.5*cell_hor_offset} y={appHeight/2 + cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={Farmland} x={appWidth/2 - 0.5*cell_hor_offset} y={appHeight/2 + cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={Pasture} x={appWidth/2 + 0.5*cell_hor_offset} y={appHeight/2 + cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={Mountain} x={appWidth/2 + 1.5*cell_hor_offset} y={appHeight/2 + cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={biome(12)} x={appWidth/2 - 1.5*cell_hor_offset} y={appHeight/2 + cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={biome(13)} x={appWidth/2 - 0.5*cell_hor_offset} y={appHeight/2 + cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={biome(14)} x={appWidth/2 + 0.5*cell_hor_offset} y={appHeight/2 + cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={biome(15)} x={appWidth/2 + 1.5*cell_hor_offset} y={appHeight/2 + cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
                 <Sprite image={Ocean} x={appWidth/2 + 2.5*cell_hor_offset} y={appHeight/2 + cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
                 
                 <Sprite image={Ocean} x={appWidth/2 - 2*cell_hor_offset} y={appHeight/2 + 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={Forest} x={appWidth/2 - cell_hor_offset} y={appHeight/2 + 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={Farmland} x={appWidth/2} y={appHeight/2 + 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={Pasture} x={appWidth/2 + cell_hor_offset} y={appHeight/2 + 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={biome(16)} x={appWidth/2 - cell_hor_offset} y={appHeight/2 + 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={biome(17)} x={appWidth/2} y={appHeight/2 + 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={biome(18)} x={appWidth/2 + cell_hor_offset} y={appHeight/2 + 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
                 <Sprite image={Ocean} x={appWidth/2 + 2*cell_hor_offset} y={appHeight/2 + 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
                 
                 <Sprite image={Ocean} x={appWidth/2 - 1.5*cell_hor_offset} y={appHeight/2 + 3*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
@@ -247,7 +277,7 @@ function Game() {
                 <Graphics draw={draw_nodes} />
                 <Graphics draw={draw_roads} />
                 <Graphics draw={draw_UI} />
-                <Graphics draw={draw_Dice} />
+                
             </Stage>
         </div>
     );

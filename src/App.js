@@ -3,11 +3,12 @@ import axios from 'axios'
 import io from 'socket.io-client';
 import Game from "./Game.js"
 import logo from './Catan-logo-4.png'
-import React, { useState } from 'react'
+import React, { useState, createContext } from 'react'
 
 //import storage from './storage.js'
 const {GameService} = require('./services/game.service')
 
+export const SocketContext = createContext();
 
 //import cbg0 from '../Catan-bg0.jpg'
 //import cbg1 from '../Catan-bg1.jpg'
@@ -170,6 +171,11 @@ function App() {
                     return nextStatus
                 })
             })
+            socket.on('redirectToGame', (game) => {
+                console.log("Despues de redirectToGame")
+                sessionStorage.setItem('game', JSON.stringify(game))
+                handleMenuChange('game') // Redirigir a la página de juego
+            });
             socket.emit('joinGame', JSON.parse(sessionStorage.getItem('user')).accessToken, data.codigo_partida)
             setSocket(socket)
             // Cambiar al conexto del Game lobby:
@@ -214,8 +220,9 @@ function App() {
                     return nextStatus
                 })
             })
-            socket.on('redirectToGame', () => {
+            socket.on('redirectToGame', (game) => {
                 console.log("Despues de redirectToGame")
+                sessionStorage.setItem('game', JSON.stringify(game))
                 handleMenuChange('game') // Redirigir a la página de juego
             });
   
@@ -239,6 +246,7 @@ function App() {
     // ========================================================================
     //console.log(socket)
     return (
+        <SocketContext.Provider value={socket}>
         <div>
         {activeMenu !== 'game' ?
             <div className='common-header'>
@@ -343,7 +351,7 @@ function App() {
                                 )}
                             </div>
                             {lobby[5] === 'host' && (
-                                <button className={lobby[4] < 4 ? 'common-button | common-button-deactivated' : 'common-button | common-button-activated'} onClick={() => {socket.emit('startGame',JSON.parse(sessionStorage.getItem('game-token')),JSON.parse(sessionStorage.getItem('players'))); console.log("Empiezo startGame"); handleMenuChange('game'); }}>Play</button>
+                                <button className={lobby[4] < 4 ? 'common-button | common-button-deactivated' : 'common-button | common-button-activated'} onClick={() => {socket.emit('startGame',JSON.parse(sessionStorage.getItem('game-token')),JSON.parse(sessionStorage.getItem('players'))); console.log("Empiezo startGame");}}>Play</button>
                             )}
                             <button className='common-button | common-button-activated' onClick={() => { handleMenuChange('main-menu')} }>Return</button>
                         </div>
@@ -364,7 +372,12 @@ function App() {
             <Game />
         }
         </div>
+        </SocketContext.Provider>
+        
     )
 }
 
 export default App;
+
+
+
