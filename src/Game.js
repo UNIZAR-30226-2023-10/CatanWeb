@@ -8,7 +8,14 @@ import Mountain from './images/mountain.png'
 import Pasture from './images/pasture.png'
 import './styles/boton.css'
 import { Texture } from 'pixi.js';
-//import Dado1 from './images/Dice01.png'
+import Dice1 from './images/Dice01.png'
+import Dice2 from './images/Dice02.png'
+import Dice3 from './images/Dice03.png'
+import Dice4 from './images/Dice04.png'
+import Dice5 from './images/Dice05.png'
+import Dice6 from './images/Dice06.png'
+
+import './styles/boton.css'
 import { Stage, Graphics, Sprite } from '@pixi/react';
 import React, { useCallback, useMemo, useState, useContext } from "react";
 import { SocketContext } from './App';
@@ -188,23 +195,59 @@ function Game() {
 
     }, [])
 
-    const draw_Dice = useCallback((g) => {
-        let dice1 = new PIXI.Graphics();
-        dice1.lineStyle(2, 0x000000, 1);
-        dice1.beginFill(0xffffff);
-        dice1.drawRoundedRect(905,10, 100, 100, 20);
-        dice1.beginFill(0x000000);
-        dice1.endFill(); 
-        g.addChild(dice1);
+    const listaDados = [
+        Dice1,
+        Dice2,
+        Dice3,
+        Dice4,
+        Dice5,
+        Dice6
+    ]
 
-        let dice2 = new PIXI.Graphics();
-        dice2.lineStyle(2, 0x000000, 1);
-        dice2.beginFill(0xffffff);
-        dice2.drawRoundedRect(1010,10, 100, 100, 20);
-        dice2.beginFill(0x000000);
-        dice2.endFill();
-        g.addChild(dice2);
-    }, [])
+    // provisional para ver como queda
+    const [dado1, setDado1] = useState(listaDados[0])
+    const [dado2, setDado2 ] = useState(listaDados[0])
+
+    const draw_Dice = useCallback((g) => {
+
+        const container1 = new PIXI.Container();
+        const texture1 = PIXI.Texture.from(dado1);
+        const Dado1 = new PIXI.Sprite(texture1);
+        Dado1.x = 0;
+        Dado1.y = 0;
+        container1.addChild(Dado1);
+        const mask1 = new PIXI.Graphics();
+        mask1.beginFill(0xffffff);
+        mask1.drawRoundedRect(0, 0, 64, 64, 20);
+        mask1.endFill();
+        container1.mask = mask1;
+        container1.addChild(mask1);
+ 
+        // Crear el contenedor para el dado 2
+        const container2 = new PIXI.Container();
+        const texture2 = PIXI.Texture.from(dado2);
+        const Dado2 = new PIXI.Sprite(texture2);
+        Dado2.x = 0;
+        Dado2.y = 0;
+        container2.addChild(Dado2);
+        const mask2 = new PIXI.Graphics();
+        mask2.beginFill(0xffffff);
+        mask2.drawRoundedRect(0, 0, 64, 64, 20);
+        mask2.endFill();
+        container2.mask = mask2;
+        container2.addChild(mask2);
+ 
+        // Ajusta la posición de los contenedores de los dados
+        container1.x = 945;
+        container1.y = 40;
+        container2.x = 1010;
+        container2.y = 40;
+ 
+        // Añade los contenedores de los dados al contenedor principal
+        g.addChild(container1);
+        g.addChild(container2);
+ 
+     }, [dado1,dado2])
 
     function biome(id){
         if(game!==null){
@@ -277,8 +320,14 @@ function Game() {
                 <Graphics draw={draw_nodes} />
                 <Graphics draw={draw_roads} />
                 <Graphics draw={draw_UI} />
+                <Graphics draw={draw_Dice} />
                 
             </Stage>
+
+            <div id="button-container">
+                    <button id='boton-lanzar-dados'>Lanzar Dados</button>
+            </div>
+
         </div>
     );
 }
