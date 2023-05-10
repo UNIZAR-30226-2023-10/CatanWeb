@@ -6,9 +6,17 @@ import Forest from './images/forest.png'
 import Hill from './images/hill.png'
 import Mountain from './images/mountain.png'
 import Pasture from './images/pasture.png'
+import Dice1 from './images/Dice01.png'
+import Dice2 from './images/Dice02.png'
+import Dice3 from './images/Dice03.png'
+import Dice4 from './images/Dice04.png'
+import Dice5 from './images/Dice05.png'
+import Dice6 from './images/Dice06.png'
+
+
+
 import './styles/boton.css'
 import { Texture } from 'pixi.js';
-//import Dado1 from './images/Dice01.png'
 import { Stage, Graphics, Sprite } from '@pixi/react';
 import React, { useCallback, useMemo, useState, useContext } from "react";
 import { SocketContext } from './App';
@@ -21,6 +29,7 @@ function random(min, max) {
 function ncoor_toString(coords) {
     return coords.x.toString() + "," + coords.y.toString()
 }
+
 
 function create_road(id, x, y, selected_point, set_selected_point) {
     let road = new PIXI.Graphics()
@@ -40,22 +49,46 @@ const color_4 = 0xd4b700
 
 
 function Game() {
+    
+    const listaDados = [
+        Dice1,
+        Dice2,
+        Dice3,
+        Dice4,
+        Dice5,
+        Dice6
+    ]
+
+    const [disabled, setDisabled] = useState(true);
+    const [dado1, setDado1] = useState(listaDados[0])
+    const [dado2, setDado2 ] = useState(listaDados[0])
+
+
+
     const socket = useContext(SocketContext);
-    console.log(socket)
     let game = null
-    socket.emit('updateActive')
+
+    //socket.emit('updateActive')
+
+
+    let gameToken = JSON.parse(sessionStorage.getItem('game-token'))
+    const [jugadorALanzar, setJugadorALanzar] = useState('');
+    const user = JSON.parse(sessionStorage.getItem('user'))
+
+    socket.on('esTuTurno', (nombreJugadorLanzador) => {
+        setJugadorALanzar(nombreJugadorLanzador);
+        if  (nombreJugadorLanzador === user.name)
+            setDisabled(false);
+    })
 
     socket.on('update', (gameUpdate) => {
         sessionStorage.setItem('game', JSON.stringify(gameUpdate))
+        console.log("partida updateada")
         game = JSON.parse(sessionStorage.getItem('game'))
         //console.log(game.board.biomes[0])
     })
 
     game = JSON.parse(sessionStorage.getItem('game'))
-
-        
-
-    const user = JSON.parse(sessionStorage.getItem('user'))
 
     const appWidth = 1200, appHeight = 675
     const cell_hor_offset = 115, cell_ver_offset = 100;
@@ -189,22 +222,59 @@ function Game() {
     }, [])
 
     const draw_Dice = useCallback((g) => {
-        let dice1 = new PIXI.Graphics();
-        dice1.lineStyle(2, 0x000000, 1);
-        dice1.beginFill(0xffffff);
-        dice1.drawRoundedRect(905,10, 100, 100, 20);
-        dice1.beginFill(0x000000);
-        dice1.endFill(); 
-        g.addChild(dice1);
 
-        let dice2 = new PIXI.Graphics();
-        dice2.lineStyle(2, 0x000000, 1);
-        dice2.beginFill(0xffffff);
-        dice2.drawRoundedRect(1010,10, 100, 100, 20);
-        dice2.beginFill(0x000000);
-        dice2.endFill();
-        g.addChild(dice2);
-    }, [])
+       const container1 = new PIXI.Container();
+       const texture1 = PIXI.Texture.from(dado1);
+       const Dado1 = new PIXI.Sprite(texture1);
+       Dado1.x = 0;
+       Dado1.y = 0;
+       container1.addChild(Dado1);
+       const mask1 = new PIXI.Graphics();
+       mask1.beginFill(0xffffff);
+       mask1.drawRoundedRect(0, 0, 64, 64, 20);
+       mask1.endFill();
+       container1.mask = mask1;
+       container1.addChild(mask1);
+
+       // Crear el contenedor para el dado 2
+       const container2 = new PIXI.Container();
+       const texture2 = PIXI.Texture.from(dado2);
+       const Dado2 = new PIXI.Sprite(texture2);
+       Dado2.x = 0;
+       Dado2.y = 0;
+       container2.addChild(Dado2);
+       const mask2 = new PIXI.Graphics();
+       mask2.beginFill(0xffffff);
+       mask2.drawRoundedRect(0, 0, 64, 64, 20);
+       mask2.endFill();
+       container2.mask = mask2;
+       container2.addChild(mask2);
+
+       // Ajusta la posición de los contenedores de los dados
+       container1.x = 945;
+       container1.y = 40;
+       container2.x = 1010;
+       container2.y = 40;
+
+       // Añade los contenedores de los dados al contenedor principal
+       g.addChild(container1);
+       g.addChild(container2);
+
+    }, [dado1,dado2])
+
+    const RollDice = () => {
+            let gameToken = JSON.parse(sessionStorage.getItem('game-token'))
+            let players = JSON.parse(sessionStorage.getItem('players'))
+            console.log('lanzando dados')
+            var randomNum1 = Math.floor(Math.random() * 6);
+            var randomNum2 = Math.floor(Math.random() * 6);
+            setDado1(listaDados[randomNum1]);
+            setDado2(listaDados[randomNum2]);
+            setDisabled(true);
+            socket.emit('esTuTurno', gameToken, players);
+    }
+
+    
 
     function biome(id){
         if(game!==null){
@@ -236,37 +306,37 @@ function Game() {
                 <Sprite image={Ocean}   x={appWidth/2 + 1.5*cell_hor_offset} y={appHeight/2 - 3*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
                 
                 <Sprite image={Ocean}   x={appWidth/2 - 2*cell_hor_offset} y={appHeight/2 - 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={biome(0)}    x={appWidth/2 - cell_hor_offset} y={appHeight/2 - 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={biome(1)}  x={appWidth/2} y={appHeight/2 - 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={biome(2)}    x={appWidth/2 + cell_hor_offset} y={appHeight/2 - 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={Farmland}    x={appWidth/2 - cell_hor_offset} y={appHeight/2 - 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={Forest}  x={appWidth/2} y={appHeight/2 - 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={Mountain}    x={appWidth/2 + cell_hor_offset} y={appHeight/2 - 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
                 <Sprite image={Ocean}   x={appWidth/2 + 2*cell_hor_offset} y={appHeight/2 - 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
 
                 <Sprite image={Ocean}   x={appWidth/2 - 2.5*cell_hor_offset} y={appHeight/2 - cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={biome(3)}  x={appWidth/2 - 1.5*cell_hor_offset} y={appHeight/2 - cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={biome(4)} x={appWidth/2 - 0.5*cell_hor_offset} y={appHeight/2 - cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={biome(5)}  x={appWidth/2 + 0.5*cell_hor_offset} y={appHeight/2 - cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={biome(6)} x={appWidth/2 + 1.5*cell_hor_offset} y={appHeight/2 - cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={Farmland}  x={appWidth/2 - 1.5*cell_hor_offset} y={appHeight/2 - cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={Forest} x={appWidth/2 - 0.5*cell_hor_offset} y={appHeight/2 - cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={Pasture}  x={appWidth/2 + 0.5*cell_hor_offset} y={appHeight/2 - cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={Mountain} x={appWidth/2 + 1.5*cell_hor_offset} y={appHeight/2 - cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
                 <Sprite image={Ocean}   x={appWidth/2 + 2.5*cell_hor_offset} y={appHeight/2 - cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
                 
                 <Sprite image={Ocean}   x={appWidth/2 - 3*cell_hor_offset} y={appHeight/2} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={biome(7)}    x={appWidth/2 - 2*cell_hor_offset} y={appHeight/2} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={biome(8)}    x={appWidth/2 - cell_hor_offset} y={appHeight/2} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={biome(9)}  x={appWidth/2} y={appHeight/2} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={biome(10)} x={appWidth/2 + cell_hor_offset} y={appHeight/2} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={biome(11)} x={appWidth/2 + 2*cell_hor_offset} y={appHeight/2} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={Farmland}    x={appWidth/2 - 2*cell_hor_offset} y={appHeight/2} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={Forest}    x={appWidth/2 - cell_hor_offset} y={appHeight/2} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={Pasture}  x={appWidth/2} y={appHeight/2} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={Desert} x={appWidth/2 + cell_hor_offset} y={appHeight/2} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={Farmland} x={appWidth/2 + 2*cell_hor_offset} y={appHeight/2} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
                 <Sprite image={Ocean} x={appWidth/2 + 3*cell_hor_offset} y={appHeight/2} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
                 
                 <Sprite image={Ocean} x={appWidth/2 - 2.5*cell_hor_offset} y={appHeight/2 + cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={biome(12)} x={appWidth/2 - 1.5*cell_hor_offset} y={appHeight/2 + cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={biome(13)} x={appWidth/2 - 0.5*cell_hor_offset} y={appHeight/2 + cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={biome(14)} x={appWidth/2 + 0.5*cell_hor_offset} y={appHeight/2 + cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={biome(15)} x={appWidth/2 + 1.5*cell_hor_offset} y={appHeight/2 + cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={Mountain} x={appWidth/2 - 1.5*cell_hor_offset} y={appHeight/2 + cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={Mountain} x={appWidth/2 - 0.5*cell_hor_offset} y={appHeight/2 + cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={Forest} x={appWidth/2 + 0.5*cell_hor_offset} y={appHeight/2 + cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={Hill} x={appWidth/2 + 1.5*cell_hor_offset} y={appHeight/2 + cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
                 <Sprite image={Ocean} x={appWidth/2 + 2.5*cell_hor_offset} y={appHeight/2 + cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
                 
                 <Sprite image={Ocean} x={appWidth/2 - 2*cell_hor_offset} y={appHeight/2 + 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={biome(16)} x={appWidth/2 - cell_hor_offset} y={appHeight/2 + 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={biome(17)} x={appWidth/2} y={appHeight/2 + 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={biome(18)} x={appWidth/2 + cell_hor_offset} y={appHeight/2 + 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={Farmland} x={appWidth/2 - cell_hor_offset} y={appHeight/2 + 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={Hill} x={appWidth/2} y={appHeight/2 + 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+                <Sprite image={Farmland} x={appWidth/2 + cell_hor_offset} y={appHeight/2 + 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
                 <Sprite image={Ocean} x={appWidth/2 + 2*cell_hor_offset} y={appHeight/2 + 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
                 
                 <Sprite image={Ocean} x={appWidth/2 - 1.5*cell_hor_offset} y={appHeight/2 + 3*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
@@ -277,8 +347,14 @@ function Game() {
                 <Graphics draw={draw_nodes} />
                 <Graphics draw={draw_roads} />
                 <Graphics draw={draw_UI} />
+                <Graphics draw={draw_Dice} />
+
                 
             </Stage>
+
+            <div id="button-container">
+                    <button id='boton-lanzar-dados' disabled={disabled} onClick={RollDice}>Lanzar Dados</button>
+            </div>
         </div>
     );
 }

@@ -171,9 +171,11 @@ function App() {
                     return nextStatus
                 })
             })
-            socket.on('redirectToGame', (game) => {
-                console.log("Despues de redirectToGame")
-                sessionStorage.setItem('game', JSON.stringify(game))
+            socket.on('redirectToGame', (gamecode, players, firstPlayerNumber, firstPlayerName) => {
+                console.log("Despues de redirectToGame con codigo de partida" + gamecode + "y los jugadores" + players + " siendo el primer jugador el numero " + firstPlayerNumber + " cuyo nombre es " + firstPlayerName)
+                sessionStorage.setItem('game', JSON.stringify(gamecode))
+                sessionStorage.setItem('firstPlayerName', JSON.stringify(firstPlayerName))
+                sessionStorage.setItem('firstPlayerNumber', JSON.stringify(firstPlayerNumber))
                 handleMenuChange('game') // Redirigir a la página de juego
             });
             socket.emit('joinGame', JSON.parse(sessionStorage.getItem('user')).accessToken, data.codigo_partida)
@@ -220,9 +222,11 @@ function App() {
                     return nextStatus
                 })
             })
-            socket.on('redirectToGame', (game) => {
-                console.log("Despues de redirectToGame")
-                sessionStorage.setItem('game', JSON.stringify(game))
+            socket.on('redirectToGame', (gamecode, players, firstPlayerNumber, firstPlayerName) => {
+                console.log("Despues de redirectToGame con codigo de partida" + gamecode + "y los jugadores" + players + " siendo el primer jugador el numero " + firstPlayerNumber + " cuyo nombre es " + firstPlayerName)
+                sessionStorage.setItem('game', JSON.stringify(gamecode))
+                sessionStorage.setItem('firstPlayerName', JSON.stringify(firstPlayerName))
+                sessionStorage.setItem('firstPlayerNumber', JSON.stringify(firstPlayerNumber))
                 handleMenuChange('game') // Redirigir a la página de juego
             });
   
@@ -351,7 +355,7 @@ function App() {
                                 )}
                             </div>
                             {lobby[5] === 'host' && (
-                                <button className={lobby[4] < 4 ? 'common-button | common-button-deactivated' : 'common-button | common-button-activated'} onClick={() => {socket.emit('startGame',JSON.parse(sessionStorage.getItem('game-token')),JSON.parse(sessionStorage.getItem('players'))); console.log("Empiezo startGame");}}>Play</button>
+                                <button className={lobby[4] < 4 ? 'common-button | common-button-deactivated' : 'common-button | common-button-activated'} onClick={() => {socket.emit('startGame',JSON.parse(sessionStorage.getItem('game-token')),JSON.parse(sessionStorage.getItem('players'))); console.log("Empiezo startGame pasando codigo partida y");}}>Play</button>
                             )}
                             <button className='common-button | common-button-activated' onClick={() => { handleMenuChange('main-menu')} }>Return</button>
                         </div>
