@@ -47,20 +47,11 @@ const color_4 = 0xd4b700
 
 
 function Game() {
-    const socket = useContext(SocketContext);
-    console.log(socket)
+    //const socket = useContext(SocketContext);
     let game = null
-    socket.emit('updateActive')
+    //socket.emit('updateActive')
 
-    socket.on('update', (gameUpdate) => {
-        sessionStorage.setItem('game', JSON.stringify(gameUpdate))
-        game = JSON.parse(sessionStorage.getItem('game'))
-        //console.log(game.board.biomes[0])
-    })
-
-    game = JSON.parse(sessionStorage.getItem('game'))
-
-        
+    //game = JSON.parse(sessionStorage.getItem('game'))
 
     const user = JSON.parse(sessionStorage.getItem('user'))
 
@@ -321,11 +312,10 @@ function Game() {
                 <Graphics draw={draw_roads} />
                 <Graphics draw={draw_UI} />
                 <Graphics draw={draw_Dice} />
-                
             </Stage>
 
             <div id="button-container">
-                    <button id='boton-lanzar-dados'>Lanzar Dados</button>
+                <button id='boton-lanzar-dados'>Lanzar Dados</button>
             </div>
 
         </div>
