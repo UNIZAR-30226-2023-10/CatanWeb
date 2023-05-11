@@ -171,7 +171,7 @@ function App() {
                     return nextStatus
                 })
             })
-            socket.on('redirectToGame', (game) => {
+            socket.on('update', (game) => {
                 console.log("Despues de redirectToGame")
                 sessionStorage.setItem('game', JSON.stringify(game))
                 handleMenuChange('game') // Redirigir a la página de juego
@@ -220,7 +220,7 @@ function App() {
                     return nextStatus
                 })
             })
-            socket.on('redirectToGame', (game) => {
+            socket.on('update', (game) => {
                 console.log("Despues de redirectToGame")
                 sessionStorage.setItem('game', JSON.stringify(game))
                 handleMenuChange('game') // Redirigir a la página de juego
@@ -351,7 +351,7 @@ function App() {
                                 )}
                             </div>
                             {lobby[5] === 'host' && (
-                                <button className={lobby[4] < 4 ? 'common-button | common-button-deactivated' : 'common-button | common-button-activated'} onClick={() => {socket.emit('startGame',JSON.parse(sessionStorage.getItem('game-token')),JSON.parse(sessionStorage.getItem('players'))); console.log("Empiezo startGame");}}>Play</button>
+                                <button className={lobby[4] < 4 ? 'common-button | common-button-deactivated' : 'common-button | common-button-activated'} onClick={() => {GameService.start(JSON.parse(sessionStorage.getItem('game-token'))); console.log("Empiezo startGame");}}>Play</button>
                             )}
                             <button className='common-button | common-button-activated' onClick={() => { handleMenuChange('main-menu')} }>Return</button>
                         </div>

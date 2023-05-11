@@ -29,6 +29,19 @@ const GameService = {
             }
         )
         return x
+    },
+    async start(gameCode){
+        let x = await http.post(Routes.start, {codigo_partida: gameCode}, {headers: authHeader()}).then(
+            (response) => {
+                console.log("GAMESERVICE START: ", response.data)
+                return response.data
+            },
+            (error) => {
+                //console.log(error)
+                return {}
+            }
+        )
+        return x
     }
 }
 

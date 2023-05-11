@@ -49,13 +49,16 @@ const color_4 = 0xd4b700
 function Game() {
     const socket = useContext(SocketContext);
     console.log(socket)
-    let game = null
-    socket.emit('updateActive')
+    let game = JSON.parse(sessionStorage.getItem('game'))
 
     socket.on('update', (gameUpdate) => {
         sessionStorage.setItem('game', JSON.stringify(gameUpdate))
         game = JSON.parse(sessionStorage.getItem('game'))
         //console.log(game.board.biomes[0])
+    })
+
+    socket.on('notify', (data) => {
+        console.log(data)
     })
 
     game = JSON.parse(sessionStorage.getItem('game'))
