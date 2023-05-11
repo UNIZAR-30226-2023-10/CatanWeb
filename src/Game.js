@@ -21,7 +21,7 @@ import { Stage, Graphics, Sprite } from '@pixi/react';
 import React, { useCallback, useMemo, useState, useContext } from "react";
 import { SocketContext } from './App';
 
-const MoveType = ( './services/movesTypes.js')
+const MoveType = require( './services/movesTypes.js')
 /*
 function random(min, max) {
     return Math.floor(Math.random() * max) + min;
@@ -242,13 +242,16 @@ function Game() {
     }, [])
     function onButtonClick(game) {
         // Código que se ejecuta cuando el botón es pulsado
-        let change_turn = {
-            id : MoveType.next_turn
-        }
+        console.log(MoveType.next_turn)
+        console.log(MoveType)
+        let move = {
+            id : MoveType.next_turn,
+            }
         if(JSON.parse(sessionStorage.getItem('players'))[game.current_turn] === user.name){
-            console.log('Cambio de turno');
+            console.log('Cambio de turno'); 
+            
 
-            socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, change_turn)
+            socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, move)
             //Cambiar turno
         }else{
             console.log('No es tu turno');
