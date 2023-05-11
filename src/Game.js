@@ -55,19 +55,10 @@ let socket = io('http://localhost:8080/')
 
 
 function Game() {
-    const socket = useContext(SocketContext);
-    console.log(socket)
+    //const socket = useContext(SocketContext);
     let game = null
 
-    socket.on('update', (gameUpdate) => {
-        sessionStorage.setItem('game', JSON.stringify(gameUpdate))
-        game = JSON.parse(sessionStorage.getItem('game'))
-        //console.log(game.board.biomes[0])
-    })
-
-    game = JSON.parse(sessionStorage.getItem('game'))
-
-        
+    //game = JSON.parse(sessionStorage.getItem('game'))
 
     const user = JSON.parse(sessionStorage.getItem('user'))
 
