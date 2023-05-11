@@ -19,7 +19,7 @@ export const SocketContext = createContext();
 
 /**
  * Cosas que faltan por hacer:
- *  - Mejorar los PUTOS mensajes de error. (PRIORIDAD MAXIMA).
+ *  - Mejorar los mensajes de error. (PRIORIDAD MAXIMA).
  *  - Mantener la sesión iniciada.
  *  - Si el usuario ya ha iniciado sesión, no puede iniciar en otra parte.
  *  - Hacer el diseño responsive (muy opcional).
@@ -145,8 +145,8 @@ function App() {
     // MAIN MENU STATE
     // ========================================================================
     // New game action:
-    const [socket, setSocket] = useState(null)
-    const [lobby, setLobby]   = useState([ null, null, null, null, 1 ]);
+    const [socket, setSocket] = useState(null);
+    const [lobby, setLobby]   = useState([]);
     async function handleSubmit_NewGame(event) {
         // Evita que el formublanklario se envíe de manera predeterminada
         event.preventDefault();
@@ -154,9 +154,8 @@ function App() {
         if (data.status === 'success') {
             console.log("NEW GAME: ", data)
 
-            const lobby = [JSON.parse(sessionStorage.getItem('user')).name, null, null, null, 1, 'host']
-            setLobby(lobby)
-            
+            setLobby([JSON.parse(sessionStorage.getItem('user')).name])
+
             sessionStorage.setItem('game-token', JSON.stringify(data.codigo_partida))
             sessionStorage.setItem('players', JSON.stringify(lobby))
 
@@ -166,7 +165,7 @@ function App() {
             socket.on('new_player', (socket_data) => {
                 setLobby(prevStatus => {
                     const nextStatus = [...prevStatus]
-                    nextStatus[nextStatus[4]++] = socket_data.username;
+                    nextStatus.push(socket_data.username);
                     sessionStorage.setItem('players', JSON.stringify(nextStatus))
                     return nextStatus
                 })
@@ -174,6 +173,7 @@ function App() {
             socket.on('update', (game) => {
                 console.log("Despues de redirectToGame")
                 sessionStorage.setItem('game', JSON.stringify(game))
+                console.log("LA PARTIDA/TABLERO: ", game)
                 handleMenuChange('game') // Redirigir a la página de juego
             });
             socket.emit('joinGame', JSON.parse(sessionStorage.getItem('user')).accessToken, data.codigo_partida)
@@ -205,17 +205,15 @@ function App() {
 
         let gamecode = plainFormData.gamecode, data = await GameService.join(gamecode)
         sessionStorage.setItem('game-token', JSON.stringify(gamecode))
-        setLobby([null, null, null, null, 0, 'guest'])
         console.log("JOINING GAME DATA: ", data)
         if (data.status === 'success') {
             // Creacion y configuracion del nuevo socket:
-            let socket   = io('http://localhost:8080/')
+            let socket = io('http://localhost:8080/')
             socket.on('error', (err) => { console.log('SOCKET ERROR:', err) })
             socket.on('new_player', (socket_data) => {
                 setLobby(prevStatus => {
-                    console.log(prevStatus)
                     const nextStatus = [...prevStatus]
-                    nextStatus[nextStatus[4]++] = socket_data.username;
+                    nextStatus.push(socket_data.username);
                     sessionStorage.setItem('players', JSON.stringify(nextStatus))
                     return nextStatus
                 })
@@ -223,15 +221,16 @@ function App() {
             socket.on('update', (game) => {
                 console.log("Despues de redirectToGame")
                 sessionStorage.setItem('game', JSON.stringify(game))
+                console.log("LA PARTIDA/TABLERO: ", game)
                 handleMenuChange('game') // Redirigir a la página de juego
             });
   
             socket.emit('joinGame', JSON.parse(sessionStorage.getItem('user')).accessToken, gamecode)
             setSocket(socket)
             // Configuración de los nuevos jugadores:
-            const players = [ null, null, null, null, data.jugadores.length ]
-            for (let i = 0; i < players[4]; i++) {
-                players[i] = data.jugadores[i]
+            const players = [];
+            for (let i = 0; i < data.jugadores.length; i++) {
+                players.push(data.jugadores[i]);
             }
             sessionStorage.setItem('players', JSON.stringify(players));
             setLobby(players)
@@ -241,12 +240,26 @@ function App() {
         }
     }
 
+    async function handleSubmit_StartGame(event) {
+
+        // Evita que el formulario se envíe de manera predeterminada
+        event.preventDefault();
+        let data = await GameService.start(JSON.parse(sessionStorage.getItem('game-token')));
+        if (data.status === 'success') {
+            socket.on('update', (game) => {
+                sessionStorage.setItem('game', JSON.stringify(game))
+                console.log(game);
+            })
+            setActiveMenu('game');
+        }
+    }
+
+
+
     // ========================================================================
     // GAME-LOBBY STATE
     // ========================================================================
-    //console.log(socket)
     return (
-        <SocketContext.Provider value={socket}>
         <div>
         {activeMenu !== 'game' ?
             <div className='common-header'>
@@ -304,56 +317,56 @@ function App() {
                         <div className='common-content-container | flex-column-center-center'>
                             <h2 id='game-code'>{JSON.parse(sessionStorage.getItem('game-token'))}</h2>
                             <div className='waiting-player | flex-column-center-center'>
-                                {lobby[0] === null ? (
+                                {lobby.length < 1 ? (
                                     <section>
                                         <svg className="spinner" viewBox="0 0 16 18">
                                             <path className="path" fill="none" strokeWidth="2" d="M7.21487 1.2868C7.88431 0.9044 8.73031 0.9044 9.39974 1.2868L9.40283 1.28856L14.4613 4.20761C15.1684 4.598 15.5746 5.33558 15.5746 6.11465V8.99996V11.8853C15.5746 12.6507 15.1632 13.3848 14.4617 13.7721L9.37973 16.7132C8.71029 17.0956 7.86428 17.0956 7.19485 16.7132L7.19088 16.7109L2.11279 13.772C1.40602 13.3816 1 12.6441 1 11.8653V8.98995V6.11465C1 5.31458 1.44381 4.59039 2.10827 4.21051L7.21487 1.2868Z" />
                                         </svg>
                                     </section>
                                 ) : (
-                                    <div>Player 1: {lobby[0]}</div>
+                                    <div>{lobby[0]}</div>
                                 )}
                             </div>
 
                             <div className='waiting-player | flex-column-center-center'>
-                                {lobby[1] === null ? (
+                                {lobby.length < 2 ? (
                                     <section>
                                         <svg className="spinner" viewBox="0 0 16 18">
                                             <path className="path" fill="none" strokeWidth="2" d="M7.21487 1.2868C7.88431 0.9044 8.73031 0.9044 9.39974 1.2868L9.40283 1.28856L14.4613 4.20761C15.1684 4.598 15.5746 5.33558 15.5746 6.11465V8.99996V11.8853C15.5746 12.6507 15.1632 13.3848 14.4617 13.7721L9.37973 16.7132C8.71029 17.0956 7.86428 17.0956 7.19485 16.7132L7.19088 16.7109L2.11279 13.772C1.40602 13.3816 1 12.6441 1 11.8653V8.98995V6.11465C1 5.31458 1.44381 4.59039 2.10827 4.21051L7.21487 1.2868Z" />
                                         </svg>
                                     </section>
                                 ) : (
-                                    <div>Player 2: {lobby[1]}</div>
+                                    <div>{lobby[1]}</div>
                                 )}
                             </div>
 
                             <div className='waiting-player | flex-column-center-center'>
-                                {lobby[2] === null ? (
+                                {lobby.length < 3 ? (
                                     <section>
                                         <svg className="spinner" viewBox="0 0 16 18">
                                             <path className="path" fill="none" strokeWidth="2" d="M7.21487 1.2868C7.88431 0.9044 8.73031 0.9044 9.39974 1.2868L9.40283 1.28856L14.4613 4.20761C15.1684 4.598 15.5746 5.33558 15.5746 6.11465V8.99996V11.8853C15.5746 12.6507 15.1632 13.3848 14.4617 13.7721L9.37973 16.7132C8.71029 17.0956 7.86428 17.0956 7.19485 16.7132L7.19088 16.7109L2.11279 13.772C1.40602 13.3816 1 12.6441 1 11.8653V8.98995V6.11465C1 5.31458 1.44381 4.59039 2.10827 4.21051L7.21487 1.2868Z" />
                                         </svg>
                                     </section>
                                 ) : (
-                                    <div>Player 3: {lobby[2]}</div>
+                                    <div>{lobby[2]}</div>
                                 )}
                             </div>
 
                             <div className='waiting-player | flex-column-center-center'>
-                                {lobby[3] === null ? (
+                                {lobby.length < 4 ? (
                                     <section>
                                         <svg className="spinner" viewBox="0 0 16 18">
                                             <path className="path" fill="none" strokeWidth="2" d="M7.21487 1.2868C7.88431 0.9044 8.73031 0.9044 9.39974 1.2868L9.40283 1.28856L14.4613 4.20761C15.1684 4.598 15.5746 5.33558 15.5746 6.11465V8.99996V11.8853C15.5746 12.6507 15.1632 13.3848 14.4617 13.7721L9.37973 16.7132C8.71029 17.0956 7.86428 17.0956 7.19485 16.7132L7.19088 16.7109L2.11279 13.772C1.40602 13.3816 1 12.6441 1 11.8653V8.98995V6.11465C1 5.31458 1.44381 4.59039 2.10827 4.21051L7.21487 1.2868Z" />
                                         </svg>
                                     </section>
                                 ) : (
-                                    <div>Player 4: {lobby[3]}</div>
+                                    <div>{lobby[3]}</div>
                                 )}
                             </div>
-                            {lobby[5] === 'host' && (
-                                <button className={lobby[4] < 4 ? 'common-button | common-button-deactivated' : 'common-button | common-button-activated'} onClick={() => {GameService.start(JSON.parse(sessionStorage.getItem('game-token'))); console.log("Empiezo startGame");}}>Play</button>
+                            {lobby[0] === JSON.parse(sessionStorage.getItem('user')).name && (
+                                <button className={lobby.length < 3 ? 'common-button | common-button-deactivated' : 'common-button | common-button-activated'} onClick={handleSubmit_StartGame}>Play</button>
                             )}
-                            <button className='common-button | common-button-activated' onClick={() => { handleMenuChange('main-menu')} }>Return</button>
+                            <button className='common-button | common-button-activated' onClick={() => {handleMenuChange('main-menu')}}>Return</button>
                         </div>
                     )}
 
@@ -363,17 +376,17 @@ function App() {
                                 <input name='gamecode' id='gamecode' className='common-input' type="text" placeholder="Game code" value={gamecodeInput} maxLength={6} onChange={handleChange} required />
                                 <button className='common-button | common-button-activated' type='submit'>Join</button>
                             </form>
-                            <button className='common-button | common-button-activated' onClick={() => handleMenuChange('main-menu')}>Return</button>
+                            <button className='common-button | common-button-activated' onClick={() => {handleMenuChange('main-menu')}}>Return</button>
                         </div>
                     )}
                 </div>
             </div>
             :
-            <Game />
+            <div>
+                Hola
+            </div>
         }
         </div>
-        </SocketContext.Provider>
-        
     )
 }
 

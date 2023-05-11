@@ -20,7 +20,7 @@ const GameService = {
     async join(gameCode){
         let x = await http.post(Routes.join, {codigo_partida: gameCode}, {headers: authHeader()}).then(
             (response) => {
-                console.log("GAMESERVICE JOIN: ", response.data)
+                //console.log("GAMESERVICE JOIN: ", response.data)
                 return response.data
             },
             (error) => {

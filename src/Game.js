@@ -14,7 +14,8 @@ import Dice3 from './images/Dice03.png'
 import Dice4 from './images/Dice04.png'
 import Dice5 from './images/Dice05.png'
 import Dice6 from './images/Dice06.png'
-
+import nextTurn from './images/next_boton.png'
+import io from 'socket.io-client';
 import './styles/boton.css'
 import { Stage, Graphics, Sprite } from '@pixi/react';
 import React, { useCallback, useMemo, useState, useContext } from "react";
@@ -45,6 +46,13 @@ const color_2 = 0x06b300
 const color_3 = 0x005bb5
 const color_4 = 0xd4b700
 
+const color_1_2 = 0x7a010b
+const color_2_2 = 0x154f03
+const color_3_2 = 0x080152
+const color_4_2 = 0x595904
+
+let socket = io('http://localhost:8080/')
+
 
 function Game() {
     const socket = useContext(SocketContext);
@@ -72,6 +80,9 @@ function Game() {
     const [selected_point, set_selected_point] = useState(null);
     const nodes = useMemo(() => new Set(), []);
 
+    const buttonTexture = PIXI.Texture.from('./images/next_boton.png');
+    
+
     const draw_nodes = useCallback((g) => {
         let start_width = 320;
         for (let i = 0; i < 12; i++) {
@@ -88,6 +99,7 @@ function Game() {
             }
         }
     }, [selected_point, nodes]);
+
 
     const draw_roads = useCallback((g) => {
         let arr_nodes = [...nodes], n = [0, arr_nodes.length-1]
@@ -126,6 +138,8 @@ function Game() {
     const draw_UI = useCallback((g) => {
         const players = JSON.parse(sessionStorage.getItem('players'))
         let user_rectangle = new PIXI.Graphics()
+        let next_turn = new PIXI.Graphics()
+        const game = JSON.parse(sessionStorage.getItem('game'))
 
         const user1 = new PIXI.Text(players[0], {
             fontFamily: "Arial",
@@ -165,38 +179,80 @@ function Game() {
 
         user4.anchor.set(0.5); // Establece el anclaje en el punto medio horizontal y vertical
         user4.position.set(105, 225); // Establece la posición del texto dentro del rectángulo
-
-        user_rectangle.beginFill(color_1)
+        console.log(game.current_turn)
+        if(game.current_turn === 0){
+            user_rectangle.beginFill(color_1)
+        }else{
+            user_rectangle.beginFill(color_1_2)
+        }
         user_rectangle.drawRoundedRect(-20, 20, 250, 50, 5)
         user_rectangle.addChild(user1)
         user_rectangle.endFill()
         g.addChild(user_rectangle)
         let user_rectangle2 = new PIXI.Graphics()
-        user_rectangle2.beginFill(color_2)
+        if(game.current_turn === 1){
+            user_rectangle2.beginFill(color_2)
+        }else{
+            user_rectangle2.beginFill(color_2_2)
+        }
         user_rectangle2.drawRoundedRect(-20, 80, 250, 50, 5)
         user_rectangle2.addChild(user2)
         user_rectangle2.endFill()
         g.addChild(user_rectangle2)
         let user_rectangle3 = new PIXI.Graphics()
-        user_rectangle3.beginFill(color_3)
+        if(game.current_turn === 2){
+            user_rectangle3.beginFill(color_3)
+        }else{
+            user_rectangle3.beginFill(color_3_2)
+        }
         user_rectangle3.drawRoundedRect(-20, 140, 250, 50, 5)
         user_rectangle3.addChild(user3)
         user_rectangle3.endFill()
         g.addChild(user_rectangle3)
         let user_rectangle4 = new PIXI.Graphics()
-        user_rectangle4.beginFill(color_4)
+        if(game.current_turn === 3){
+            user_rectangle4.beginFill(color_4)
+        }else{
+            user_rectangle4.beginFill(color_4_2)
+        }
         user_rectangle4.drawRoundedRect(-20, 200, 250, 50, 5)
         user_rectangle4.addChild(user4)
         user_rectangle4.endFill()
         g.addChild(user_rectangle4)
 
-        user_rectangle.beginFill(0xffffff);
-        user_rectangle.drawCircle(1100, 570, 70);
-        user_rectangle.endFill();
-        //g.addChild(circle);
-        
+        const container = new PIXI.Container();
+        const texture1 = PIXI.Texture.from(nextTurn);
+        const button = new PIXI.Sprite(texture1);
+        button.x = 0;
+        button.y = 0;
+        button.position.set(1100, 570);
+        button.anchor.set(0.5);
+        button.scale.set(0.1, 0.1);
+        container.addChild(button);
+        g.addChild(container)
+
+        // Agrega un evento de escucha al botón
+        button.interactive = true;
+        button.buttonMode = true;
+        button.on('pointerdown', () => onButtonClick(game));  
+          
 
     }, [])
+    function onButtonClick(game) {
+        // Código que se ejecuta cuando el botón es pulsado
+        let change_turn = {
+            id : 11
+        }
+        if(JSON.parse(sessionStorage.getItem('players'))[game.current_turn] === user.name){
+            console.log('Cambio de turno');
+
+            socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, change_turn)
+            //Cambiar turno
+        }else{
+            console.log('No es tu turno');
+        }
+      }
+
 
     const listaDados = [
         Dice1,
@@ -320,17 +376,12 @@ function Game() {
                 <Sprite image={Ocean} x={appWidth/2 + 0.5*cell_hor_offset} y={appHeight/2 + 3*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
                 <Sprite image={Ocean} x={appWidth/2 + 1.5*cell_hor_offset} y={appHeight/2 + 3*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
                 
+                <Graphics draw={draw_Dice} />
                 <Graphics draw={draw_nodes} />
                 <Graphics draw={draw_roads} />
                 <Graphics draw={draw_UI} />
-                <Graphics draw={draw_Dice} />
                 
             </Stage>
-
-            <div id="button-container">
-                    <button id='boton-lanzar-dados'>Lanzar Dados</button>
-            </div>
-
         </div>
     );
 }
