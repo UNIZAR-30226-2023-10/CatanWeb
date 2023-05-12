@@ -62,9 +62,9 @@ function Game() {
     let game = JSON.parse(sessionStorage.getItem('game'))
 
     socket.on('update', (gameUpdate) => {
-        sessionStorage.setItem('game', JSON.stringify(gameUpdate))
-        game = JSON.parse(sessionStorage.getItem('game'))
-        //console.log(game.board.biomes[0])
+        console.log("update")
+        //sessionStorage.setItem('game', JSON.stringify(gameUpdate))
+        game = gameUpdate
     })
 
     socket.on('notify', (data) => {
@@ -236,25 +236,28 @@ function Game() {
         // Agrega un evento de escucha al botón
         button.interactive = true;
         button.buttonMode = true;
-        button.on('pointerdown', () => onButtonClick(game));  
+        button.on('pointerdown', () => 
+            onButtonClick()
+        );  
           
 
     }, [])
-    function onButtonClick(game) {
+    function onButtonClick() {
         // Código que se ejecuta cuando el botón es pulsado
+        game = JSON.parse(sessionStorage.getItem('game'))
         console.log(MoveType.next_turn)
         console.log(MoveType)
         let move = {
             id : MoveType.next_turn,
             }
         if(JSON.parse(sessionStorage.getItem('players'))[game.current_turn] === user.name){
-            console.log('Cambio de turno'); 
+            console.log('Cambio de turno(CurrentTurn): ', game.current_turn); 
             
 
             socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, move)
             //Cambiar turno
         }else{
-            console.log('No es tu turno');
+            console.log('No es tu turno(CurrentTurn): ', game.current_turn);
         }
       }
 
