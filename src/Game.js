@@ -17,10 +17,10 @@ import Dice6 from './images/Dice06.png'
 import nextTurn from './images/next_boton.png'
 import io from 'socket.io-client';
 import './styles/boton.css'
-import { Stage, Graphics, Sprite } from '@pixi/react';
+import { Stage, Graphics, Sprite, Text } from '@pixi/react';
 import React, { useCallback, useMemo, useState, useContext } from "react";
 import { SocketContext } from './App';
-
+import { Button } from 'react-bootstrap'; // o '@material-ui/core'
 const MoveType = require( './services/movesTypes.js')
 /*
 function random(min, max) {
@@ -28,20 +28,12 @@ function random(min, max) {
 }
 */
 
+
 function ncoor_toString(coords) {
     return coords.x.toString() + "," + coords.y.toString()
 }
 
-function create_road(id, x, y, selected_point, set_selected_point) {
-    let road = new PIXI.Graphics()
-    road.id  = id
-    road.beginFill(selected_point && selected_point.id === road.id ? 0x0b04cf : 0x6f5c9c)
-    road.drawRoundedRect(x, y, 17, 17, 5)
-    road.endFill()
-    road.interactive = true
-    road.on("pointertap", () => {set_selected_point({id:id, type:'Road'})})
-    return road
-}
+
 const borders = [[3,7],[2,8],[2,8],[1,9],[1,9],[0,10],[0,10],[1,9],[1,9],[2,8],[2,8],[3,7]];
 const color_1 = 0xd60000
 const color_2 = 0x06b300
@@ -57,6 +49,24 @@ let socket = io('http://localhost:8080/')
 
 
 function Game() {
+
+    const [carreteras, setCarreteras] = useState(new Map());
+
+    function create_road(id, x, y, selected_point, set_selected_point) {
+        let road = new PIXI.Graphics()
+        console.log(id);
+        road.id  = id
+        road.beginFill(selected_point && selected_point.id === road.id ? 0x0b04cf : 0x6f5c9c)
+        road.drawRoundedRect(x, y, 17, 17, 5)
+        road.endFill()
+        road.coordenadaX = x;
+        road.coordenadaY = y;
+        road.interactive = true
+        road.on("pointertap", () => {set_selected_point({id:id, type:'Road'})})
+        setCarreteras(prevCarreteras => new Map(prevCarreteras.set(id, road)));
+        return road
+    }
+
     const socket = useContext(SocketContext);
     console.log(socket)
     let game = JSON.parse(sessionStorage.getItem('game'))
@@ -79,11 +89,33 @@ function Game() {
 
     const appWidth = 1200, appHeight = 675
     const cell_hor_offset = 115, cell_ver_offset = 100;
-    const [selected_point, set_selected_point] = useState(null);
-    const nodes = useMemo(() => new Set(), []);
+    const [nodes, setNodes] = useState(new Map());
 
-    const buttonTexture = PIXI.Texture.from('./images/next_boton.png');
+    const [selected_point, set_selected_point] = useState(null);
     
+    const crearPoblado = (id) => {
+        const nodo = nodes.get(id);
+        if (nodo) {
+            nodo.beginFill(0x000000); // Cambiar el color de relleno a negro
+            nodo.drawCircle(nodo.coordX, nodo.coordY, 15); // Asumiendo que `x` y `y` son las coordenadas del círculo
+            nodo.endFill();
+        }
+    };
+    
+    const crearPobladoAleatorio = () => {
+        const nodeArray = Array.from(nodes.values()); // Convertir los valores de nodes a una matriz
+        const nodeAleatorio = nodeArray[Math.floor(Math.random() * nodeArray.length)]; // Obtener un elemento aleatorio de la matriz
+    
+        if (nodeAleatorio) {
+            crearPoblado(nodeAleatorio.id); // Pasar el id del nodo en lugar del nodo en sí
+        }
+        console.log(carreteras);
+    };
+    
+
+
+
+
 
     const draw_nodes = useCallback((g) => {
         let start_width = 320;
@@ -93,49 +125,70 @@ function Game() {
                 node.id = id
                 node.beginFill(selected_point && selected_point.id === id ? 0xffff00 : 0xffffff)
                 node.drawCircle(start_width + (j*(cell_hor_offset-4)/2), 76 + (24 * (i%2)) + (Math.floor(i/2) * cell_ver_offset), 15)
+                node.coordX = start_width + (j*(cell_hor_offset-4)/2);  // Guardar la coordenada X
+                node.coordY = 76 + (24 * (i%2)) + (Math.floor(i/2) * cell_ver_offset);  // Guardar la coordenada Y
                 node.endFill()
                 node.interactive = true
                 node.on("pointertap", () => set_selected_point({id:id, type:'Node'}))
                 g.addChild(node)
-                nodes.add(id)
+                setNodes(nodes.set(id, node));
+            }
+        }
+        console.log(nodes);
+    }, [selected_point, nodes]);
+    
+
+    
+    
+    const buttonTexture = PIXI.Texture.from('./images/next_boton.png');
+    
+
+      const draw_roads = useCallback((g) => {
+        let arr_nodes = Array.from(nodes.keys()), n = [0, arr_nodes.length-1];
+        for (let i = 0; i < 3; i++) {
+            for (let j = 0; j < (3+i); j++) {
+                // Upper part:
+                let coords = arr_nodes[n[0]].split(','), x = parseInt(coords[0]), y = parseInt(coords[1]);
+                // -- Road(x+1,y-1)
+                g.addChild(create_road(`${coords}:${ncoor_toString({x:x+1, y:y-1})}`, 448+(113*j)-(57*i), 78+100*i, selected_point, set_selected_point));
+                // -- Road(x+1,y+1)
+                g.addChild(create_road(`${coords}:${ncoor_toString({x:x+1, y:y+1})}`, 505+(113*j)-(57*i), 78+100*i, selected_point, set_selected_point));
+                n[0]++;
+                // Bottom part:
+                coords = arr_nodes[n[1]].split(','); x = parseInt(coords[0]); y = parseInt(coords[1]);
+                // -- Road(x-1,y+1)
+                g.addChild(create_road(`${ncoor_toString({x:x-1, y:y+1})}:${coords}`, 730-(112*j)+(57*i), 78+(101*(5-i)), selected_point, set_selected_point));
+                // -- Road(x-1,y-1)
+                g.addChild(create_road(`${ncoor_toString({x:x-1, y:y-1})}:${coords}`, 673-(112*j)+(57*i), 78+(101*(5-i)), selected_point, set_selected_point));
+                n[1]--;
+            }
+            for (let j = 0; j < (4+i); j++) {
+                // Upper part:
+                let coords = arr_nodes[n[0]].split(','), x = parseInt(coords[0]), y = parseInt(coords[1]);
+                // -- Road(x+1,y)
+                g.addChild(create_road(`${coords}:${ncoor_toString({x:x+1, y:y})}`, 419+(115*j)-(58*i), 129+(100*i), selected_point, set_selected_point));
+                n[0]++;
+                // Bottom part:
+                coords = arr_nodes[n[1]].split(','); x = parseInt(coords[0]); y = parseInt(coords[1]);
+                // -- Road(x-1,y)
+                g.addChild(create_road(`${ncoor_toString({x:x-1, y:y})}:${coords}`, 419+(115*j)-(58*i), 129+(100*(4-i)), selected_point, set_selected_point));
+                n[1]--;
             }
         }
     }, [selected_point, nodes]);
 
-
-    const draw_roads = useCallback((g) => {
-        let arr_nodes = [...nodes], n = [0, arr_nodes.length-1]
-        for (let i = 0; i < 3; i++) {
-            for (let j = 0; j < (3+i); j++) {
-                // Upper part:
-                let coords = arr_nodes[n[0]].split(','), x = parseInt(coords[0]), y = parseInt(coords[1])
-                // -- Road(x+1,y-1)
-                g.addChild(create_road(`${coords}:${ncoor_toString({x:x+1, y:y-1})}`, 448+(113*j)-(57*i), 78+100*i, selected_point, set_selected_point))
-                // -- Road(x+1,y+1)
-                g.addChild(create_road(`${coords}:${ncoor_toString({x:x+1, y:y+1})}`, 505+(113*j)-(57*i), 78+100*i, selected_point, set_selected_point))
-                n[0]++
-                // Bottom part:
-                coords = arr_nodes[n[1]].split(','); x = parseInt(coords[0]); y = parseInt(coords[1])
-                // -- Road(x-1,y+1)
-                g.addChild(create_road(`${ncoor_toString({x:x-1, y:y+1})}:${coords}`, 730-(112*j)+(57*i), 78+(101*(5-i)), selected_point, set_selected_point))
-                // -- Road(x-1,y-1)
-                g.addChild(create_road(`${ncoor_toString({x:x-1, y:y-1})}:${coords}`, 673-(112*j)+(57*i), 78+(101*(5-i)), selected_point, set_selected_point))
-                n[1]--
-            }
-            for (let j = 0; j < (4+i); j++) {
-                // Upper part:
-                let coords = arr_nodes[n[0]].split(','), x = parseInt(coords[0]), y = parseInt(coords[1])
-                // -- Road(x+1,y)
-                g.addChild(create_road(`${coords}:${ncoor_toString({x:x+1, y:y})}`, 419+(115*j)-(58*i), 129+(100*i), selected_point, set_selected_point))
-                n[0]++
-                // Bottom part:
-                coords = arr_nodes[n[1]].split(','); x = parseInt(coords[0]); y = parseInt(coords[1])
-                // -- Road(x-1,y)
-                g.addChild(create_road(`${ncoor_toString({x:x-1, y:y})}:${coords}`, 419+(115*j)-(58*i), 129+(100*(4-i)), selected_point, set_selected_point))
-                n[1]--
-            }
+    const cambiarCarreteraAleatoria = () => {
+        const carreterasArray = Array.from(carreteras.values()); // Convertir los valores de carreteras a una matriz
+        const carreteraAleatoria = carreterasArray[Math.floor(Math.random() * carreterasArray.length)]; // Obtener un elemento aleatorio de la matriz
+    
+        if (carreteraAleatoria) {
+            carreteraAleatoria.beginFill(0x000000); // Cambiar el color de relleno a negro
+            carreteraAleatoria.drawRoundedRect(carreteraAleatoria.coordenadaX, carreteraAleatoria.coordenadaY, 17, 17, 5);
+            carreteraAleatoria.endFill();
         }
-    }, [selected_point, nodes])
+    };
+    
+    
 
     const draw_UI = useCallback((g) => {
         const players = JSON.parse(sessionStorage.getItem('players'))
@@ -334,10 +387,23 @@ function Game() {
         }
     }
 
+    const randomNumber = Math.floor(Math.random() * 11) + 2;
+    const rows = [3, 2, 1, 0, -1, -2, -3]; // Array con la cantidad de sprites por fila
+    const biomes = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]; // Array con los biomas
+let biomeIndex = 0;
+
+
     return (
         <div id="game-header">
             <Stage width={appWidth} height={appHeight}>
-                <Sprite image={Ocean}   x={appWidth/2 - 1.5*cell_hor_offset} y={appHeight/2 - 3*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+            <Sprite image={Ocean} x={appWidth/2 - 1.5*cell_hor_offset} y={appHeight/2 - 3*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
+            <Text 
+                text={`${Math.floor(Math.random() * 11) + 2}`} // Genera un número aleatorio del 2 al 12
+                x={appWidth/2 - 1.5*cell_hor_offset}
+                y={appHeight/2 - 3*cell_ver_offset}
+                anchor={{ x: 0.5, y: 0.5 }} // Centra el texto
+                style={{ fill: 'black' }} // Establece el color del texto a blanco
+            /> 
                 <Sprite image={Ocean}   x={appWidth/2 - 0.5*cell_hor_offset} y={appHeight/2 - 3*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
                 <Sprite image={Ocean}   x={appWidth/2 + 0.5*cell_hor_offset} y={appHeight/2 - 3*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
                 <Sprite image={Ocean}   x={appWidth/2 + 1.5*cell_hor_offset} y={appHeight/2 - 3*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
@@ -386,9 +452,12 @@ function Game() {
                 <Graphics draw={draw_roads} />
                 <Graphics draw={draw_UI} />
                 
+                               
             </Stage>
+            <Button onClick={crearPobladoAleatorio}>Crear Poblado</Button>
+            <Button onClick={cambiarCarreteraAleatoria}>Cambiar Carretera</Button>
         </div>
     );
 }
-
+//<Graphics draw={(g) => draw_poblado(g, "3,5")} />
 export default Game
