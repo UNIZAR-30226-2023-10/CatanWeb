@@ -169,12 +169,13 @@ function App() {
                 })
             })
             socket.on('update', (game) => {
-                console.log("Despues de redirectToGame")
                 sessionStorage.setItem('game', JSON.stringify(game))
+                setGame(game)
                 console.log("LA PARTIDA/TABLERO: ", game)
                 handleMenuChange('game') // Redirigir a la página de juego
             });
             socket.emit('joinGame', JSON.parse(sessionStorage.getItem('user')).accessToken, data.codigo_partida)
+            sessionStorage.setItem("my-turn", 0)
             setSocket(socket)
             // Cambiar al conexto del Game lobby:
             handleMenuChange('game-lobby')
@@ -191,6 +192,7 @@ function App() {
         }
     };
 
+    let [game, setGame] = useState(null)
     async function handleSubmit_JoinGame(event) {
         // Evita que el formulario se envíe de manera predeterminada
         event.preventDefault();
@@ -217,8 +219,8 @@ function App() {
                 })
             })
             socket.on('update', (game) => {
-                console.log("Despues de redirectToGame")
                 sessionStorage.setItem('game', JSON.stringify(game))
+                setGame(game)
                 console.log("LA PARTIDA/TABLERO: ", game)
                 handleMenuChange('game') // Redirigir a la página de juego
             });
@@ -227,6 +229,8 @@ function App() {
             setSocket(socket)
             // Configuración de los nuevos jugadores:
             setLobby(data.jugadores)
+            sessionStorage.setItem("my-turn", 
+                data.jugadores.findIndex(curr_player => curr_player === JSON.parse(sessionStorage.getItem('user')).name))
             // Cambiar al conexto del Game lobby:
             setActiveMenu('game-lobby')
         }
@@ -235,14 +239,6 @@ function App() {
     // ========================================================================
     // GAME
     // ========================================================================
-    const appWidth = 1200, appHeight = 675
-    const cell_hor_offset = 115, cell_ver_offset = 100;
-    const [selected_point, set_selected_point] = useState(null);
-    const nodes = useMemo(() => new Set(), []);
- 
-
-
-
 
     return (
         <SocketContext.Provider value={socket}>
@@ -368,7 +364,7 @@ function App() {
                     </div>
                 </div>
                 :
-                <Game />
+                <Game game={game} />
             }
             </div>
         </SocketContext.Provider>
