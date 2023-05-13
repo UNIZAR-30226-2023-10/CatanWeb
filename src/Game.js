@@ -105,6 +105,12 @@ function Game(props) {
     const nodes = useMemo(() => new Set(), []);
     const draw_board = useCallback((g) => {
         g.clear()
+        let background = new PIXI.Graphics()
+        background.beginFill(0x000000)
+        background.drawRect(0,0,appWidth,appHeight)
+        background.endFill()
+        g.addChild(background)
+
         let game  = JSON.parse(sessionStorage.getItem('game'))
         let me    = game.players[sessionStorage.getItem('my-turn')]
 
@@ -165,9 +171,7 @@ function Game(props) {
                     }
                 }
                 if (player_i === -1) {
-                    if (!buildmode) {
-                        node.beginFill(0xaaaaaa)
-                    } else {
+                    if (buildmode) {
                         if (free_nodes_set.has(id)) {
                             node.beginFill(selectedPoint && selectedPoint.id === id ? 0xffff00 : 0xffffff)
                             node.interactive = true
@@ -486,11 +490,7 @@ function Game(props) {
                 align: 'center'
             });
             let user = JSON.parse(sessionStorage.getItem('user')).name;
-            console.log(user);
             let index = game.players.findIndex(player => player.name === user);
-            console.log(index)
-            console.log(game.players[index])
-            console.log(ordenRecursos[i])
             const text = new PIXI.Text(game.players[index].resources[ordenRecursos[i]], style); // i+1 será el número que se mostrará en el círculo
         
             // Posicionar el texto en el centro del círculo
