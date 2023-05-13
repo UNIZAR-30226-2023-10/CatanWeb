@@ -147,6 +147,8 @@ function App() {
     // New game action:
     const [socket, setSocket] = useState(null)
     const [lobby, setLobby]   = useState([]);
+    let [gameChanged, setGameChanged] = useState(false)
+
     async function handleSubmit_NewGame(event) {
         // Evita que el formublanklario se envíe de manera predeterminada
         event.preventDefault();
@@ -170,7 +172,9 @@ function App() {
             })
             socket.on('update', (game) => {
                 sessionStorage.setItem('game', JSON.stringify(game))
-                setGame(game)
+                setGameChanged(prevStatus => {
+                    return !prevStatus
+                })
                 console.log("LA PARTIDA/TABLERO: ", game)
                 handleMenuChange('game') // Redirigir a la página de juego
             });
@@ -192,7 +196,6 @@ function App() {
         }
     };
 
-    let [game, setGame] = useState(null)
     async function handleSubmit_JoinGame(event) {
         // Evita que el formulario se envíe de manera predeterminada
         event.preventDefault();
@@ -220,7 +223,9 @@ function App() {
             })
             socket.on('update', (game) => {
                 sessionStorage.setItem('game', JSON.stringify(game))
-                setGame(game)
+                setGameChanged(prevStatus => {
+                    return !prevStatus
+                })
                 console.log("LA PARTIDA/TABLERO: ", game)
                 handleMenuChange('game') // Redirigir a la página de juego
             });
@@ -364,7 +369,7 @@ function App() {
                     </div>
                 </div>
                 :
-                <Game game={game} />
+                <Game gameChanged={gameChanged} />
             }
             </div>
         </SocketContext.Provider>
