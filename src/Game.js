@@ -108,6 +108,7 @@ function Game(props) {
 
     const { gameChanged } = props
     let socket = useContext(SocketContext);
+    let game = JSON.parse(sessionStorage.getItem('game'))
     console.log(JSON.parse(sessionStorage.getItem('game')))
     //socket.on('notify', (data) => {
     //    console.log(data)
@@ -119,6 +120,8 @@ function Game(props) {
     const [buildmode, setBuildMode] = useState(false)
     const [throwDices, setThrowDices] = useState(false)
     const [selectedPoint, setSelectedPoint] = useState(null);
+    const [turnEnd, setTurnEnd] = useState(false);
+    const [builtVillage, setBuiltVillage] = useState(false);
 
     function create_road(g, players, free_roads_set, id, x, y) {
 
@@ -129,7 +132,7 @@ function Game(props) {
             }
         }
         if (p_i === -1) {
-            if (buildmode && free_roads_set.has(id)) {
+            if (buildmode && free_roads_set.has(id) && (game.phase === 3 || (game.phase !== 3 && builtVillage))) {
                 let road = new PIXI.Graphics()
                 //road.id  = id
                 road.beginFill(selectedPoint && selectedPoint.id === id ? 0x0b04cf : 0x6f5c9c)
@@ -154,7 +157,7 @@ function Game(props) {
         }
         g.addChild(Draw(0x000000, 'Rect', 0, 0, appWidth, appHeight))
 
-        let game    = JSON.parse(sessionStorage.getItem('game'))
+        game    = JSON.parse(sessionStorage.getItem('game'))
         let players = game.players 
         let me      = players[sessionStorage.getItem('my-turn')]
 
@@ -213,7 +216,7 @@ function Game(props) {
                 }
 
                 if (p_i === -1) {
-                    if (buildmode && free_nodes_set.has(id)) {
+                    if (buildmode && free_nodes_set.has(id) && !builtVillage) {
                         let node = Draw(selectedPoint && selectedPoint.id === id ? 0xffff00 : 0xffffff, 'Circle', start_width + (j*(cell_hor_offset-4)/2), 76 + (24 * (i%2)) + (Math.floor(i/2) * cell_ver_offset), 15)
                         node.interactive = true
                         node.on("pointerdown", () => {
@@ -317,7 +320,7 @@ function Game(props) {
         let BUTTON = null
         if (!buildmode) {
             // Build button
-            if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name) {
+            if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && !turnEnd) {
                 BUTTON = NewSprite(ButtonBuild, 1100, 505, 0.1)
                 BUTTON.interactive = true;
                 BUTTON.buttonMode = true;
@@ -373,10 +376,10 @@ function Game(props) {
             }
         }
 
-    }, [buildmode, gameChanged, selectedPoint])
+    }, [buildmode, gameChanged, selectedPoint, turnEnd])
 
     console.log(selectedPoint)
-
+    /*
     const draw_board2 = useCallback((g) => {
         g.clear()
         let background = new PIXI.Graphics()
@@ -385,7 +388,7 @@ function Game(props) {
         background.endFill()
         g.addChild(background)
 
-        let game  = JSON.parse(sessionStorage.getItem('game'))
+        game  = JSON.parse(sessionStorage.getItem('game'))
         let me    = game.players[sessionStorage.getItem('my-turn')]
 
         const sprites = [
@@ -468,7 +471,7 @@ function Game(props) {
             }
         }
 
-/*
+
         let arr_nodes = [...nodes], n = [0, arr_nodes.length-1]
         for (let i = 0; i < 3; i++) {
             for (let j = 0; j < (3+i); j++) {
@@ -500,15 +503,17 @@ function Game(props) {
                 n[1]--
             }
         }
-*/
-    }, [buildmode, gameChanged, selectedPoint])
+
+    }, [buildmode, gameChanged, selectedPoint])*/
 
 
     const draw_UI2 = useCallback((g) => {
-        let game    = JSON.parse(sessionStorage.getItem('game'))
+        game    = JSON.parse(sessionStorage.getItem('game'))
         let players = game.players
         let me      = game.players[sessionStorage.getItem('my-turn')]
-
+        let user = JSON.parse(sessionStorage.getItem('user')).name; 
+        let index = game.players.findIndex(player => player.name === user);
+        
         // PLAYER 1:
         let PLAYER_BOX = new PIXI.Graphics();
         PLAYER_BOX.beginFill((game.current_turn === 0) ? color_1 : color_1_2)
@@ -582,7 +587,8 @@ function Game(props) {
         if (!buildmode) {
             // Build button
             let BUTTON = null
-            if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name) {
+            console.log('turnEnd: ', turnEnd)
+            if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && !turnEnd) {
                 BUTTON = NewSprite(ButtonBuild, 1100, 410, 0.1)
                 BUTTON.interactive = true;
                 BUTTON.buttonMode = true;
@@ -596,7 +602,7 @@ function Game(props) {
             g.addChild(BUTTON);
 
             // Dice button
-            if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && !throwDices) {
+            if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && !throwDices && game.phase === 3) {
                 BUTTON = NewSprite(ButtonDices, 1100, 505, 0.1)
                 BUTTON.interactive = true
                 BUTTON.buttonMode  = true
@@ -612,13 +618,15 @@ function Game(props) {
             g.addChild(BUTTON);
 
             // Next turn button
-            if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name) {
+            if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && (game.phase !==3 && turnEnd)) {
                 BUTTON = NewSprite(ButtonNextTurn, 1100, 600, 0.1)
                 BUTTON.interactive = true;
                 BUTTON.buttonMode = true;
                 BUTTON.on('pointerdown', () => {
                     console.log('Siguiente turno: ', game.current_turn); 
-                    //socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id : MoveType.next_turn })
+                    socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id : MoveType.next_turn })
+                    setTurnEnd(false)
+                    setBuiltVillage(false)
                 })
             } else {
                 BUTTON = NewSprite(ButtonNextTurnD, 1100, 600, 0.1)
@@ -663,7 +671,7 @@ function Game(props) {
             g.addChild(BLACK_BOX)
 
             
-            if (selectedPoint && (new Set(me.free_nodes)).has(selectedPoint.id)) {
+            if (selectedPoint && ((new Set(me.free_nodes)).has(selectedPoint.id)||(new Set(me.free_roads)).has(selectedPoint.id))) {
                 BUTTON = NewSprite(ButtonCancel, 1005, 600, 0.1)
                 BUTTON.interactive = true;
                 BUTTON.buttonMode = true;
@@ -679,11 +687,13 @@ function Game(props) {
                     console.log("CONSTRUYO EN ", selectedPoint)
                     if (selectedPoint.type === 'Node') {
                         socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id : MoveType.build_village, coords: selectedPoint.id })
-                        setBuildMode(false)
-                        setSelectedPoint(null)
+                        setBuiltVillage(true)                        
                     } else if (selectedPoint.type === 'Road') {
                         socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, {id : MoveType.build_road, coords: selectedPoint.id})
+                        setTurnEnd(true)
                     }
+                        setBuildMode(false)
+                        setSelectedPoint(null)
                 })
                 g.addChild(BUTTON);
             }
@@ -706,10 +716,10 @@ function Game(props) {
         button.buttonMode = true;
         button.on('pointerdown', () => 
             onButtonClick()
-        );
-        */
+        );*/
+        
 
-        /*
+        
         const routesCartas = ['wheat_card.svg','lumber_card.svg', 'brick_card.svg', 'stone_card.svg', 'sheep_card.svg'];
         const routesDesarrollo = [Caballero,ConstruccionCarreteras, AgnoAbundancia, Monopoly, PuntosVictoria]
         const ordenRecursos = ['Trigo', 'Madera', 'Ladrillo', 'Piedra', 'Lana'];
@@ -777,7 +787,7 @@ function Game(props) {
           });
   
           const text = new PIXI.Text(game.players[index].resources[ordenRecursos[i]], style); // i+1 será el número que se mostrará en el círculo
-  
+            
           // Posicionar el texto en el centro del círculo
           text.x = circleX - text.width / 2;
           text.y = circleY - text.height / 2;
@@ -785,6 +795,7 @@ function Game(props) {
           texts.push(text);
   
           }
+          
           const circleRightX = 30 + width; // Posicionar el centro del círculo en el borde derecho del rectángulo
           const circleRightY = 540 + height / 2; // Posicionar el centro del círculo en el centro vertical del rectángulo
           const circleRight = new PIXI.Graphics();
@@ -808,14 +819,15 @@ function Game(props) {
               }
               
           });
-          */
+          
   
-      }, [buildmode, selectedPoint, throwDices])
+      }, [buildmode, selectedPoint, throwDices, game, turnEnd])
 
     /*
     function onButtonClick() {
         // Código que se ejecuta cuando el botón es pulsado
         game = JSON.parse(sessionStorage.getItem('game'))
+        let user = JSON.parse(sessionStorage.getItem('user')).name; 
         console.log(MoveType.next_turn)
         console.log(MoveType)
         let move = {
@@ -830,9 +842,9 @@ function Game(props) {
             console.log('No es tu turno(CurrentTurn): ', game.current_turn);
         }
       }
-      */
-
-    /*
+      
+*/
+    
     const listaDados = [
         Dice1,
         Dice2,
@@ -886,12 +898,13 @@ function Game(props) {
         g.addChild(container2);
  
      }, [dado1,dado2])
-     */
+     
 
     return (
         <div id="game-header">
             <Stage width={appWidth} height={appHeight}>
                 <Graphics draw={draw_game} />
+                <Graphics draw={draw_UI2} />
             </Stage>
         </div>
     );
