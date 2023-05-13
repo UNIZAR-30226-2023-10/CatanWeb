@@ -22,7 +22,11 @@ import Dice6 from './images/Dice06.png'
 
 // Buttons
 import ButtonBuild from './images/button_build.png'
-import nextTurn from './images/next_boton.png'
+import ButtonBuildCancel from './images/button_build-cancel.png'
+import ButtonCancel  from './images/button_cancel.png'
+import ButtonConfirm from './images/button_confirm.png'
+import ButtonDices from './images/button_dices.png'
+import ButtonNextTurn from './images/button_next-turn.png'
 import './styles/boton.css'
 import { SocketContext } from './App';
 
@@ -47,14 +51,14 @@ function ncoor_toString(coords) {
     return coords.x.toString() + "," + coords.y.toString()
 }
 
-function create_road(id, x, y, selected_point, set_selected_point) {
+function create_road(id, x, y, selectedPoint, setSelectedPoint) {
     let road = new PIXI.Graphics()
     road.id  = id
-    road.beginFill(selected_point && selected_point.id === road.id ? 0x0b04cf : 0x6f5c9c)
+    road.beginFill(selectedPoint && selectedPoint.id === road.id ? 0x0b04cf : 0x6f5c9c)
     road.drawRoundedRect(x, y, 17, 17, 5)
     road.endFill()
     road.interactive = true
-    road.on("pointertap", () => {set_selected_point({id:id, type:'Road'})})
+    road.on("pointertap", () => {setSelectedPoint({id:id, type:'Road'})})
     return road
 }
 const borders = [[3,7],[2,8],[2,8],[1,9],[1,9],[0,10],[0,10],[1,9],[1,9],[2,8],[2,8],[3,7]];
@@ -91,8 +95,8 @@ function Game() {
     const appWidth = 1200, appHeight = 675
     const cell_hor_offset = 115, cell_ver_offset = 100;
 
-    const [buildmode, setBuildMode] = useState(null)
-    const [selected_point, set_selected_point] = useState(null);
+    const [buildmode, setBuildMode] = useState(false)
+    const [selectedPoint, setSelectedPoint] = useState(null);
 
     const nodes = useMemo(() => new Set(), []);
     const draw_board = useCallback((g) => {
@@ -159,13 +163,13 @@ function Game() {
                 if (!buildmode) {
                     node.beginFill(0xaaaaaa)
                 } else {
-                    node.beginFill(selected_point && selected_point.id === id ? 0xffff00 : 0xffffff)
+                    node.beginFill(selectedPoint && selectedPoint.id === id ? 0xffff00 : 0xffffff)
                 } 
                 node.drawCircle(start_width + (j*(cell_hor_offset-4)/2), 76 + (24 * (i%2)) + (Math.floor(i/2) * cell_ver_offset), 15)
                 node.endFill()
                 if (buildmode && free_nodes_set.has(id)) {
                     node.interactive = true
-                    node.on("pointertap", () => set_selected_point({id:id, type:'Node'}))
+                    node.on("pointertap", () => setSelectedPoint({id:id, type:'Node'}))
                 }
                 g.addChild(node)
                 nodes.add(id)
@@ -178,33 +182,33 @@ function Game() {
                 // Upper part:
                 let coords = arr_nodes[n[0]].split(','), x = parseInt(coords[0]), y = parseInt(coords[1])
                 // -- Road(x+1,y-1)
-                g.addChild(create_road(`${coords}:${ncoor_toString({x:x+1, y:y-1})}`, 448+(113*j)-(57*i), 78+100*i, selected_point, set_selected_point))
+                g.addChild(create_road(`${coords}:${ncoor_toString({x:x+1, y:y-1})}`, 448+(113*j)-(57*i), 78+100*i, selectedPoint, setSelectedPoint))
                 // -- Road(x+1,y+1)
-                g.addChild(create_road(`${coords}:${ncoor_toString({x:x+1, y:y+1})}`, 505+(113*j)-(57*i), 78+100*i, selected_point, set_selected_point))
+                g.addChild(create_road(`${coords}:${ncoor_toString({x:x+1, y:y+1})}`, 505+(113*j)-(57*i), 78+100*i, selectedPoint, setSelectedPoint))
                 n[0]++
                 // Bottom part:
                 coords = arr_nodes[n[1]].split(','); x = parseInt(coords[0]); y = parseInt(coords[1])
                 // -- Road(x-1,y+1)
-                g.addChild(create_road(`${ncoor_toString({x:x-1, y:y+1})}:${coords}`, 730-(112*j)+(57*i), 78+(101*(5-i)), selected_point, set_selected_point))
+                g.addChild(create_road(`${ncoor_toString({x:x-1, y:y+1})}:${coords}`, 730-(112*j)+(57*i), 78+(101*(5-i)), selectedPoint, setSelectedPoint))
                 // -- Road(x-1,y-1)
-                g.addChild(create_road(`${ncoor_toString({x:x-1, y:y-1})}:${coords}`, 673-(112*j)+(57*i), 78+(101*(5-i)), selected_point, set_selected_point))
+                g.addChild(create_road(`${ncoor_toString({x:x-1, y:y-1})}:${coords}`, 673-(112*j)+(57*i), 78+(101*(5-i)), selectedPoint, setSelectedPoint))
                 n[1]--
             }
             for (let j = 0; j < (4+i); j++) {
                 // Upper part:
                 let coords = arr_nodes[n[0]].split(','), x = parseInt(coords[0]), y = parseInt(coords[1])
                 // -- Road(x+1,y)
-                g.addChild(create_road(`${coords}:${ncoor_toString({x:x+1, y:y})}`, 419+(115*j)-(58*i), 129+(100*i), selected_point, set_selected_point))
+                g.addChild(create_road(`${coords}:${ncoor_toString({x:x+1, y:y})}`, 419+(115*j)-(58*i), 129+(100*i), selectedPoint, setSelectedPoint))
                 n[0]++
                 // Bottom part:
                 coords = arr_nodes[n[1]].split(','); x = parseInt(coords[0]); y = parseInt(coords[1])
                 // -- Road(x-1,y)
-                g.addChild(create_road(`${ncoor_toString({x:x-1, y:y})}:${coords}`, 419+(115*j)-(58*i), 129+(100*(4-i)), selected_point, set_selected_point))
+                g.addChild(create_road(`${ncoor_toString({x:x-1, y:y})}:${coords}`, 419+(115*j)-(58*i), 129+(100*(4-i)), selectedPoint, setSelectedPoint))
                 n[1]--
             }
         }
 
-    }, [buildmode, selected_point])
+    }, [buildmode, selectedPoint])
 
     const draw_UI = useCallback((g) => {
         let game    = JSON.parse(sessionStorage.getItem('game'))
@@ -280,41 +284,120 @@ function Game() {
         g.addChild(PLAYER_BOX);
 
         // --- BUTTONS ---
-        // Build button
-        let BUTTON = NewSprite(ButtonBuild, 1100, 505, 0.1)
-        BUTTON.interactive = true;
-        BUTTON.buttonMode = true;
-        BUTTON.on('pointerdown', () => {
-            if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name) {
-                setBuildMode(prevStatus => {
-                    console.log("BUILD MODE: ", !prevStatus)
-                    return !prevStatus
+        if (!buildmode) {
+            // Build button
+            let BUTTON = NewSprite(ButtonBuild, 1100, 410, 0.1)
+            BUTTON.interactive = true;
+            BUTTON.buttonMode = true;
+            BUTTON.on('pointerdown', () => {
+                if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name) {
+                    setBuildMode(prevStatus => {
+                        console.log("BUILD MODE: ", !prevStatus)
+                        return !prevStatus
+                    })
+                } else {
+                    console.log("CURRENT TURN: ", players[game.current_turn].name, "ME: ", JSON.parse(sessionStorage.getItem('user')).name)
+                }
+    
+            })
+            g.addChild(BUTTON);
+
+            // Dice button
+            BUTTON = NewSprite(ButtonDices, 1100, 505, 0.1)
+            BUTTON.interactive = true
+            BUTTON.buttonMode  = true
+            BUTTON.on('pointerdown', () => {
+                if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name) {
+                    console.log("TIRO LOS DADOS")
+                } else {
+                    console.log("CURRENT TURN: ", players[game.current_turn].name, "ME: ", JSON.parse(sessionStorage.getItem('user')).name)
+                }
+    
+            })
+            g.addChild(BUTTON);
+
+            // Next turn button
+            BUTTON = NewSprite(ButtonNextTurn, 1100, 600, 0.1)
+            BUTTON.interactive = true;
+            BUTTON.buttonMode = true;
+            BUTTON.on('pointerdown', () => {
+                if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name) {
+                    console.log('Siguiente turno: ', game.current_turn); 
+                    socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id : MoveType.next_turn })
+                } else {
+                    console.log("CURRENT TURN: ", players[game.current_turn].name, "ME: ", JSON.parse(sessionStorage.getItem('user')).name)
+                }
+            })
+            g.addChild(BUTTON)
+
+            let BLACK_BOX = new PIXI.Graphics();
+            BLACK_BOX.beginFill(0x000000)
+            BLACK_BOX.drawRect(1005 - BUTTON.width/2, 600 - BUTTON.height/2, BUTTON.width, BUTTON.height)
+            BLACK_BOX.endFill()
+            g.addChild(BLACK_BOX)
+
+        } else {
+            // Build button on buildmode
+            let BUTTON = NewSprite(ButtonBuildCancel, 1100, 505, 0.1)
+            BUTTON.interactive = true;
+            BUTTON.buttonMode = true;
+            BUTTON.on('pointerdown', () => {
+                if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name) {
+                    setBuildMode(prevStatus => {
+                        console.log("BUILD MODE: ", !prevStatus)
+                        return !prevStatus
+                    })
+                    setSelectedPoint(null)
+                } else {
+                    console.log("CURRENT TURN: ", players[game.current_turn].name, "ME: ", JSON.parse(sessionStorage.getItem('user')).name)
+                }
+    
+            })
+            g.addChild(BUTTON);
+
+            let BLACK_BOX = new PIXI.Graphics();
+            BLACK_BOX.beginFill(0x000000)
+            BLACK_BOX.drawRect(1100 - BUTTON.width/2, 410 - BUTTON.height/2, BUTTON.width, BUTTON.height)
+            BLACK_BOX.endFill()
+            g.addChild(BLACK_BOX)
+
+            BLACK_BOX = new PIXI.Graphics();
+            BLACK_BOX.beginFill(0x000000)
+            BLACK_BOX.drawRect(1100 - BUTTON.width/2, 600 - BUTTON.height/2, BUTTON.width, BUTTON.height)
+            BLACK_BOX.endFill()
+            g.addChild(BLACK_BOX)
+
+            BLACK_BOX = new PIXI.Graphics();
+            BLACK_BOX.beginFill(0x000000)
+            BLACK_BOX.drawRect(1005 - BUTTON.width/2, 600 - BUTTON.height/2, BUTTON.width, BUTTON.height)
+            BLACK_BOX.endFill()
+            g.addChild(BLACK_BOX)
+
+            if (selectedPoint) {
+                BUTTON = NewSprite(ButtonConfirm, 1100, 600, 0.1)
+                BUTTON.interactive = true;
+                BUTTON.buttonMode = true;
+                BUTTON.on('pointerdown', () => {
+                    console.log("CONSTRUYO EN ", selectedPoint)
                 })
-            } else {
-                console.log("CURRENT TURN: ", players[game.current_turn].name, "ME: ", JSON.parse(sessionStorage.getItem('user')).name)
+                g.addChild(BUTTON);
+
+                BUTTON = NewSprite(ButtonCancel, 1005, 600, 0.1)
+                BUTTON.interactive = true;
+                BUTTON.buttonMode = true;
+                BUTTON.on('pointerdown', () => {
+                    console.log("HOLA?")
+                    setSelectedPoint(null)
+                })
+                g.addChild(BUTTON);
+
             }
 
-        })
-        g.addChild(BUTTON);
-
-        // Next turn button
-        BUTTON = NewSprite(nextTurn, 1100, 600, 0.1)
-        BUTTON.interactive = true;
-        BUTTON.buttonMode = true;
-        BUTTON.on('pointerdown', () => {
-            if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name) {
-                console.log('Siguiente turno: ', game.current_turn); 
-                socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id : MoveType.next_turn })
-            } else {
-                console.log("CURRENT TURN: ", players[game.current_turn].name, "ME: ", JSON.parse(sessionStorage.getItem('user')).name)
-            }
-        })
-        g.addChild(BUTTON)
-
+        }
 
         /*
         const container = new PIXI.Container();
-        const texture1 = PIXI.Texture.from(nextTurn);
+        const texture1 = PIXI.Texture.from(ButtonNextTurn);
         const button = new PIXI.Sprite(texture1);
         button.x = 0;
         button.y = 0;
@@ -331,9 +414,8 @@ function Game() {
             onButtonClick()
         );
         */
-          
 
-    }, [])
+    }, [buildmode, selectedPoint])
 
     /*
     function onButtonClick() {
