@@ -3,7 +3,7 @@ import axios from 'axios'
 import io from 'socket.io-client';
 import Game from "./Game.js"
 import logo from './Catan-logo-4.png'
-import React, { useState, createContext } from 'react'
+import React, { createContext, useMemo, useState } from 'react'
 
 //import storage from './storage.js'
 const {GameService} = require('./services/game.service')
@@ -146,7 +146,7 @@ function App() {
     // ========================================================================
     // New game action:
     const [socket, setSocket] = useState(null)
-    const [lobby, setLobby]   = useState([ null, null, null, null, 1 ]);
+    const [lobby, setLobby]   = useState([]);
     async function handleSubmit_NewGame(event) {
         // Evita que el formublanklario se envíe de manera predeterminada
         event.preventDefault();
@@ -154,11 +154,9 @@ function App() {
         if (data.status === 'success') {
             console.log("NEW GAME: ", data)
 
-            const lobby = [JSON.parse(sessionStorage.getItem('user')).name, null, null, null, 1, 'host']
-            setLobby(lobby)
+            setLobby( [JSON.parse(sessionStorage.getItem('user')).name])
             
             sessionStorage.setItem('game-token', JSON.stringify(data.codigo_partida))
-            sessionStorage.setItem('players', JSON.stringify(lobby))
 
             // Creacion y configuracion del nuevo socket:
             let socket = io('http://localhost:8080/')
@@ -166,14 +164,14 @@ function App() {
             socket.on('new_player', (socket_data) => {
                 setLobby(prevStatus => {
                     const nextStatus = [...prevStatus]
-                    nextStatus[nextStatus[4]++] = socket_data.username;
-                    sessionStorage.setItem('players', JSON.stringify(nextStatus))
+                    nextStatus.push(socket_data.username);
                     return nextStatus
                 })
             })
             socket.on('update', (game) => {
                 console.log("Despues de redirectToGame")
                 sessionStorage.setItem('game', JSON.stringify(game))
+                console.log("LA PARTIDA/TABLERO: ", game)
                 handleMenuChange('game') // Redirigir a la página de juego
             });
             socket.emit('joinGame', JSON.parse(sessionStorage.getItem('user')).accessToken, data.codigo_partida)
@@ -213,167 +211,167 @@ function App() {
             socket.on('error', (err) => { console.log('SOCKET ERROR:', err) })
             socket.on('new_player', (socket_data) => {
                 setLobby(prevStatus => {
-                    console.log(prevStatus)
                     const nextStatus = [...prevStatus]
-                    nextStatus[nextStatus[4]++] = socket_data.username;
-                    sessionStorage.setItem('players', JSON.stringify(nextStatus))
+                    nextStatus.push(socket_data.username);
                     return nextStatus
                 })
             })
             socket.on('update', (game) => {
                 console.log("Despues de redirectToGame")
                 sessionStorage.setItem('game', JSON.stringify(game))
+                console.log("LA PARTIDA/TABLERO: ", game)
                 handleMenuChange('game') // Redirigir a la página de juego
             });
   
             socket.emit('joinGame', JSON.parse(sessionStorage.getItem('user')).accessToken, gamecode)
             setSocket(socket)
             // Configuración de los nuevos jugadores:
-            const players = [ null, null, null, null, data.jugadores.length ]
-            for (let i = 0; i < players[4]; i++) {
-                players[i] = data.jugadores[i]
-            }
-            sessionStorage.setItem('players', JSON.stringify(players));
-            setLobby(players)
-            console.log("ME HE UNIDO: ", players)
+            setLobby(data.jugadores)
             // Cambiar al conexto del Game lobby:
             setActiveMenu('game-lobby')
         }
     }
 
     // ========================================================================
-    // GAME-LOBBY STATE
+    // GAME
     // ========================================================================
-    //console.log(socket)
+    const appWidth = 1200, appHeight = 675
+    const cell_hor_offset = 115, cell_ver_offset = 100;
+    const [selected_point, set_selected_point] = useState(null);
+    const nodes = useMemo(() => new Set(), []);
+ 
+
+
+
+
     return (
         <SocketContext.Provider value={socket}>
-        <div>
-        {activeMenu !== 'game' ?
-            <div className='common-header'>
-                {errorMessage && (
-                    <p style={{color: 'red'}}> {errorMessage} </p>
-                )}
+            <div>
+            {activeMenu !== 'game' ?
+                <div className='common-header'>
+                    {errorMessage && (
+                        <p style={{color: 'red'}}> {errorMessage} </p>
+                    )}
 
-                <div className='common-container | flex-column-center-center'>
-                    <img src={logo} className='common-logo' alt='catan-logo'></img>
-                    {activeMenu === 'login' && (
-                        <div className='common-content-container | flex-column-center-center'>
-                            <div id='Home-up-form' className='flex-column-center-center'>
-                                <form id='login' className='flex-column-center-center' onSubmit={handleSubmit_Login}>
-                                    <input className='common-input' type="text" placeholder="Email" name='email' id='email' required />
-                                    <input className='common-input' type="password" placeholder="Password" name='password' id='password' required />
-                                    <button className='common-button | common-button-activated' type='submit'>Log In</button>
-                                    <a href='recover' id='forgor-password'>Did you forget your password?</a>
+                    <div className='common-container | flex-column-center-center'>
+                        <img src={logo} className='common-logo' alt='catan-logo'></img>
+                        {activeMenu === 'login' && (
+                            <div className='common-content-container | flex-column-center-center'>
+                                <div id='Home-up-form' className='flex-column-center-center'>
+                                    <form id='login' className='flex-column-center-center' onSubmit={handleSubmit_Login}>
+                                        <input className='common-input' type="text" placeholder="Email" name='email' id='email' required />
+                                        <input className='common-input' type="password" placeholder="Password" name='password' id='password' required />
+                                        <button className='common-button | common-button-activated' type='submit'>Log In</button>
+                                        <a href='recover' id='forgor-password'>Did you forget your password?</a>
+                                    </form>
+                                </div>
+                                <div id='Home-down-form'>
+                                    <button className='common-button | common-button-activated' onClick={() => handleMenuChange('register')}>Register</button>
+                                    <button className='common-button | common-button-activated' onClick={() => handleMenuChange('main-menu')}>Play without register</button>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeMenu === 'register' && (
+                            <div className='common-content-container | flex-column-center-center'>
+                                <div id='Home-up-form' className='flex-column-center-center'>
+                                    <form id='register' className='flex-column-center-center' onSubmit={handleSubmit_Register}>
+                                        <input className='common-input' type="text" placeholder="Email" name='email' id='email' required />
+                                        <input className='common-input' type="text" placeholder="Username" name='username' id='username' required />
+                                        <input className='common-input' type="password" placeholder="Password" name='password' id='password' required />
+                                        <input className='common-input' type="password" placeholder="Repeat password" name='confirm_password' id='confirm_password' required />
+                                        <button className='common-button | common-button-activated' type='submit'>Register</button>
+                                    </form>
+                                </div>
+                                <div id='Home-down-form'>
+                                    <button className='common-button | common-button-activated' onClick={() => handleMenuChange('login')}>Log in</button>
+                                    <button className='common-button | common-button-activated' onClick={() => handleMenuChange('main-menu')}>Play without register</button>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeMenu === 'main-menu' && (
+                            <div className='common-content-container | flex-column-center-center'>
+                                <button className='common-button | common-button-activated' onClick={handleSubmit_NewGame}>New game</button>
+                                <button className='common-button | common-button-activated' onClick={() => handleMenuChange('join-game')}>Join game</button>
+                                <button className='common-button | common-button-deactivated'>Find a game</button>
+                                <button className='common-button | common-button-activated' onClick={() => handleMenuChange('login')}>Return</button>
+                            </div>
+                        )}
+
+                        {activeMenu === 'game-lobby' && (
+                            <div className='common-content-container | flex-column-center-center'>
+                                <h2 id='game-code'>{JSON.parse(sessionStorage.getItem('game-token'))}</h2>
+                                <div className='waiting-player | flex-column-center-center'>
+                                    {lobby.length < 1 ? (
+                                        <section>
+                                            <svg className="spinner" viewBox="0 0 16 18">
+                                                <path className="path" fill="none" strokeWidth="2" d="M7.21487 1.2868C7.88431 0.9044 8.73031 0.9044 9.39974 1.2868L9.40283 1.28856L14.4613 4.20761C15.1684 4.598 15.5746 5.33558 15.5746 6.11465V8.99996V11.8853C15.5746 12.6507 15.1632 13.3848 14.4617 13.7721L9.37973 16.7132C8.71029 17.0956 7.86428 17.0956 7.19485 16.7132L7.19088 16.7109L2.11279 13.772C1.40602 13.3816 1 12.6441 1 11.8653V8.98995V6.11465C1 5.31458 1.44381 4.59039 2.10827 4.21051L7.21487 1.2868Z" />
+                                            </svg>
+                                        </section>
+                                    ) : (
+                                        <div>{lobby[0]}</div>
+                                    )}
+                                </div>
+
+                                <div className='waiting-player | flex-column-center-center'>
+                                    {lobby.length < 2 ? (
+                                        <section>
+                                            <svg className="spinner" viewBox="0 0 16 18">
+                                                <path className="path" fill="none" strokeWidth="2" d="M7.21487 1.2868C7.88431 0.9044 8.73031 0.9044 9.39974 1.2868L9.40283 1.28856L14.4613 4.20761C15.1684 4.598 15.5746 5.33558 15.5746 6.11465V8.99996V11.8853C15.5746 12.6507 15.1632 13.3848 14.4617 13.7721L9.37973 16.7132C8.71029 17.0956 7.86428 17.0956 7.19485 16.7132L7.19088 16.7109L2.11279 13.772C1.40602 13.3816 1 12.6441 1 11.8653V8.98995V6.11465C1 5.31458 1.44381 4.59039 2.10827 4.21051L7.21487 1.2868Z" />
+                                            </svg>
+                                        </section>
+                                    ) : (
+                                        <div>{lobby[1]}</div>
+                                    )}
+                                </div>
+
+                                <div className='waiting-player | flex-column-center-center'>
+                                    {lobby.length < 3 ? (
+                                        <section>
+                                            <svg className="spinner" viewBox="0 0 16 18">
+                                                <path className="path" fill="none" strokeWidth="2" d="M7.21487 1.2868C7.88431 0.9044 8.73031 0.9044 9.39974 1.2868L9.40283 1.28856L14.4613 4.20761C15.1684 4.598 15.5746 5.33558 15.5746 6.11465V8.99996V11.8853C15.5746 12.6507 15.1632 13.3848 14.4617 13.7721L9.37973 16.7132C8.71029 17.0956 7.86428 17.0956 7.19485 16.7132L7.19088 16.7109L2.11279 13.772C1.40602 13.3816 1 12.6441 1 11.8653V8.98995V6.11465C1 5.31458 1.44381 4.59039 2.10827 4.21051L7.21487 1.2868Z" />
+                                            </svg>
+                                        </section>
+                                    ) : (
+                                        <div>{lobby[2]}</div>
+                                    )}
+                                </div>
+
+                                <div className='waiting-player | flex-column-center-center'>
+                                    {lobby.length < 4 ? (
+                                        <section>
+                                            <svg className="spinner" viewBox="0 0 16 18">
+                                                <path className="path" fill="none" strokeWidth="2" d="M7.21487 1.2868C7.88431 0.9044 8.73031 0.9044 9.39974 1.2868L9.40283 1.28856L14.4613 4.20761C15.1684 4.598 15.5746 5.33558 15.5746 6.11465V8.99996V11.8853C15.5746 12.6507 15.1632 13.3848 14.4617 13.7721L9.37973 16.7132C8.71029 17.0956 7.86428 17.0956 7.19485 16.7132L7.19088 16.7109L2.11279 13.772C1.40602 13.3816 1 12.6441 1 11.8653V8.98995V6.11465C1 5.31458 1.44381 4.59039 2.10827 4.21051L7.21487 1.2868Z" />
+                                            </svg>
+                                        </section>
+                                    ) : (
+                                        <div>{lobby[3]}</div>
+                                    )}
+                                </div>
+                                {lobby[0] === JSON.parse(sessionStorage.getItem('user')).name && (
+                                    <button className={lobby.length < 4 ? 'common-button | common-button-deactivated' : 'common-button | common-button-activated'} onClick={() => {GameService.start(JSON.parse(sessionStorage.getItem('game-token')) ); console.log("Empiezo startGame");}}>Play</button>
+                                )}
+                                <button className='common-button | common-button-activated' onClick={() => { handleMenuChange('main-menu')} }>Return</button>
+                            </div>
+                        )}
+
+                        {activeMenu === 'join-game' && (
+                            <div className='common-content-container | flex-column-center-center'>
+                                <form id='join-game' className='flex-column-center-center' onSubmit={handleSubmit_JoinGame}>
+                                    <input name='gamecode' id='gamecode' className='common-input' type="text" placeholder="Game code" value={gamecodeInput} maxLength={6} onChange={handleChange} required />
+                                    <button className='common-button | common-button-activated' type='submit'>Join</button>
                                 </form>
+                                <button className='common-button | common-button-activated' onClick={() => handleMenuChange('main-menu')}>Return</button>
                             </div>
-                            <div id='Home-down-form'>
-                                <button className='common-button | common-button-activated' onClick={() => handleMenuChange('register')}>Register</button>
-                                <button className='common-button | common-button-activated' onClick={() => handleMenuChange('main-menu')}>Play without register</button>
-                            </div>
-                        </div>
-                    )}
-
-                    {activeMenu === 'register' && (
-                        <div className='common-content-container | flex-column-center-center'>
-                            <div id='Home-up-form' className='flex-column-center-center'>
-                                <form id='register' className='flex-column-center-center' onSubmit={handleSubmit_Register}>
-                                    <input className='common-input' type="text" placeholder="Email" name='email' id='email' required />
-                                    <input className='common-input' type="text" placeholder="Username" name='username' id='username' required />
-                                    <input className='common-input' type="password" placeholder="Password" name='password' id='password' required />
-                                    <input className='common-input' type="password" placeholder="Repeat password" name='confirm_password' id='confirm_password' required />
-                                    <button className='common-button | common-button-activated' type='submit'>Register</button>
-                                </form>
-                            </div>
-                            <div id='Home-down-form'>
-                                <button className='common-button | common-button-activated' onClick={() => handleMenuChange('login')}>Log in</button>
-                                <button className='common-button | common-button-activated' onClick={() => handleMenuChange('main-menu')}>Play without register</button>
-                            </div>
-                        </div>
-                    )}
-
-                    {activeMenu === 'main-menu' && (
-                        <div className='common-content-container | flex-column-center-center'>
-                            <button className='common-button | common-button-activated' onClick={handleSubmit_NewGame}>New game</button>
-                            <button className='common-button | common-button-activated' onClick={() => handleMenuChange('join-game')}>Join game</button>
-                            <button className='common-button | common-button-deactivated'>Find a game</button>
-                            <button className='common-button | common-button-activated' onClick={() => handleMenuChange('login')}>Return</button>
-                        </div>
-                    )}
-
-                    {activeMenu === 'game-lobby' && (
-                        <div className='common-content-container | flex-column-center-center'>
-                            <h2 id='game-code'>{JSON.parse(sessionStorage.getItem('game-token'))}</h2>
-                            <div className='waiting-player | flex-column-center-center'>
-                                {lobby[0] === null ? (
-                                    <section>
-                                        <svg className="spinner" viewBox="0 0 16 18">
-                                            <path className="path" fill="none" strokeWidth="2" d="M7.21487 1.2868C7.88431 0.9044 8.73031 0.9044 9.39974 1.2868L9.40283 1.28856L14.4613 4.20761C15.1684 4.598 15.5746 5.33558 15.5746 6.11465V8.99996V11.8853C15.5746 12.6507 15.1632 13.3848 14.4617 13.7721L9.37973 16.7132C8.71029 17.0956 7.86428 17.0956 7.19485 16.7132L7.19088 16.7109L2.11279 13.772C1.40602 13.3816 1 12.6441 1 11.8653V8.98995V6.11465C1 5.31458 1.44381 4.59039 2.10827 4.21051L7.21487 1.2868Z" />
-                                        </svg>
-                                    </section>
-                                ) : (
-                                    <div>Player 1: {lobby[0]}</div>
-                                )}
-                            </div>
-
-                            <div className='waiting-player | flex-column-center-center'>
-                                {lobby[1] === null ? (
-                                    <section>
-                                        <svg className="spinner" viewBox="0 0 16 18">
-                                            <path className="path" fill="none" strokeWidth="2" d="M7.21487 1.2868C7.88431 0.9044 8.73031 0.9044 9.39974 1.2868L9.40283 1.28856L14.4613 4.20761C15.1684 4.598 15.5746 5.33558 15.5746 6.11465V8.99996V11.8853C15.5746 12.6507 15.1632 13.3848 14.4617 13.7721L9.37973 16.7132C8.71029 17.0956 7.86428 17.0956 7.19485 16.7132L7.19088 16.7109L2.11279 13.772C1.40602 13.3816 1 12.6441 1 11.8653V8.98995V6.11465C1 5.31458 1.44381 4.59039 2.10827 4.21051L7.21487 1.2868Z" />
-                                        </svg>
-                                    </section>
-                                ) : (
-                                    <div>Player 2: {lobby[1]}</div>
-                                )}
-                            </div>
-
-                            <div className='waiting-player | flex-column-center-center'>
-                                {lobby[2] === null ? (
-                                    <section>
-                                        <svg className="spinner" viewBox="0 0 16 18">
-                                            <path className="path" fill="none" strokeWidth="2" d="M7.21487 1.2868C7.88431 0.9044 8.73031 0.9044 9.39974 1.2868L9.40283 1.28856L14.4613 4.20761C15.1684 4.598 15.5746 5.33558 15.5746 6.11465V8.99996V11.8853C15.5746 12.6507 15.1632 13.3848 14.4617 13.7721L9.37973 16.7132C8.71029 17.0956 7.86428 17.0956 7.19485 16.7132L7.19088 16.7109L2.11279 13.772C1.40602 13.3816 1 12.6441 1 11.8653V8.98995V6.11465C1 5.31458 1.44381 4.59039 2.10827 4.21051L7.21487 1.2868Z" />
-                                        </svg>
-                                    </section>
-                                ) : (
-                                    <div>Player 3: {lobby[2]}</div>
-                                )}
-                            </div>
-
-                            <div className='waiting-player | flex-column-center-center'>
-                                {lobby[3] === null ? (
-                                    <section>
-                                        <svg className="spinner" viewBox="0 0 16 18">
-                                            <path className="path" fill="none" strokeWidth="2" d="M7.21487 1.2868C7.88431 0.9044 8.73031 0.9044 9.39974 1.2868L9.40283 1.28856L14.4613 4.20761C15.1684 4.598 15.5746 5.33558 15.5746 6.11465V8.99996V11.8853C15.5746 12.6507 15.1632 13.3848 14.4617 13.7721L9.37973 16.7132C8.71029 17.0956 7.86428 17.0956 7.19485 16.7132L7.19088 16.7109L2.11279 13.772C1.40602 13.3816 1 12.6441 1 11.8653V8.98995V6.11465C1 5.31458 1.44381 4.59039 2.10827 4.21051L7.21487 1.2868Z" />
-                                        </svg>
-                                    </section>
-                                ) : (
-                                    <div>Player 4: {lobby[3]}</div>
-                                )}
-                            </div>
-                            {lobby[5] === 'host' && (
-                                <button className={lobby[4] < 4 ? 'common-button | common-button-deactivated' : 'common-button | common-button-activated'} onClick={() => {GameService.start(JSON.parse(sessionStorage.getItem('game-token')) ); console.log("Empiezo startGame");}}>Play</button>
-                            )}
-                            <button className='common-button | common-button-activated' onClick={() => { handleMenuChange('main-menu')} }>Return</button>
-                        </div>
-                    )}
-
-                    {activeMenu === 'join-game' && (
-                        <div className='common-content-container | flex-column-center-center'>
-                            <form id='join-game' className='flex-column-center-center' onSubmit={handleSubmit_JoinGame}>
-                                <input name='gamecode' id='gamecode' className='common-input' type="text" placeholder="Game code" value={gamecodeInput} maxLength={6} onChange={handleChange} required />
-                                <button className='common-button | common-button-activated' type='submit'>Join</button>
-                            </form>
-                            <button className='common-button | common-button-activated' onClick={() => handleMenuChange('main-menu')}>Return</button>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
+                :
+                <Game />
+            }
             </div>
-            :
-            <Game />
-        }
-        </div>
         </SocketContext.Provider>
-        
     )
 }
 

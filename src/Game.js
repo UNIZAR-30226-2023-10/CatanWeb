@@ -1,24 +1,29 @@
+// React
+import React, { useCallback, useMemo, useState, useContext } from "react";
+
+// Board
 import * as PIXI from 'pixi.js'
-import Ocean from './images/ocean.png'
-import Desert from './images/desert.png'
+import { Stage, Graphics, Sprite } from '@pixi/react';
+import Desert   from './images/desert.png'
 import Farmland from './images/farmland.png'
-import Forest from './images/forest.png'
-import Hill from './images/hill.png'
+import Forest   from './images/forest.png'
+import Hill     from './images/hill.png'
 import Mountain from './images/mountain.png'
-import Pasture from './images/pasture.png'
+import Ocean    from './images/ocean.png'
+import Pasture  from './images/pasture.png'
+
 import './styles/boton.css'
-import { Texture } from 'pixi.js';
 import Dice1 from './images/Dice01.png'
 import Dice2 from './images/Dice02.png'
 import Dice3 from './images/Dice03.png'
 import Dice4 from './images/Dice04.png'
 import Dice5 from './images/Dice05.png'
 import Dice6 from './images/Dice06.png'
+
+// Buttons
+import ButtonBuild from './images/button_build.png'
 import nextTurn from './images/next_boton.png'
-import io from 'socket.io-client';
 import './styles/boton.css'
-import { Stage, Graphics, Sprite } from '@pixi/react';
-import React, { useCallback, useMemo, useState, useContext } from "react";
 import { SocketContext } from './App';
 
 const MoveType = require( './services/movesTypes.js')
@@ -27,6 +32,16 @@ function random(min, max) {
     return Math.floor(Math.random() * max) + min;
 }
 */
+
+const Biomes_sprites = {
+    'Desert': Desert,
+    'Farmland': Farmland,
+    'Forest': Forest,
+    'Hill': Hill,
+    'Mountain': Mountain,
+    'Ocean': Ocean,
+    'Pasture': Pasture
+}
 
 function ncoor_toString(coords) {
     return coords.x.toString() + "," + coords.y.toString()
@@ -48,62 +63,115 @@ const color_2 = 0x06b300
 const color_3 = 0x005bb5
 const color_4 = 0xd4b700
 
-const color_1_2 = 0x7a010b
-const color_2_2 = 0x154f03
-const color_3_2 = 0x080152
-const color_4_2 = 0x595904
+const color_1_2 = 0x6e2323
+const color_2_2 = 0x2f662d
+const color_3_2 = 0x2e4a66
+const color_4_2 = 0x706939
 
-let socket = io('http://localhost:8080/')
-
+function NewSprite(img, x, y, scale = 0.5) {
+    let sprite = PIXI.Sprite.from(img)
+    sprite.x = x;
+    sprite.y = y;
+    sprite.scale.set(scale);
+    sprite.anchor.set(0.5);
+    return sprite
+}
 
 function Game() {
-    const socket = useContext(SocketContext);
-    console.log(socket)
-    let game = JSON.parse(sessionStorage.getItem('game'))
+    //const socket = useContext(SocketContext);
+    //console.log(socket)
+    let socket = useContext(SocketContext);
 
-    socket.on('update', (gameUpdate) => {
-        console.log("update")
-        //sessionStorage.setItem('game', JSON.stringify(gameUpdate))
-        game = gameUpdate
-    })
+    console.log("PARTIDA: ", JSON.parse(sessionStorage.getItem('game')));
+    //socket.on('notify', (data) => {
+    //    console.log(data)
+    //})
 
-    socket.on('notify', (data) => {
-        console.log(data)
-    })
-
-    game = JSON.parse(sessionStorage.getItem('game'))
-
-        
-
-    const user = JSON.parse(sessionStorage.getItem('user'))
 
     const appWidth = 1200, appHeight = 675
     const cell_hor_offset = 115, cell_ver_offset = 100;
+
+    const [buildmode, setBuildMode] = useState(null)
     const [selected_point, set_selected_point] = useState(null);
+
     const nodes = useMemo(() => new Set(), []);
+    const draw_board = useCallback((g) => {
+        let game  = JSON.parse(sessionStorage.getItem('game'))
+        let me    = null
+        for (let i of game.players) {
+            if (i.name === JSON.parse(sessionStorage.getItem('user')).name) {
+                me = i
+                break
+            }
+        }
+        console.log(me) 
 
-    const buttonTexture = PIXI.Texture.from('./images/next_boton.png');
+        const sprites = [
+            NewSprite(Biomes_sprites[game.board.biomes[0].type], appWidth/2 - cell_hor_offset, appHeight/2 - 2*cell_ver_offset),
+            NewSprite(Biomes_sprites[game.board.biomes[1].type], appWidth/2, appHeight/2 - 2*cell_ver_offset),
+            NewSprite(Biomes_sprites[game.board.biomes[2].type], appWidth/2 + cell_hor_offset, appHeight/2 - 2*cell_ver_offset),
+
+            NewSprite(Biomes_sprites[game.board.biomes[11].type], appWidth/2 - 1.5*cell_hor_offset, appHeight/2 - cell_ver_offset),
+            NewSprite(Biomes_sprites[game.board.biomes[12].type], appWidth/2 - 0.5*cell_hor_offset, appHeight/2 - cell_ver_offset),
+            NewSprite(Biomes_sprites[game.board.biomes[13].type], appWidth/2 + 0.5*cell_hor_offset, appHeight/2 - cell_ver_offset),
+            NewSprite(Biomes_sprites[game.board.biomes[3].type], appWidth/2 + 1.5*cell_hor_offset, appHeight/2 - cell_ver_offset),
+
+            NewSprite(Biomes_sprites[game.board.biomes[10].type], appWidth/2 - 2*cell_hor_offset, appHeight/2),
+            NewSprite(Biomes_sprites[game.board.biomes[17].type], appWidth/2 - cell_hor_offset, appHeight/2),
+            NewSprite(Biomes_sprites[game.board.biomes[18].type], appWidth/2,appHeight/2),
+            NewSprite(Biomes_sprites[game.board.biomes[14].type],appWidth/2 + cell_hor_offset, appHeight/2),
+            NewSprite(Biomes_sprites[game.board.biomes[4].type],appWidth/2 + 2*cell_hor_offset, appHeight/2),
+
+            NewSprite(Biomes_sprites[game.board.biomes[9].type],appWidth/2 - 1.5*cell_hor_offset, appHeight/2 + cell_ver_offset),
+            NewSprite(Biomes_sprites[game.board.biomes[16].type],appWidth/2 - 0.5*cell_hor_offset, appHeight/2 + cell_ver_offset),
+            NewSprite(Biomes_sprites[game.board.biomes[15].type],appWidth/2 + 0.5*cell_hor_offset, appHeight/2 + cell_ver_offset),
+            NewSprite(Biomes_sprites[game.board.biomes[5].type],appWidth/2 + 1.5*cell_hor_offset, appHeight/2 + cell_ver_offset),
+
+            NewSprite(Biomes_sprites[game.board.biomes[8].type],appWidth/2 - cell_hor_offset, appHeight/2 + 2*cell_ver_offset),
+            NewSprite(Biomes_sprites[game.board.biomes[7].type],appWidth/2, appHeight/2 + 2*cell_ver_offset),
+            NewSprite(Biomes_sprites[game.board.biomes[6].type],appWidth/2 + cell_hor_offset, appHeight/2 + 2*cell_ver_offset),
+        ]
+
+        for (let i = 0; i < sprites.length; i++) {
+
+            g.addChild(sprites[i])
+            if (game.board.biomes[i].token !== 0) {
+                let token = new PIXI.Graphics();
+                token.beginFill(0xe8a85a);
+                token.drawCircle(sprites[i].x, sprites[i].y, 20);
+                token.endFill();
+
+                let text  = new PIXI.Text(game.board.biomes[i].token, {fontFamily: "Arial", fontSize: 16, fill: (game.board.biomes[i].token === 8) ? "red" : "white"});
+                text.anchor.set(0.5);
+                text.position.set(sprites[i].x, sprites[i].y);
+                token.addChild(text);
     
+                g.addChild(token)
+            }
+        }
 
-    const draw_nodes = useCallback((g) => {
         let start_width = 320;
+        let free_nodes_set = new Set(me.free_nodes)
         for (let i = 0; i < 12; i++) {
             for (let j = borders[i][0]; j <= borders[i][1]; j+=2) {
                 let node = new PIXI.Graphics(), id = `${i},${j}`
                 node.id = id
-                node.beginFill(selected_point && selected_point.id === id ? 0xffff00 : 0xffffff)
+                if (!buildmode) {
+                    node.beginFill(0xaaaaaa)
+                } else {
+                    node.beginFill(selected_point && selected_point.id === id ? 0xffff00 : 0xffffff)
+                } 
                 node.drawCircle(start_width + (j*(cell_hor_offset-4)/2), 76 + (24 * (i%2)) + (Math.floor(i/2) * cell_ver_offset), 15)
                 node.endFill()
-                node.interactive = true
-                node.on("pointertap", () => set_selected_point({id:id, type:'Node'}))
+                if (buildmode && free_nodes_set.has(id)) {
+                    node.interactive = true
+                    node.on("pointertap", () => set_selected_point({id:id, type:'Node'}))
+                }
                 g.addChild(node)
                 nodes.add(id)
             }
         }
-    }, [selected_point, nodes]);
 
-
-    const draw_roads = useCallback((g) => {
         let arr_nodes = [...nodes], n = [0, arr_nodes.length-1]
         for (let i = 0; i < 3; i++) {
             for (let j = 0; j < (3+i); j++) {
@@ -135,93 +203,116 @@ function Game() {
                 n[1]--
             }
         }
-    }, [selected_point, nodes])
+
+    }, [buildmode, selected_point])
 
     const draw_UI = useCallback((g) => {
-        const players = JSON.parse(sessionStorage.getItem('players'))
-        let user_rectangle = new PIXI.Graphics()
-        let next_turn = new PIXI.Graphics()
-        const game = JSON.parse(sessionStorage.getItem('game'))
+        let game    = JSON.parse(sessionStorage.getItem('game'))
+        let players = game.players
+        
+        // PLAYER 1:
+        let PLAYER_BOX = new PIXI.Graphics();
+        PLAYER_BOX.beginFill((game.current_turn === 0) ? color_1 : color_1_2)
+        PLAYER_BOX.drawRoundedRect(-20, 20, 250, 50, 5)
+        PLAYER_BOX.endFill()
 
-        const user1 = new PIXI.Text(players[0], {
-            fontFamily: "Arial",
-            fontSize: 20,
-            fill: 0xffffff,
-            align: "center"
-        });
-        user1.anchor.set(0.5); // Establece el anclaje en el punto medio horizontal y vertical
-        user1.position.set(105, 45); // Establece la posición del texto dentro del rectángulo
-    
-        const user2 = new PIXI.Text(players[1], {
-            fontFamily: "Arial",
-            fontSize: 20,
-            fill: 0xffffff,
-            align: "center"
-        });
-    
-        user2.anchor.set(0.5); // Establece el anclaje en el punto medio horizontal y vertical
-        user2.position.set(105, 105); // Establece la posición del texto dentro del rectángulo
-    
-        const user3 = new PIXI.Text(players[2], {
-            fontFamily: "Arial",
-            fontSize: 20,
-            fill: 0xffffff,
-            align: "center"
-        });
-    
-        user3.anchor.set(0.5); // Establece el anclaje en el punto medio horizontal y vertical
-        user3.position.set(105, 165); // Establece la posición del texto dentro del rectángulo
-    
-        const user4 = new PIXI.Text(players[3], {
-            fontFamily: "Arial",
-            fontSize: 20,
-            fill: 0xffffff,
-            align: "center"
-        });
+        let PLAYER = new PIXI.Text(players[0].name, {
+            fontFamily: 'Arial',
+            fontSize:   20,
+            fill:       0xffffff,
+            align:      'center'
+        })
+        PLAYER.anchor.set(0.5); // Establece el anclaje en el punto medio horizontal y vertical
+        PLAYER.position.set(105, 45); // Establece la posición del texto dentro del rectángulo
+        PLAYER_BOX.addChild(PLAYER)
+        g.addChild(PLAYER_BOX);
 
-        user4.anchor.set(0.5); // Establece el anclaje en el punto medio horizontal y vertical
-        user4.position.set(105, 225); // Establece la posición del texto dentro del rectángulo
-        console.log(game.current_turn)
-        if(game.current_turn === 0){
-            user_rectangle.beginFill(color_1)
-        }else{
-            user_rectangle.beginFill(color_1_2)
-        }
-        user_rectangle.drawRoundedRect(-20, 20, 250, 50, 5)
-        user_rectangle.addChild(user1)
-        user_rectangle.endFill()
-        g.addChild(user_rectangle)
-        let user_rectangle2 = new PIXI.Graphics()
-        if(game.current_turn === 1){
-            user_rectangle2.beginFill(color_2)
-        }else{
-            user_rectangle2.beginFill(color_2_2)
-        }
-        user_rectangle2.drawRoundedRect(-20, 80, 250, 50, 5)
-        user_rectangle2.addChild(user2)
-        user_rectangle2.endFill()
-        g.addChild(user_rectangle2)
-        let user_rectangle3 = new PIXI.Graphics()
-        if(game.current_turn === 2){
-            user_rectangle3.beginFill(color_3)
-        }else{
-            user_rectangle3.beginFill(color_3_2)
-        }
-        user_rectangle3.drawRoundedRect(-20, 140, 250, 50, 5)
-        user_rectangle3.addChild(user3)
-        user_rectangle3.endFill()
-        g.addChild(user_rectangle3)
-        let user_rectangle4 = new PIXI.Graphics()
-        if(game.current_turn === 3){
-            user_rectangle4.beginFill(color_4)
-        }else{
-            user_rectangle4.beginFill(color_4_2)
-        }
-        user_rectangle4.drawRoundedRect(-20, 200, 250, 50, 5)
-        user_rectangle4.addChild(user4)
-        user_rectangle4.endFill()
-        g.addChild(user_rectangle4)
+        // PLAYER 2:
+        PLAYER_BOX = new PIXI.Graphics();
+        PLAYER_BOX.beginFill((game.current_turn === 1) ? color_2 : color_2_2)
+        PLAYER_BOX.drawRoundedRect(-20, 80, 250, 50, 5)
+        PLAYER_BOX.endFill()
 
+        PLAYER = new PIXI.Text(players[1].name, {
+            fontFamily: 'Arial',
+            fontSize:   20,
+            fill:       0xffffff,
+            align:      'center'
+        })
+        PLAYER.anchor.set(0.5); // Establece el anclaje en el punto medio horizontal y vertical
+        PLAYER.position.set(105, 105); // Establece la posición del texto dentro del rectángulo
+        PLAYER_BOX.addChild(PLAYER)
+        g.addChild(PLAYER_BOX);
+    
+
+        // PLAYER 3:
+        PLAYER_BOX = new PIXI.Graphics();
+        PLAYER_BOX.beginFill((game.current_turn === 2) ? color_3 : color_3_2)
+        PLAYER_BOX.drawRoundedRect(-20, 140, 250, 50, 5)
+        PLAYER_BOX.endFill()
+
+        PLAYER = new PIXI.Text(players[2].name, {
+            fontFamily: 'Arial',
+            fontSize:   20,
+            fill:       0xffffff,
+            align:      'center'
+        })
+        PLAYER.anchor.set(0.5); // Establece el anclaje en el punto medio horizontal y vertical
+        PLAYER.position.set(105, 165); // Establece la posición del texto dentro del rectángulo
+        PLAYER_BOX.addChild(PLAYER)
+        g.addChild(PLAYER_BOX);
+
+        // PLAYER 4:
+        PLAYER_BOX = new PIXI.Graphics();
+        PLAYER_BOX.beginFill((game.current_turn === 3) ? color_4 : color_4_2)
+        PLAYER_BOX.drawRoundedRect(-20, 200, 250, 50, 5)
+        PLAYER_BOX.endFill()
+
+        PLAYER = new PIXI.Text(players[3].name, {
+            fontFamily: 'Arial',
+            fontSize:   20,
+            fill:       0xffffff,
+            align:      'center'
+        })
+        PLAYER.anchor.set(0.5); // Establece el anclaje en el punto medio horizontal y vertical
+        PLAYER.position.set(105, 225); // Establece la posición del texto dentro del rectángulo
+        PLAYER_BOX.addChild(PLAYER)
+        g.addChild(PLAYER_BOX);
+
+        // --- BUTTONS ---
+        // Build button
+        let BUTTON = NewSprite(ButtonBuild, 1100, 505, 0.1)
+        BUTTON.interactive = true;
+        BUTTON.buttonMode = true;
+        BUTTON.on('pointerdown', () => {
+            if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name) {
+                setBuildMode(prevStatus => {
+                    console.log("BUILD MODE: ", !prevStatus)
+                    return !prevStatus
+                })
+            } else {
+                console.log("CURRENT TURN: ", players[game.current_turn].name, "ME: ", JSON.parse(sessionStorage.getItem('user')).name)
+            }
+
+        })
+        g.addChild(BUTTON);
+
+        // Next turn button
+        BUTTON = NewSprite(nextTurn, 1100, 600, 0.1)
+        BUTTON.interactive = true;
+        BUTTON.buttonMode = true;
+        BUTTON.on('pointerdown', () => {
+            if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name) {
+                console.log('Siguiente turno: ', game.current_turn); 
+                socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id : MoveType.next_turn })
+            } else {
+                console.log("CURRENT TURN: ", players[game.current_turn].name, "ME: ", JSON.parse(sessionStorage.getItem('user')).name)
+            }
+        })
+        g.addChild(BUTTON)
+
+
+        /*
         const container = new PIXI.Container();
         const texture1 = PIXI.Texture.from(nextTurn);
         const button = new PIXI.Sprite(texture1);
@@ -238,10 +329,13 @@ function Game() {
         button.buttonMode = true;
         button.on('pointerdown', () => 
             onButtonClick()
-        );  
+        );
+        */
           
 
     }, [])
+
+    /*
     function onButtonClick() {
         // Código que se ejecuta cuando el botón es pulsado
         game = JSON.parse(sessionStorage.getItem('game'))
@@ -252,14 +346,14 @@ function Game() {
             }
         if(JSON.parse(sessionStorage.getItem('players'))[game.current_turn] === user.name){
             console.log('Cambio de turno(CurrentTurn): ', game.current_turn); 
-            
-
+        
             socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, move)
             //Cambiar turno
         }else{
             console.log('No es tu turno(CurrentTurn): ', game.current_turn);
         }
       }
+      */
 
 
     const listaDados = [
@@ -273,7 +367,7 @@ function Game() {
 
     // provisional para ver como queda
     const [dado1, setDado1] = useState(listaDados[0])
-    const [dado2, setDado2 ] = useState(listaDados[0])
+    const [dado2, setDado2] = useState(listaDados[0])
 
     const draw_Dice = useCallback((g) => {
 
@@ -316,79 +410,11 @@ function Game() {
  
      }, [dado1,dado2])
 
-    function biome(id){
-        if(game!==null){
-            console.log(game.board.biomes[id])
-            if(game.board.biomes[id].type === 'Farmland'){
-                return Farmland
-            }else if (game.board.biomes[id].type === 'Forest'){
-                return Forest
-            }else if (game.board.biomes[id].type === 'Hill'){
-                return Hill
-            }else if (game.board.biomes[id].type === 'Mountain'){
-                return Mountain
-            }else if (game.board.biomes[id].type === 'Pasture'){
-                return Pasture
-            }else {
-                return Desert
-            }
-        }else{
-            return Desert
-        }
-    }
-
     return (
         <div id="game-header">
             <Stage width={appWidth} height={appHeight}>
-                <Sprite image={Ocean}   x={appWidth/2 - 1.5*cell_hor_offset} y={appHeight/2 - 3*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={Ocean}   x={appWidth/2 - 0.5*cell_hor_offset} y={appHeight/2 - 3*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={Ocean}   x={appWidth/2 + 0.5*cell_hor_offset} y={appHeight/2 - 3*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={Ocean}   x={appWidth/2 + 1.5*cell_hor_offset} y={appHeight/2 - 3*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                
-                <Sprite image={Ocean}   x={appWidth/2 - 2*cell_hor_offset} y={appHeight/2 - 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={biome(0)}    x={appWidth/2 - cell_hor_offset} y={appHeight/2 - 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={biome(1)}  x={appWidth/2} y={appHeight/2 - 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={biome(2)}    x={appWidth/2 + cell_hor_offset} y={appHeight/2 - 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={Ocean}   x={appWidth/2 + 2*cell_hor_offset} y={appHeight/2 - 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-
-                <Sprite image={Ocean}   x={appWidth/2 - 2.5*cell_hor_offset} y={appHeight/2 - cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={biome(3)}  x={appWidth/2 - 1.5*cell_hor_offset} y={appHeight/2 - cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={biome(4)} x={appWidth/2 - 0.5*cell_hor_offset} y={appHeight/2 - cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={biome(5)}  x={appWidth/2 + 0.5*cell_hor_offset} y={appHeight/2 - cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={biome(6)} x={appWidth/2 + 1.5*cell_hor_offset} y={appHeight/2 - cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={Ocean}   x={appWidth/2 + 2.5*cell_hor_offset} y={appHeight/2 - cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                
-                <Sprite image={Ocean}   x={appWidth/2 - 3*cell_hor_offset} y={appHeight/2} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={biome(7)}    x={appWidth/2 - 2*cell_hor_offset} y={appHeight/2} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={biome(8)}    x={appWidth/2 - cell_hor_offset} y={appHeight/2} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={biome(9)}  x={appWidth/2} y={appHeight/2} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={biome(10)} x={appWidth/2 + cell_hor_offset} y={appHeight/2} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={biome(11)} x={appWidth/2 + 2*cell_hor_offset} y={appHeight/2} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={Ocean} x={appWidth/2 + 3*cell_hor_offset} y={appHeight/2} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                
-                <Sprite image={Ocean} x={appWidth/2 - 2.5*cell_hor_offset} y={appHeight/2 + cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={biome(12)} x={appWidth/2 - 1.5*cell_hor_offset} y={appHeight/2 + cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={biome(13)} x={appWidth/2 - 0.5*cell_hor_offset} y={appHeight/2 + cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={biome(14)} x={appWidth/2 + 0.5*cell_hor_offset} y={appHeight/2 + cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={biome(15)} x={appWidth/2 + 1.5*cell_hor_offset} y={appHeight/2 + cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={Ocean} x={appWidth/2 + 2.5*cell_hor_offset} y={appHeight/2 + cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                
-                <Sprite image={Ocean} x={appWidth/2 - 2*cell_hor_offset} y={appHeight/2 + 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={biome(16)} x={appWidth/2 - cell_hor_offset} y={appHeight/2 + 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={biome(17)} x={appWidth/2} y={appHeight/2 + 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={biome(18)} x={appWidth/2 + cell_hor_offset} y={appHeight/2 + 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={Ocean} x={appWidth/2 + 2*cell_hor_offset} y={appHeight/2 + 2*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                
-                <Sprite image={Ocean} x={appWidth/2 - 1.5*cell_hor_offset} y={appHeight/2 + 3*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={Ocean} x={appWidth/2 - 0.5*cell_hor_offset} y={appHeight/2 + 3*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={Ocean} x={appWidth/2 + 0.5*cell_hor_offset} y={appHeight/2 + 3*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                <Sprite image={Ocean} x={appWidth/2 + 1.5*cell_hor_offset} y={appHeight/2 + 3*cell_ver_offset} scale={0.5} anchor={{ x: 0.5, y: 0.5 }} />
-                
-                <Graphics draw={draw_Dice} />
-                <Graphics draw={draw_nodes} />
-                <Graphics draw={draw_roads} />
+                <Graphics draw={draw_board} />
                 <Graphics draw={draw_UI} />
-                
             </Stage>
         </div>
     );
