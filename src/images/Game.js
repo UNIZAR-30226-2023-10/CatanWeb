@@ -28,14 +28,12 @@ import AgnoAbundancia from './images/card_yearofplenty.svg'
 
 // Buttons
 import ButtonBuild from './images/button_build.png'
-import ButtonBuildD from './images/button_build_d.png'
 import ButtonBuildCancel from './images/button_build-cancel.png'
 import ButtonCancel  from './images/button_cancel.png'
 import ButtonConfirm from './images/button_confirm.png'
 import ButtonDices from './images/button_dices.png'
-import ButtonDicesD from './images/button_dices_d.png'
 import ButtonNextTurn from './images/button_next-turn.png'
-import ButtonNextTurnD from './images/button_next-turn_d.png'
+import ButtonDevelopmentCards from './images/foto_cartas_desarrollo.png'
 import './styles/boton.css'
 import { SocketContext } from './App';
 
@@ -76,9 +74,6 @@ const color_2 = 0x06b300
 const color_3 = 0x005bb5
 const color_4 = 0xd4b700
 
-const PlayersColors  = [0xd60000, 0x06b300, 0x005bb5, 0xd4b700]
-const PlayersColorsD = [0x6e2323, 0x2f662d, 0x2e4a66, 0x706939]
-
 const color_1_2 = 0x6e2323
 const color_2_2 = 0x2f662d
 const color_3_2 = 0x2e4a66
@@ -93,32 +88,36 @@ function NewSprite(img, x, y, scale = 0.5) {
     return sprite
 }
 
-function Game(props) {
-
-    const { game } = props
+function Game() {
+    //const socket = useContext(SocketContext);
+    //console.log(socket)
     let socket = useContext(SocketContext);
+
+    console.log("PARTIDA: ", JSON.parse(sessionStorage.getItem('game')));
     //socket.on('notify', (data) => {
     //    console.log(data)
     //})
+
 
     const appWidth = 1200, appHeight = 675
     const cell_hor_offset = 115, cell_ver_offset = 100;
 
     const [buildmode, setBuildMode] = useState(false)
-    const [throwDices, setThrowDices] = useState(false)
     const [selectedPoint, setSelectedPoint] = useState(null);
-    
+
     const nodes = useMemo(() => new Set(), []);
     const draw_board = useCallback((g) => {
-        g.clear()
-        let background = new PIXI.Graphics()
-        background.beginFill(0x000000)
-        background.drawRect(0,0,appWidth,appHeight)
-        background.endFill()
-        g.addChild(background)
 
         let game  = JSON.parse(sessionStorage.getItem('game'))
-        let me    = game.players[sessionStorage.getItem('my-turn')]
+        
+        let me    = null
+        for (let i of game.players) {
+            if (i.name === JSON.parse(sessionStorage.getItem('user')).name) {
+                me = i
+                break
+            }
+        }
+        console.log(me) 
 
         const sprites = [
             NewSprite(Biomes_sprites[game.board.biomes[0].type], appWidth/2 - cell_hor_offset, appHeight/2 - 2*cell_ver_offset),
@@ -147,6 +146,7 @@ function Game(props) {
         ]
 
         for (let i = 0; i < sprites.length; i++) {
+
             g.addChild(sprites[i])
             if (game.board.biomes[i].token !== 0) {
                 let token = new PIXI.Graphics();
@@ -167,34 +167,19 @@ function Game(props) {
         let free_nodes_set = new Set(me.free_nodes)
         for (let i = 0; i < 12; i++) {
             for (let j = borders[i][0]; j <= borders[i][1]; j+=2) {
-                let node = new PIXI.Graphics(), id = `${i},${j}`, player_i = -1
-
-                for (let k = 0; k < game.players.length; k++) {
-                    let villages_set = new Set(game.players[k].villages)
-                    if (villages_set.has(id)) {
-                        player_i = k
-                        break
-                    }
-                }
-                if (player_i === -1) {
-                    if (buildmode) {
-                        if (free_nodes_set.has(id)) {
-                            node.beginFill(selectedPoint && selectedPoint.id === id ? 0xffff00 : 0xffffff)
-                            node.interactive = true
-                            node.on("pointerdown", () => {
-                                setSelectedPoint({id:id, type:'Node'})
-                                console.log(selectedPoint)
-                            })
-                        } else {
-                            node.beginFill(0xaaaaaa)
-                        }
-                    }
+                let node = new PIXI.Graphics(), id = `${i},${j}`
+                node.id = id
+                if (!buildmode) {
+                    node.beginFill(0xaaaaaa)
                 } else {
-                    node.beginFill(PlayersColors[player_i])
-                }
+                    node.beginFill(selectedPoint && selectedPoint.id === id ? 0xffff00 : 0xffffff)
+                } 
                 node.drawCircle(start_width + (j*(cell_hor_offset-4)/2), 76 + (24 * (i%2)) + (Math.floor(i/2) * cell_ver_offset), 15)
                 node.endFill()
-
+                if (buildmode && free_nodes_set.has(id)) {
+                    node.interactive = true
+                    node.on("pointertap", () => setSelectedPoint({id:id, type:'Node'}))
+                }
                 g.addChild(node)
                 nodes.add(id)
             }
@@ -232,15 +217,14 @@ function Game(props) {
             }
         }
 
-    }, [buildmode, game, selectedPoint])
+    }, [buildmode, selectedPoint])
 
     const draw_UI = useCallback((g) => {
-        //let game    = JSON.parse(sessionStorage.getItem('game'))
+        let game    = JSON.parse(sessionStorage.getItem('game'))
         let user = JSON.parse(sessionStorage.getItem('user')).name;   
         let index = game.players.findIndex(player => player.name === user);
         let players = game.players
-        let me      = game.players[sessionStorage.getItem('my-turn')]
-
+        
         // PLAYER 1:
         let PLAYER_BOX = new PIXI.Graphics();
         PLAYER_BOX.beginFill((game.current_turn === 0) ? color_1 : color_1_2)
@@ -313,55 +297,67 @@ function Game(props) {
         // --- BUTTONS ---
         if (!buildmode) {
             // Build button
-            let BUTTON = null
-            if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name) {
-                BUTTON = NewSprite(ButtonBuild, 1100, 410, 0.1)
-                BUTTON.interactive = true;
-                BUTTON.buttonMode = true;
-                BUTTON.on('pointerdown', () => {
-                    setBuildMode(true)
-                    setSelectedPoint(null)
-                })
-            } else {
-                BUTTON = NewSprite(ButtonBuildD, 1100, 410, 0.1)
-            }
+            let BUTTON = NewSprite(ButtonBuild, 1100, 410, 0.1)
+            BUTTON.interactive = true;
+            BUTTON.buttonMode = true;
+            BUTTON.on('pointerdown', () => {
+                if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name) {
+                    setBuildMode(prevStatus => {
+                        console.log("BUILD MODE: ", !prevStatus)
+                        return !prevStatus
+                    })
+                } else {
+                    console.log("CURRENT TURN: ", players[game.current_turn].name, "ME: ", JSON.parse(sessionStorage.getItem('user')).name)
+                }
+    
+            })
             g.addChild(BUTTON);
 
             // Dice button
-            if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && !throwDices) {
-                BUTTON = NewSprite(ButtonDices, 1100, 505, 0.1)
-                BUTTON.interactive = true
-                BUTTON.buttonMode  = true
-                BUTTON.on('pointerdown', () => {
-                    setThrowDices(true)
-                    socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id : MoveType.roll_dices })
-
-                })
-            } else {
-                BUTTON = NewSprite(ButtonDicesD, 1100, 505, 0.1)
-            }
-
+            BUTTON = NewSprite(ButtonDices, 1100, 505, 0.1)
+            BUTTON.interactive = true
+            BUTTON.buttonMode  = true
+            BUTTON.on('pointerdown', () => {
+                if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name) {
+                    console.log("TIRO LOS DADOS")
+                } else {
+                    console.log("CURRENT TURN: ", players[game.current_turn].name, "ME: ", JSON.parse(sessionStorage.getItem('user')).name)
+                }
+    
+            })
             g.addChild(BUTTON);
 
             // Next turn button
-            if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name) {
-                BUTTON = NewSprite(ButtonNextTurn, 1100, 600, 0.1)
-                BUTTON.interactive = true;
-                BUTTON.buttonMode = true;
-                BUTTON.on('pointerdown', () => {
+            BUTTON = NewSprite(ButtonNextTurn, 1100, 600, 0.1)
+            BUTTON.interactive = true;
+            BUTTON.buttonMode = true;
+            BUTTON.on('pointerdown', () => {
+                if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name) {
                     console.log('Siguiente turno: ', game.current_turn); 
-                    //socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id : MoveType.next_turn })
-                })
-            } else {
-                BUTTON = NewSprite(ButtonNextTurnD, 1100, 600, 0.1)
-            }
+                    socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id : MoveType.next_turn })
+                } else {
+                    console.log("CURRENT TURN: ", players[game.current_turn].name, "ME: ", JSON.parse(sessionStorage.getItem('user')).name)
+                }
+            })
             g.addChild(BUTTON)
 
             let BLACK_BOX = new PIXI.Graphics();
-            BLACK_BOX.beginFill(0x000000)
+            BLACK_BOX.beginFill(0xffffff)
             BLACK_BOX.drawRect(1005 - BUTTON.width/2, 600 - BUTTON.height/2, BUTTON.width, BUTTON.height)
             BLACK_BOX.endFill()
             g.addChild(BLACK_BOX)
+
+            BUTTON = NewSprite(ButtonDevelopmentCards, 1100, 315, 0.1);
+            BUTTON.interactive = true;
+            BUTTON.buttonMode = true;
+            BUTTON.on('pointerdown', () => {
+                if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name) {
+                    console.log("ABRO TIENDA DE CARTAS DE DESARROLLO")
+                } else {
+                    console.log("CURRENT TURN: ", players[game.current_turn].name, "ME: ", JSON.parse(sessionStorage.getItem('user')).name)
+                }
+            })
+            g.addChild(BUTTON)
 
         } else {
             // Build button on buildmode
@@ -370,9 +366,15 @@ function Game(props) {
             BUTTON.buttonMode = true;
             BUTTON.on('pointerdown', () => {
                 if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name) {
-                    setBuildMode(false)
+                    setBuildMode(prevStatus => {
+                        console.log("BUILD MODE: ", !prevStatus)
+                        return !prevStatus
+                    })
                     setSelectedPoint(null)
+                } else {
+                    console.log("CURRENT TURN: ", players[game.current_turn].name, "ME: ", JSON.parse(sessionStorage.getItem('user')).name)
                 }
+    
             })
             g.addChild(BUTTON);
 
@@ -384,39 +386,36 @@ function Game(props) {
 
             BLACK_BOX = new PIXI.Graphics();
             BLACK_BOX.beginFill(0x000000)
-            BLACK_BOX.drawRect(1005 - BUTTON.width/2, 600 - BUTTON.height/2, BUTTON.width, BUTTON.height)
+            BLACK_BOX.drawRect(1100 - BUTTON.width/2, 600 - BUTTON.height/2, BUTTON.width, BUTTON.height)
             BLACK_BOX.endFill()
             g.addChild(BLACK_BOX)
 
             BLACK_BOX = new PIXI.Graphics();
             BLACK_BOX.beginFill(0x000000)
-            BLACK_BOX.drawRect(1100 - BUTTON.width/2, 600 - BUTTON.height/2, BUTTON.width, BUTTON.height)
+            BLACK_BOX.drawRect(1005 - BUTTON.width/2, 600 - BUTTON.height/2, BUTTON.width, BUTTON.height)
             BLACK_BOX.endFill()
             g.addChild(BLACK_BOX)
 
-            
-            if (selectedPoint && (new Set(me.free_nodes)).has(selectedPoint.id)) {
-                BUTTON = NewSprite(ButtonCancel, 1005, 600, 0.1)
-                BUTTON.interactive = true;
-                BUTTON.buttonMode = true;
-                BUTTON.on('pointerdown', () => {
-                    setSelectedPoint(null)
-                })
-                g.addChild(BUTTON);
-
+            if (selectedPoint) {
                 BUTTON = NewSprite(ButtonConfirm, 1100, 600, 0.1)
                 BUTTON.interactive = true;
                 BUTTON.buttonMode = true;
                 BUTTON.on('pointerdown', () => {
                     console.log("CONSTRUYO EN ", selectedPoint)
-                    if (selectedPoint.type === 'Node') {
-                        socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id : MoveType.build_village, coords_0: selectedPoint.id })
-                        setBuildMode(false)
-                        setSelectedPoint(null)
-                    }
                 })
                 g.addChild(BUTTON);
+
+                BUTTON = NewSprite(ButtonCancel, 1005, 600, 0.1)
+                BUTTON.interactive = true;
+                BUTTON.buttonMode = true;
+                BUTTON.on('pointerdown', () => {
+                    console.log("HOLA?")
+                    setSelectedPoint(null)
+                })
+                g.addChild(BUTTON);
+
             }
+
         }
 
         /*
@@ -439,6 +438,10 @@ function Game(props) {
         );
         */
 
+
+
+        
+            
         const routesCartas = ['wheat_card.svg','lumber_card.svg', 'brick_card.svg', 'stone_card.svg', 'sheep_card.svg'];
         const routesDesarrollo = [Caballero,ConstruccionCarreteras, AgnoAbundancia, Monopoly, PuntosVictoria]
         const ordenRecursos = ['Trigo', 'Madera', 'Ladrillo', 'Piedra', 'Lana'];
@@ -538,7 +541,8 @@ function Game(props) {
             
         });
 
-    }, [buildmode, selectedPoint, throwDices])
+
+    }, [buildmode, selectedPoint])
 
     /*
     function onButtonClick() {
