@@ -1,9 +1,10 @@
 // React
-import React, { useCallback, useMemo, useState, useContext } from "react";
+import React, { useCallback, useState, useContext } from "react";
+import { SocketContext } from './App';
 
 // Board
 import * as PIXI from 'pixi.js'
-import { Stage, Graphics, Sprite } from '@pixi/react';
+import { Stage, Graphics } from '@pixi/react';
 import Desert   from './images/desert.png'
 import Farmland from './images/farmland.png'
 import Forest   from './images/forest.png'
@@ -12,7 +13,14 @@ import Mountain from './images/mountain.png'
 import Ocean    from './images/ocean.png'
 import Pasture  from './images/pasture.png'
 
-import './styles/boton.css'
+// Resources
+import Wheat from './images/wheat_card.svg'
+import Lumber from './images/lumber_card.svg'
+import Brick from './images/brick_card.svg'
+import Stone from './images/stone_card.svg'
+import Wool from './images/sheep_card.svg'
+
+/*
 import Dice1 from './images/Dice01.png'
 import Dice2 from './images/Dice02.png'
 import Dice3 from './images/Dice03.png'
@@ -25,6 +33,7 @@ import Monopoly from './images/card_monopoly.svg'
 import ConstruccionCarreteras from './images/card_roadbuilding.svg'
 import PuntosVictoria from './images/card_vp.svg'
 import AgnoAbundancia from './images/card_yearofplenty.svg'
+*/
 
 // Buttons
 import ButtonBuild from './images/button_build.png'
@@ -36,15 +45,9 @@ import ButtonDices from './images/button_dices.png'
 import ButtonDicesD from './images/button_dices_d.png'
 import ButtonNextTurn from './images/button_next-turn.png'
 import ButtonNextTurnD from './images/button_next-turn_d.png'
-import './styles/boton.css'
-import { SocketContext } from './App';
+import { create } from "./services/routes";
 
 const MoveType = require( './services/movesTypes.js')
-/*
-function random(min, max) {
-    return Math.floor(Math.random() * max) + min;
-}
-*/
 
 const Biomes = {
     'Desert': Desert,
@@ -56,31 +59,27 @@ const Biomes = {
     'Pasture': Pasture
 }
 
-function ncoor_toString(coords) {
-    return coords.x.toString() + "," + coords.y.toString()
-}
+const Resources = [
+    Wheat, Lumber, Brick, Stone, Wool
+]
 
 const borders = [[3,7],[2,8],[2,8],[1,9],[1,9],[0,10],[0,10],[1,9],[1,9],[2,8],[2,8],[3,7]];
-const color_1 = 0xd60000
-const color_2 = 0x06b300
-const color_3 = 0x005bb5
-const color_4 = 0xd4b700
 
 const PlayersColors  = [0xd60000, 0x06b300, 0x005bb5, 0xd4b700]
 const PlayersColorsD = [0x6e2323, 0x2f662d, 0x2e4a66, 0x706939]
 
-const color_1_2 = 0x6e2323
-const color_2_2 = 0x2f662d
-const color_3_2 = 0x2e4a66
-const color_4_2 = 0x706939
+// ============================================================================
+// AUXILIAR FUNCTIONS
+// ============================================================================
 
-function NewSprite(img, x, y, scale = 0.5) {
-    let sprite = PIXI.Sprite.from(img)
-    sprite.x = x;
-    sprite.y = y;
-    sprite.scale.set(scale);
-    sprite.anchor.set(0.5);
-    return sprite
+/*
+function random(min, max) {
+    return Math.floor(Math.random() * max) + min;
+}
+*/
+
+function ncoor_toString(coords) {
+    return coords.x.toString() + "," + coords.y.toString()
 }
 
 function Draw(color, type, ...params) {
@@ -97,19 +96,38 @@ function Draw(color, type, ...params) {
     return new_graphic
 }
 
-function DrawText(text, font, fontSize, fill, position, anchor) {
-    let new_text  = new PIXI.Text(text, {fontFamily: font, fontSize: fontSize, fill: fill});
+function DrawSprite(img, x, y, scale = 0.5) {
+    let sprite = PIXI.Sprite.from(img)
+    sprite.x = x;
+    sprite.y = y;
+    sprite.scale.set(scale);
+    sprite.anchor.set(0.5);
+    return sprite
+}
+
+function DrawSpritePro(img, x, y, width, height) {
+    let sprite = PIXI.Sprite.from(img)
+    sprite.width  = width
+    sprite.height = height
+    sprite.x = x;
+    sprite.y = y;
+    return sprite
+}
+
+function DrawText(text, font, fontSize, fill, align, position, anchor) {
+    let new_text  = new PIXI.Text(text, {fontFamily: font, fontSize: fontSize, fill: fill, align: align});
     new_text.anchor.set(anchor);
     new_text.position.set(position.x, position.y);
     return new_text
 }
 
+// ============================================================================
+// GAME
+// ============================================================================
 function Game(props) {
 
     const { gameChanged } = props
     let socket = useContext(SocketContext);
-    let game = JSON.parse(sessionStorage.getItem('game'))
-    console.log(JSON.parse(sessionStorage.getItem('game')))
     //socket.on('notify', (data) => {
     //    console.log(data)
     //})
@@ -117,14 +135,58 @@ function Game(props) {
     const appWidth = 1200, appHeight = 675
     const cell_hor_offset = 115, cell_ver_offset = 100;
 
-    const [buildmode, setBuildMode] = useState(false)
+    const [buildmode, setBuildMode] = useState(true)
     const [throwDices, setThrowDices] = useState(false)
     const [selectedPoint, setSelectedPoint] = useState(null);
-    const [turnEnd, setTurnEnd] = useState(false);
-    const [builtVillage, setBuiltVillage] = useState(false);
+    const [hasToBuild, setHasToBuild] = useState([true, false])
+
+    function create_biome(g, biomes, i, x, y) {
+
+        let sprite = DrawSprite(Biomes[biomes[i].type], x, y)
+        g.addChild(sprite)
+
+        if (biomes[i].token !== 0) {
+            let token = Draw(0xe8a85a, 'Circle', sprite.x, sprite.y, 20)
+            if (biomes[i].token === 6 || biomes[i].token === 8) {
+                token.addChild(DrawText(biomes[i].token, "Arial", 16, "red", 'center', {x: sprite.x, y: sprite.y }, 0.5))
+            } else {
+                token.addChild(DrawText(biomes[i].token, "Arial", 16, "white", 'center', {x: sprite.x, y: sprite.y }, 0.5))
+            }
+            g.addChild(token)
+        }
+
+    }
+
+    function create_node(g, players, free_nodes_set, id, x, y) {
+        let p_i = -1
+        for (let p = 0; p < players.length; p++) {
+            if ((new Set(players[p].villages)).has(id)) {
+                p_i = p
+            }
+        }
+        if (p_i === -1) {
+            if (free_nodes_set.size > 0) {
+                if (
+                    ((hasToBuild[0] && JSON.parse(sessionStorage.getItem('game')).phase !== 3 && JSON.parse(sessionStorage.getItem('game')).current_turn === parseInt(sessionStorage.getItem('my-turn'))) ||
+                        buildmode) && 
+                        free_nodes_set.has(id)
+                ) {
+
+                    let node = Draw(selectedPoint && selectedPoint.id === id ? 0xffff00 : 0xffffff, 'Circle', x, y, 15)
+                    node.interactive = true 
+                    node.on("pointerdown", () => {
+                        setSelectedPoint({id:id, type:'Node'})
+                    })
+                    g.addChild(node)
+                }
+            }
+
+        } else {
+            g.addChild(Draw(PlayersColors[p_i], 'Circle', x, y, 15))
+        }
+    }
 
     function create_road(g, players, free_roads_set, id, x, y) {
-
         let p_i = -1
         for (let p = 0; p < players.length; p++) {
             if ((new Set(players[p].roads)).has(id)) {
@@ -132,107 +194,214 @@ function Game(props) {
             }
         }
         if (p_i === -1) {
-            if (buildmode && free_roads_set.has(id) && (game.phase === 2 || (game.phase !== 2 && builtVillage))) {
-                let road = new PIXI.Graphics()
-                //road.id  = id
-                road.beginFill(selectedPoint && selectedPoint.id === id ? 0x0b04cf : 0x6f5c9c)
-                road.drawRoundedRect(x, y, 17, 17, 5)
-                road.endFill()
-                road.interactive = true
-                road.on("pointertap", () => {setSelectedPoint({id:id, type:'Road'})})
-                g.addChild(road)
+            if (free_roads_set.size > 0) {
+                if (
+                    ((hasToBuild[1] && JSON.parse(sessionStorage.getItem('game')).phase !== 3 && JSON.parse(sessionStorage.getItem('game')).current_turn === parseInt(sessionStorage.getItem('my-turn'))) ||
+                        buildmode) && 
+                    free_roads_set.has(id)
+                ) {
+                    let road = new PIXI.Graphics()
+                    road.beginFill(selectedPoint && selectedPoint.id === id ? 0x0b04cf : 0x6f5c9c)
+                    road.drawRoundedRect(x, y, 17, 17, 5)
+                    road.endFill()
+                    road.interactive = true
+                    road.on("pointertap", () => {setSelectedPoint({id:id, type:'Road'})})
+                    g.addChild(road)
+                }
             }
+
         } else {
             g.addChild(Draw(PlayersColors[p_i], 'RoundedRect', x, y, 17, 17, 5))
         }
-
     }
-    
-    //const nodes = useMemo(() => new Set(), []);
+
+    function game_phase_init(g, game, players) {
+
+        if (game.current_turn === parseInt(sessionStorage.getItem('my-turn'))) {
+            let BUTTON = null
+            // Only if player has selected a place to build
+            if (hasToBuild[0] || hasToBuild[1]) {
+                if (selectedPoint) {
+                    // Cancel building selection
+                    BUTTON = DrawSprite(ButtonCancel, 1005, 600, 0.1)
+                    BUTTON.interactive = true;
+                    BUTTON.buttonMode = true;
+                    BUTTON.on('pointerdown', () => {
+                        setSelectedPoint(null)
+                    })
+                    g.addChild(BUTTON);
+
+                    // Confirm building selection
+                    BUTTON = DrawSprite(ButtonConfirm, 1100, 600, 0.1)
+                    BUTTON.interactive = true;
+                    BUTTON.buttonMode = true;
+                    BUTTON.on('pointerdown', () => {
+                        console.log("CONSTRUYO EN ", selectedPoint)
+                        if (selectedPoint.type === 'Node') {
+                            socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id : MoveType.build_village, coords: selectedPoint.id })
+                        } else if (selectedPoint.type === 'Road') {
+                            socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, {id : MoveType.build_road, coords: selectedPoint.id})
+                        }
+                        if (hasToBuild[0]) {
+                            setHasToBuild([false, true])
+                        } else if (hasToBuild[1]) {
+                            setHasToBuild([false, false])
+                            setBuildMode(false)
+                        }
+                        setSelectedPoint(null)
+                    })
+                    g.addChild(BUTTON);
+                }
+            } else {
+                // Next turn button
+                BUTTON = DrawSprite(ButtonNextTurn, 1100, 600, 0.1)
+                BUTTON.interactive = true;
+                BUTTON.buttonMode  = true;
+                BUTTON.on('pointerdown', () => {
+                    socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id : MoveType.next_turn })
+                    setHasToBuild([true, false])
+                    if (game.current_turn === 0 && game.phase === 2) {
+                        setBuildMode(false)
+                    }
+                })
+                g.addChild(BUTTON)
+            }
+        }
+    }
+
+    function game_phase_post(g, game, players) {
+
+        // Drawing the buttons
+        let BUTTON = null
+        if (!buildmode) {
+            // Build button
+            if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name) {
+                BUTTON = DrawSprite(ButtonBuild, 1100, 505, 0.1)
+                BUTTON.interactive = true;
+                BUTTON.buttonMode = true;
+                BUTTON.on('pointerdown', () => {
+                    setBuildMode(true)
+                    setSelectedPoint(null)
+                })
+            } else {
+                BUTTON = DrawSprite(ButtonBuildD, 1100, 505, 0.1)
+            }
+            g.addChild(BUTTON)
+
+            // Next turn button
+            if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name) {
+                BUTTON = DrawSprite(ButtonNextTurn, 1100, 600, 0.1)
+                BUTTON.interactive = true;
+                BUTTON.buttonMode = true;
+                BUTTON.on('pointerdown', () => {
+                    console.log('Siguiente turno: ', game.current_turn+1); 
+                    //socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id : MoveType.next_turn })
+                })
+            } else {
+                BUTTON = DrawSprite(ButtonNextTurnD, 1100, 600, 0.1)
+            }
+            g.addChild(BUTTON)
+
+            // Dice button
+            if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && !throwDices) {
+                BUTTON = DrawSprite(ButtonDices, 1005, 600, 0.1)
+                BUTTON.interactive = true
+                BUTTON.buttonMode  = true
+                BUTTON.on('pointerdown', () => {
+                    setThrowDices(true)
+                    socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id : MoveType.roll_dices })
+
+                })
+            } else {
+                BUTTON = DrawSprite(ButtonDicesD, 1005, 600, 0.1)
+            }
+            g.addChild(BUTTON);
+
+        } else {
+            // Build button cancel
+            BUTTON = DrawSprite(ButtonBuildCancel, 1100, 505, 0.1)
+            BUTTON.interactive = true;
+            BUTTON.buttonMode = true;
+            BUTTON.on('pointerdown', () => {
+                setBuildMode(false)
+                setSelectedPoint(null)
+            })
+            g.addChild(BUTTON)
+
+            // Only if player has selected a place to build
+            if (selectedPoint) {
+                // Cancel building selection
+                BUTTON = DrawSprite(ButtonCancel, 1005, 600, 0.1)
+                BUTTON.interactive = true;
+                BUTTON.buttonMode = true;
+                BUTTON.on('pointerdown', () => {
+                    setSelectedPoint(null)
+                })
+                g.addChild(BUTTON);
+
+                // Confirm building selection
+                BUTTON = DrawSprite(ButtonConfirm, 1100, 600, 0.1)
+                BUTTON.interactive = true;
+                BUTTON.buttonMode = true;
+                BUTTON.on('pointerdown', () => {
+                    console.log("CONSTRUYO EN ", selectedPoint)
+                    if (selectedPoint.type === 'Node') {
+                        socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id : MoveType.build_village, coords: selectedPoint.id })
+                    } else if (selectedPoint.type === 'Road') {
+                        socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, {id : MoveType.build_road, coords: selectedPoint.id})
+                    }
+                    setBuildMode(false)
+                    setSelectedPoint(null)
+                })
+                g.addChild(BUTTON);
+            }
+        }
+    }
 
     const draw_game = useCallback((g) => {
+
+        // Variables:
+        let game    = JSON.parse(sessionStorage.getItem('game'))
+        let players = game.players 
+        let me      = players[sessionStorage.getItem('my-turn')]
+
         // Clear background:
         for (let i = g.children.length - 1; i >= 0; i--) {
             g.removeChild(g.children[i])
         }
         g.addChild(Draw(0x000000, 'Rect', 0, 0, appWidth, appHeight))
 
-        game    = JSON.parse(sessionStorage.getItem('game'))
-        let players = game.players 
-        let me      = players[sessionStorage.getItem('my-turn')]
-
         // Drawing the biomes:
-        const sprites = [
-            NewSprite(Biomes[game.board.biomes[0].type], appWidth/2 - cell_hor_offset, appHeight/2 - 2*cell_ver_offset),
-            NewSprite(Biomes[game.board.biomes[1].type], appWidth/2, appHeight/2 - 2*cell_ver_offset),
-            NewSprite(Biomes[game.board.biomes[2].type], appWidth/2 + cell_hor_offset, appHeight/2 - 2*cell_ver_offset),
-
-            NewSprite(Biomes[game.board.biomes[3].type], appWidth/2 - 1.5*cell_hor_offset, appHeight/2 - cell_ver_offset),
-            NewSprite(Biomes[game.board.biomes[4].type], appWidth/2 - 0.5*cell_hor_offset, appHeight/2 - cell_ver_offset),
-            NewSprite(Biomes[game.board.biomes[5].type], appWidth/2 + 0.5*cell_hor_offset, appHeight/2 - cell_ver_offset),
-            NewSprite(Biomes[game.board.biomes[6].type], appWidth/2 + 1.5*cell_hor_offset, appHeight/2 - cell_ver_offset),
-
-            NewSprite(Biomes[game.board.biomes[7].type], appWidth/2 - 2*cell_hor_offset, appHeight/2),
-            NewSprite(Biomes[game.board.biomes[8].type], appWidth/2 - cell_hor_offset, appHeight/2),
-            NewSprite(Biomes[game.board.biomes[9].type], appWidth/2,appHeight/2),
-            NewSprite(Biomes[game.board.biomes[10].type],appWidth/2 + cell_hor_offset, appHeight/2),
-            NewSprite(Biomes[game.board.biomes[11].type],appWidth/2 + 2*cell_hor_offset, appHeight/2),
-
-            NewSprite(Biomes[game.board.biomes[12].type],appWidth/2 - 1.5*cell_hor_offset, appHeight/2 + cell_ver_offset),
-            NewSprite(Biomes[game.board.biomes[13].type],appWidth/2 - 0.5*cell_hor_offset, appHeight/2 + cell_ver_offset),
-            NewSprite(Biomes[game.board.biomes[14].type],appWidth/2 + 0.5*cell_hor_offset, appHeight/2 + cell_ver_offset),
-            NewSprite(Biomes[game.board.biomes[15].type],appWidth/2 + 1.5*cell_hor_offset, appHeight/2 + cell_ver_offset),
-
-            NewSprite(Biomes[game.board.biomes[16].type],appWidth/2 - cell_hor_offset, appHeight/2 + 2*cell_ver_offset),
-            NewSprite(Biomes[game.board.biomes[17].type],appWidth/2, appHeight/2 + 2*cell_ver_offset),
-            NewSprite(Biomes[game.board.biomes[18].type],appWidth/2 + cell_hor_offset, appHeight/2 + 2*cell_ver_offset),
-        ]
-        for (let i = 0; i < sprites.length; i++) {
-            g.addChild(sprites[i])
-            if (game.board.biomes[i].token !== 0) {
-                let token = Draw(0xe8a85a, 'Circle', sprites[i].x, sprites[i].y, 20)
-                if (game.board.biomes[i].token === 6 || game.board.biomes[i].token === 8) {
-                    token.addChild(DrawText(game.board.biomes[i].token, "Arial", 16, "red", {x: sprites[i].x, y: sprites[i].y }, 0.5))
-                } else {
-                    token.addChild(DrawText(game.board.biomes[i].token, "Arial", 16, "white", {x: sprites[i].x, y: sprites[i].y }, 0.5))
-                }
-                g.addChild(token)
-            }
-        }
+        create_biome(g, game.board.biomes, 0, appWidth/2 - cell_hor_offset, appHeight/2 - 2*cell_ver_offset)
+        create_biome(g, game.board.biomes, 1,  appWidth/2, appHeight/2 - 2*cell_ver_offset)
+        create_biome(g, game.board.biomes, 2,  appWidth/2 + cell_hor_offset, appHeight/2 - 2*cell_ver_offset)
+        create_biome(g, game.board.biomes, 11, appWidth/2 - 1.5*cell_hor_offset, appHeight/2 - cell_ver_offset)
+        create_biome(g, game.board.biomes, 12, appWidth/2 - 0.5*cell_hor_offset, appHeight/2 - cell_ver_offset)
+        create_biome(g, game.board.biomes, 13, appWidth/2 + 0.5*cell_hor_offset, appHeight/2 - cell_ver_offset)
+        create_biome(g, game.board.biomes, 3,  appWidth/2 + 1.5*cell_hor_offset, appHeight/2 - cell_ver_offset)
+        create_biome(g, game.board.biomes, 10, appWidth/2 - 2*cell_hor_offset, appHeight/2)
+        create_biome(g, game.board.biomes, 17, appWidth/2 - cell_hor_offset, appHeight/2)
+        create_biome(g, game.board.biomes, 18, appWidth/2,appHeight/2)
+        create_biome(g, game.board.biomes, 14, appWidth/2 + cell_hor_offset, appHeight/2)
+        create_biome(g, game.board.biomes, 4,  appWidth/2 + 2*cell_hor_offset, appHeight/2)
+        create_biome(g, game.board.biomes, 9,  appWidth/2 - 1.5*cell_hor_offset, appHeight/2 + cell_ver_offset)
+        create_biome(g, game.board.biomes, 16, appWidth/2 - 0.5*cell_hor_offset, appHeight/2 + cell_ver_offset)
+        create_biome(g, game.board.biomes, 15, appWidth/2 + 0.5*cell_hor_offset, appHeight/2 + cell_ver_offset)
+        create_biome(g, game.board.biomes, 5,  appWidth/2 + 1.5*cell_hor_offset, appHeight/2 + cell_ver_offset)
+        create_biome(g, game.board.biomes, 6,  appWidth/2 - cell_hor_offset, appHeight/2 + 2*cell_ver_offset)
+        create_biome(g, game.board.biomes, 7,  appWidth/2, appHeight/2 + 2*cell_ver_offset)
+        create_biome(g, game.board.biomes, 8,  appWidth/2 + cell_hor_offset, appHeight/2 + 2*cell_ver_offset)
 
         // Drawing the building nodes:
-        let start_width = 320;
-        console.log ('me: ', me)
-        let free_nodes_set = new Set(me.free_nodes)
+        let free_nodes_set = (me.free_nodes.length > 0) ? new Set(me.free_nodes) : new Set()
         for (let i = 0; i < 12; i++) {
             for (let j = borders[i][0]; j <= borders[i][1]; j+=2) {
-
-                let id = `${i},${j}`
-
-                let p_i = -1
-                for (let p = 0; p < players.length; p++) {
-                    if ((new Set(players[p].villages)).has(id)) {
-                        p_i = p
-                    }
-                }
-
-                if (p_i === -1) {
-                    if (buildmode && free_nodes_set.has(id) && !builtVillage) {
-                        let node = Draw(selectedPoint && selectedPoint.id === id ? 0xffff00 : 0xffffff, 'Circle', start_width + (j*(cell_hor_offset-4)/2), 76 + (24 * (i%2)) + (Math.floor(i/2) * cell_ver_offset), 15)
-                        node.interactive = true
-                        node.on("pointerdown", () => {
-                            setSelectedPoint({id:id, type:'Node'})
-                        })
-                        g.addChild(node)
-                    }
-                } else {
-                    g.addChild(Draw(PlayersColors[p_i], 'Circle', start_width + (j*(cell_hor_offset-4)/2), 76 + (24 * (i%2)) + (Math.floor(i/2) * cell_ver_offset), 15))
-                }
+                create_node(g, players, free_nodes_set, `${i},${j}`, 320 + (j*(cell_hor_offset-4)/2), 76 + (24 * (i%2)) + (Math.floor(i/2) * cell_ver_offset))
             }
         }
 
         // Drawing the road nodes:
-        let free_roads_set = new Set(me.free_roads)
+        let free_roads_set = (me.free_roads.length > 0) ? new Set(me.free_roads) : new Set()
         create_road(g, players, free_roads_set, '0,3:1,2', 450, 81)
         create_road(g, players, free_roads_set, '0,3:1,4', 505, 81)
         create_road(g, players, free_roads_set, '0,5:1,4', 560, 81)
@@ -263,7 +432,7 @@ function Game(props) {
         create_road(g, players, free_roads_set, '4,1:5,0', 335, 281, 17, 17, 5)
         create_road(g, players, free_roads_set, '4,1:5,2', 391, 281, 17, 17, 5)
         create_road(g, players, free_roads_set, '4,3:5,2', 448, 281, 17, 17, 5)
-        create_road(g, players, free_roads_set, '4,3:5:4', 504, 281, 17, 17, 5)
+        create_road(g, players, free_roads_set, '4,3:5,4', 504, 281, 17, 17, 5)
         create_road(g, players, free_roads_set, '4,5:5,4', 561, 281, 17, 17, 5)
         create_road(g, players, free_roads_set, '4,5:5,6', 617, 281, 17, 17, 5)
         create_road(g, players, free_roads_set, '4,7:5,6', 675, 281, 17, 17, 5)
@@ -316,541 +485,42 @@ function Game(props) {
         create_road(g, players, free_roads_set, '10,6:11,7', 672, 580)
         create_road(g, players, free_roads_set, '10,8:11,7', 728, 580)
 
-
-        
-
-    }, [buildmode, gameChanged, selectedPoint, turnEnd])
-
-    console.log(selectedPoint)
-    /*
-    const draw_board2 = useCallback((g) => {
-        g.clear()
-        let background = new PIXI.Graphics()
-        background.beginFill(0x000000)
-        background.drawRect(0,0,appWidth,appHeight)
-        background.endFill()
-        g.addChild(background)
-
-        game  = JSON.parse(sessionStorage.getItem('game'))
-        let me    = game.players[sessionStorage.getItem('my-turn')]
-
-        const sprites = [
-            NewSprite(Biomes[game.board.biomes[0].type], appWidth/2 - cell_hor_offset, appHeight/2 - 2*cell_ver_offset),
-            NewSprite(Biomes[game.board.biomes[1].type], appWidth/2, appHeight/2 - 2*cell_ver_offset),
-            NewSprite(Biomes[game.board.biomes[2].type], appWidth/2 + cell_hor_offset, appHeight/2 - 2*cell_ver_offset),
-
-            NewSprite(Biomes[game.board.biomes[3].type], appWidth/2 - 1.5*cell_hor_offset, appHeight/2 - cell_ver_offset),
-            NewSprite(Biomes[game.board.biomes[4].type], appWidth/2 - 0.5*cell_hor_offset, appHeight/2 - cell_ver_offset),
-            NewSprite(Biomes[game.board.biomes[5].type], appWidth/2 + 0.5*cell_hor_offset, appHeight/2 - cell_ver_offset),
-            NewSprite(Biomes[game.board.biomes[6].type], appWidth/2 + 1.5*cell_hor_offset, appHeight/2 - cell_ver_offset),
-
-            NewSprite(Biomes[game.board.biomes[7].type], appWidth/2 - 2*cell_hor_offset, appHeight/2),
-            NewSprite(Biomes[game.board.biomes[8].type], appWidth/2 - cell_hor_offset, appHeight/2),
-            NewSprite(Biomes[game.board.biomes[9].type], appWidth/2,appHeight/2),
-            NewSprite(Biomes[game.board.biomes[10].type],appWidth/2 + cell_hor_offset, appHeight/2),
-            NewSprite(Biomes[game.board.biomes[11].type],appWidth/2 + 2*cell_hor_offset, appHeight/2),
-
-            NewSprite(Biomes[game.board.biomes[12].type],appWidth/2 - 1.5*cell_hor_offset, appHeight/2 + cell_ver_offset),
-            NewSprite(Biomes[game.board.biomes[13].type],appWidth/2 - 0.5*cell_hor_offset, appHeight/2 + cell_ver_offset),
-            NewSprite(Biomes[game.board.biomes[14].type],appWidth/2 + 0.5*cell_hor_offset, appHeight/2 + cell_ver_offset),
-            NewSprite(Biomes[game.board.biomes[15].type],appWidth/2 + 1.5*cell_hor_offset, appHeight/2 + cell_ver_offset),
-
-            NewSprite(Biomes[game.board.biomes[16].type],appWidth/2 - cell_hor_offset, appHeight/2 + 2*cell_ver_offset),
-            NewSprite(Biomes[game.board.biomes[17].type],appWidth/2, appHeight/2 + 2*cell_ver_offset),
-            NewSprite(Biomes[game.board.biomes[18].type],appWidth/2 + cell_hor_offset, appHeight/2 + 2*cell_ver_offset),
-        ]
-
-        for (let i = 0; i < sprites.length; i++) {
-            g.addChild(sprites[i])
-            if (game.board.biomes[i].token !== 0) {
-                let token = new PIXI.Graphics();
-                token.beginFill(0xe8a85a);
-                token.drawCircle(sprites[i].x, sprites[i].y, 20);
-                token.endFill();
-
-                let text  = new PIXI.Text(game.board.biomes[i].token, {fontFamily: "Arial", fontSize: 16, fill: (game.board.biomes[i].token === 8) ? "red" : "white"});
-                text.anchor.set(0.5);
-                text.position.set(sprites[i].x, sprites[i].y);
-                token.addChild(text);
-    
-                g.addChild(token)
-            }
-        }
-
-        let start_width = 320;
-        let free_nodes_set = new Set(me.free_nodes)
-        for (let i = 0; i < 12; i++) {
-            for (let j = borders[i][0]; j <= borders[i][1]; j+=2) {
-                let node = new PIXI.Graphics(), id = `${i},${j}`, player_i = -1
-
-                for (let k = 0; k < game.players.length; k++) {
-                    let villages_set = new Set(game.players[k].villages)
-                    if (villages_set.has(id)) {
-                        player_i = k
-                        break
-                    }
-                }
-                if (player_i === -1) {
-                    if (buildmode) {
-                        if (free_nodes_set.has(id)) {
-                            node.beginFill(selectedPoint && selectedPoint.id === id ? 0xffff00 : 0xffffff)
-                            node.interactive = true
-                            node.on("pointerdown", () => {
-                                setSelectedPoint({id:id, type:'Node'})
-                                console.log(selectedPoint)
-                            })
-                        } else {
-                            node.beginFill(0xaaaaaa)
-                        }
-                    }
-                } else {
-                    node.beginFill(PlayersColors[player_i])
-                }
-                node.drawCircle(start_width + (j*(cell_hor_offset-4)/2), 76 + (24 * (i%2)) + (Math.floor(i/2) * cell_ver_offset), 15)
-                node.endFill()
-
-                g.addChild(node)
-                //nodes.add(id)
-            }
-        }
-
-
-        let arr_nodes = [...nodes], n = [0, arr_nodes.length-1]
-        for (let i = 0; i < 3; i++) {
-            for (let j = 0; j < (3+i); j++) {
-                // Upper part:
-                let coords = arr_nodes[n[0]].split(','), x = parseInt(coords[0]), y = parseInt(coords[1])
-                // -- Road(x+1,y-1)
-                g.addChild(create_road(`${coords}:${ncoor_toString({x:x+1, y:y-1})}`, 448+(113*j)-(57*i), 78+100*i, selectedPoint, setSelectedPoint))
-                // -- Road(x+1,y+1)
-                g.addChild(create_road(`${coords}:${ncoor_toString({x:x+1, y:y+1})}`, 505+(113*j)-(57*i), 78+100*i, selectedPoint, setSelectedPoint))
-                n[0]++
-                // Bottom part:
-                coords = arr_nodes[n[1]].split(','); x = parseInt(coords[0]); y = parseInt(coords[1])
-                // -- Road(x-1,y+1)
-                g.addChild(create_road(`${ncoor_toString({x:x-1, y:y+1})}:${coords}`, 730-(112*j)+(57*i), 78+(101*(5-i)), selectedPoint, setSelectedPoint))
-                // -- Road(x-1,y-1)
-                g.addChild(create_road(`${ncoor_toString({x:x-1, y:y-1})}:${coords}`, 673-(112*j)+(57*i), 78+(101*(5-i)), selectedPoint, setSelectedPoint))
-                n[1]--
-            }
-            for (let j = 0; j < (4+i); j++) {
-                // Upper part:
-                let coords = arr_nodes[n[0]].split(','), x = parseInt(coords[0]), y = parseInt(coords[1])
-                // -- Road(x+1,y)
-                g.addChild(create_road(`${coords}:${ncoor_toString({x:x+1, y:y})}`, 419+(115*j)-(58*i), 129+(100*i), selectedPoint, setSelectedPoint))
-                n[0]++
-                // Bottom part:
-                coords = arr_nodes[n[1]].split(','); x = parseInt(coords[0]); y = parseInt(coords[1])
-                // -- Road(x-1,y)
-                g.addChild(create_road(`${ncoor_toString({x:x-1, y:y})}:${coords}`, 419+(115*j)-(58*i), 129+(100*(4-i)), selectedPoint, setSelectedPoint))
-                n[1]--
-            }
-        }
-
-    }, [buildmode, gameChanged, selectedPoint])*/
-
-
-    const draw_UI2 = useCallback((g) => {
-        game    = JSON.parse(sessionStorage.getItem('game'))
-        let players = game.players
-        let me      = game.players[sessionStorage.getItem('my-turn')]
-        let user = JSON.parse(sessionStorage.getItem('user')).name; 
-        let index = game.players.findIndex(player => player.name === user);
-        
-        // PLAYER 1:
-        let PLAYER_BOX = new PIXI.Graphics();
-        PLAYER_BOX.beginFill((game.current_turn === 0) ? color_1 : color_1_2)
-        PLAYER_BOX.drawRoundedRect(-20, 20, 250, 50, 5)
-        PLAYER_BOX.endFill()
-
-        let PLAYER = new PIXI.Text(players[0].name, {
-            fontFamily: 'Arial',
-            fontSize:   20,
-            fill:       0xffffff,
-            align:      'center'
-        })
-        PLAYER.anchor.set(0.5); // Establece el anclaje en el punto medio horizontal y vertical
-        PLAYER.position.set(105, 45); // Establece la posición del texto dentro del rectángulo
-        PLAYER_BOX.addChild(PLAYER)
-        g.addChild(PLAYER_BOX);
-
-        // PLAYER 2:
-        PLAYER_BOX = new PIXI.Graphics();
-        PLAYER_BOX.beginFill((game.current_turn === 1) ? color_2 : color_2_2)
-        PLAYER_BOX.drawRoundedRect(-20, 80, 250, 50, 5)
-        PLAYER_BOX.endFill()
-
-        PLAYER = new PIXI.Text(players[1].name, {
-            fontFamily: 'Arial',
-            fontSize:   20,
-            fill:       0xffffff,
-            align:      'center'
-        })
-        PLAYER.anchor.set(0.5); // Establece el anclaje en el punto medio horizontal y vertical
-        PLAYER.position.set(105, 105); // Establece la posición del texto dentro del rectángulo
-        PLAYER_BOX.addChild(PLAYER)
-        g.addChild(PLAYER_BOX);
-    
-
-        // PLAYER 3:
-        PLAYER_BOX = new PIXI.Graphics();
-        PLAYER_BOX.beginFill((game.current_turn === 2) ? color_3 : color_3_2)
-        PLAYER_BOX.drawRoundedRect(-20, 140, 250, 50, 5)
-        PLAYER_BOX.endFill()
-
-        PLAYER = new PIXI.Text(players[2].name, {
-            fontFamily: 'Arial',
-            fontSize:   20,
-            fill:       0xffffff,
-            align:      'center'
-        })
-        PLAYER.anchor.set(0.5); // Establece el anclaje en el punto medio horizontal y vertical
-        PLAYER.position.set(105, 165); // Establece la posición del texto dentro del rectángulo
-        PLAYER_BOX.addChild(PLAYER)
-        g.addChild(PLAYER_BOX);
-
-        // PLAYER 4:
-        PLAYER_BOX = new PIXI.Graphics();
-        PLAYER_BOX.beginFill((game.current_turn === 3) ? color_4 : color_4_2)
-        PLAYER_BOX.drawRoundedRect(-20, 200, 250, 50, 5)
-        PLAYER_BOX.endFill()
-
-        PLAYER = new PIXI.Text(players[3].name, {
-            fontFamily: 'Arial',
-            fontSize:   20,
-            fill:       0xffffff,
-            align:      'center'
-        })
-        PLAYER.anchor.set(0.5); // Establece el anclaje en el punto medio horizontal y vertical
-        PLAYER.position.set(105, 225); // Establece la posición del texto dentro del rectángulo
-        PLAYER_BOX.addChild(PLAYER)
-        g.addChild(PLAYER_BOX);
-
-        // --- BUTTONS ---
-        if (!buildmode) {
-            // Build button
-            let BUTTON = null
-            console.log('turnEnd: ', turnEnd)
-            console.log('game.phase: ',game.phase)
-            if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && ((!turnEnd && game.phase !==2) || (me.resources.Madera > 0 && me.resources.Ladrillo > 0 && throwDices))) {
-                BUTTON = NewSprite(ButtonBuild, 1100, 410, 0.1)
-                BUTTON.interactive = true;
-                BUTTON.buttonMode = true;
-                BUTTON.on('pointerdown', () => {
-                    setBuildMode(true)
-                    setSelectedPoint(null)
-                })
-            } else {
-                BUTTON = NewSprite(ButtonBuildD, 1100, 410, 0.1)
-            }
-            g.addChild(BUTTON);
-
-            // Dice button
-            if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && !throwDices && game.phase === 2) {
-                BUTTON = NewSprite(ButtonDices, 1100, 505, 0.1)
-                BUTTON.interactive = true
-                BUTTON.buttonMode  = true
-                BUTTON.on('pointerdown', () => {
-                    setThrowDices(true)
-                    socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id : MoveType.roll_dices })
-                    setDado1(game.dice1)
-                    setDado2(game.dice2)
-                })
-            } else {
-                BUTTON = NewSprite(ButtonDicesD, 1100, 505, 0.1)
-            }
-
-            g.addChild(BUTTON);
-
-            // Next turn button
-            if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && ((game.phase !==2 && turnEnd) || (throwDices && game.phase===2))) {
-                BUTTON = NewSprite(ButtonNextTurn, 1100, 600, 0.1)
-                BUTTON.interactive = true;
-                BUTTON.buttonMode = true;
-                BUTTON.on('pointerdown', () => {
-                    console.log('Siguiente turno: ', game.current_turn); 
-                    socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id : MoveType.next_turn })
-                    setTurnEnd(false)
-                    setBuiltVillage(false)
-                    setThrowDices(false)
-                })
-            } else {
-                BUTTON = NewSprite(ButtonNextTurnD, 1100, 600, 0.1)
-            }
-            g.addChild(BUTTON)
-
-            let BLACK_BOX = new PIXI.Graphics();
-            BLACK_BOX.beginFill(0x000000)
-            BLACK_BOX.drawRect(1005 - BUTTON.width/2, 600 - BUTTON.height/2, BUTTON.width, BUTTON.height)
-            BLACK_BOX.endFill()
-            g.addChild(BLACK_BOX)
-
+        if (game.phase !== 3) {
+            game_phase_init(g, game, players)
         } else {
-            // Build button on buildmode
-            let BUTTON = NewSprite(ButtonBuildCancel, 1100, 505, 0.1)
-            BUTTON.interactive = true;
-            BUTTON.buttonMode = true;
-            BUTTON.on('pointerdown', () => {
-                if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name) {
-                    setBuildMode(false)
-                    setSelectedPoint(null)
-                }
-            })
-            g.addChild(BUTTON);
+            game_phase_post(g, game, players)
+        }
 
-            let BLACK_BOX = new PIXI.Graphics();
-            BLACK_BOX.beginFill(0x000000)
-            BLACK_BOX.drawRect(1100 - BUTTON.width/2, 410 - BUTTON.height/2, BUTTON.width, BUTTON.height)
-            BLACK_BOX.endFill()
-            g.addChild(BLACK_BOX)
+        // Drawing the player box
+        g.addChild(Draw(0x420001, 'RoundedRect', 30, 500, 380, 150, 10))
+        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name) {
+            g.addChild(Draw(PlayersColors[sessionStorage.getItem('my-turn')], 'RoundedRect', 57, 510, 327, 30, 5))
+        } else {
+            g.addChild(Draw(PlayersColorsD[sessionStorage.getItem('my-turn')], 'RoundedRect', 57, 510, 327, 30, 5))
+        }
+        g.addChild(DrawText(me.name, 'Arial', 25, 'white', 'center', {x: 75, y:525}, 0.5))
+        for (let i = 0; i < 5; i++) {
+            g.addChild(DrawSpritePro(Resources[i], 55+(71*i), 555, 46, 66))
+            g.addChild(Draw(0xe8a85a, 'Circle', 78+(71*i), 621, 15))
+            g.addChild(DrawText(Object.values(me.resources)[i], 'Arial', 14, 'black', 'center', {x:78+(71*i), y:621}, 0.5))
+        }
 
-            BLACK_BOX = new PIXI.Graphics();
-            BLACK_BOX.beginFill(0x000000)
-            BLACK_BOX.drawRect(1005 - BUTTON.width/2, 600 - BUTTON.height/2, BUTTON.width, BUTTON.height)
-            BLACK_BOX.endFill()
-            g.addChild(BLACK_BOX)
-
-            BLACK_BOX = new PIXI.Graphics();
-            BLACK_BOX.beginFill(0x000000)
-            BLACK_BOX.drawRect(1100 - BUTTON.width/2, 600 - BUTTON.height/2, BUTTON.width, BUTTON.height)
-            BLACK_BOX.endFill()
-            g.addChild(BLACK_BOX)
-
-            
-            if (selectedPoint && ((new Set(me.free_nodes)).has(selectedPoint.id)||(new Set(me.free_roads)).has(selectedPoint.id))) {
-                BUTTON = NewSprite(ButtonCancel, 1005, 600, 0.1)
-                BUTTON.interactive = true;
-                BUTTON.buttonMode = true;
-                BUTTON.on('pointerdown', () => {
-                    setSelectedPoint(null)
-                })
-                g.addChild(BUTTON);
-
-                BUTTON = NewSprite(ButtonConfirm, 1100, 600, 0.1)
-                BUTTON.interactive = true;
-                BUTTON.buttonMode = true;
-                BUTTON.on('pointerdown', () => {
-                    console.log("CONSTRUYO EN ", selectedPoint)
-                    if (selectedPoint.type === 'Node') {
-                        socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id : MoveType.build_village, coords: selectedPoint.id })
-                        setBuiltVillage(true)                        
-                    } else if (selectedPoint.type === 'Road') {
-                        socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, {id : MoveType.build_road, coords: selectedPoint.id})
-                        setTurnEnd(true)
-                    }
-                        setBuildMode(false)
-                        setSelectedPoint(null)
-                })
-                g.addChild(BUTTON);
+        // Drawing the player list:
+        let boxes = 0
+        for (let p = 0; p < players.length; p++) {
+            if (p != sessionStorage.getItem('my-turn')) {
+                g.addChild(Draw((p === game.current_turn) ? PlayersColors[p] : PlayersColorsD[p],  'RoundedRect', 30, 500 - 45*(boxes+1), 200, 35, 5))
+                g.addChild(DrawText(game.players[p].name, 'Arial', 20, 'white', 'center', {x:57, y:(515 - 45*(boxes+1))}, 0.5))
+                boxes++
             }
         }
 
-        /*
-        const container = new PIXI.Container();
-        const texture1 = PIXI.Texture.from(ButtonNextTurn);
-        const button = new PIXI.Sprite(texture1);
-        button.x = 0;
-        button.y = 0;
-        button.position.set(1100, 570);
-        button.anchor.set(0.5);
-        button.scale.set(0.1, 0.1);
-        container.addChild(button);
-        g.addChild(container)
-
-        // Agrega un evento de escucha al botón
-        button.interactive = true;
-        button.buttonMode = true;
-        button.on('pointerdown', () => 
-            onButtonClick()
-        );*/
-        
-
-        
-        const routesCartas = ['wheat_card.svg','lumber_card.svg', 'brick_card.svg', 'stone_card.svg', 'sheep_card.svg'];
-        const routesDesarrollo = [Caballero,ConstruccionCarreteras, AgnoAbundancia, Monopoly, PuntosVictoria]
-        const ordenRecursos = ['Trigo', 'Madera', 'Ladrillo', 'Piedra', 'Lana'];
-        const ordenCartas = ['Caballeros', 'Carreteras', 'Descubrimientos', 'Monopolios', 'Puntos'];
-        const sprites = [];
-        const texts = [];
-        let originalTexturesShowing = true;
-        
-        const width = 380;
-        const height = 110;
-        const cornerRadius = 10;
-        const gradientTexture = PIXI.Texture.from('gradient.png');
-        const circleRadius = 15; // Define el radio del círculo
-        const circleYOffset = 20; // Define cuánto espacio quieres entre el rectángulo y el círculo
-
-        
-        const rectangleForResources = new PIXI.Graphics();
-        rectangleForResources.beginFill(0x420001);
-        rectangleForResources.drawRoundedRect(30, 540, width, height, cornerRadius);
-        rectangleForResources.endFill();
-        
-        g.addChild(rectangleForResources);
-        
-        const horizontalRectangles = [];
-        const totalRects = 5;
-        const rectSpacing = 25;
-        const totalSpacing = rectSpacing * (totalRects + 1); // +1 to account for the additional spacing at start and end
-        const rectWidth = (width - totalSpacing) / totalRects;
-        const rectHeight = 66;
-        const rectY = 555;
-        
-        for (let i = 0; i < totalRects; i++) {
-            const rectX = 30 + rectSpacing + (i * (rectWidth + rectSpacing)); // + rectSpacing to add a space at the start
-            const rectangle = new PIXI.Graphics();
-            rectangle.beginFill(0x420001);
-            rectangle.drawRect(rectX, rectY, rectWidth, rectHeight);
-            rectangle.endFill();
-            g.addChild(rectangle);
-            horizontalRectangles.push(rectangle);
-          
-            // Cargar el SVG como textura
-            const svgTexture = PIXI.Texture.from(routesCartas[i]); // Reemplaza 'ruta_al_archivo.svg' con la ruta correcta a tu archivo SVG
-            
-            // Crear el sprite con la textura del SVG
-            const svgSprite = new PIXI.Sprite(svgTexture);
-            svgSprite.width = rectWidth;
-            svgSprite.height = rectHeight;
-            svgSprite.position.set(rectX, rectY);
-            g.addChild(svgSprite);
-  
-            sprites.push(svgSprite);
-            
-            const circleX = rectX + rectWidth / 2; // Centrar el círculo debajo del rectángulo
-            const circleY = rectY + rectHeight + circleYOffset - 20; // Posicionar el círculo debajo del rectángulo
-            const circle = new PIXI.Graphics();
-            circle.beginFill(0xe8a85a); // Cambia este valor al color que desees para el círculo
-            circle.drawCircle(circleX, circleY, circleRadius);
-            circle.endFill();
-            g.addChild(circle);
-  
-            const style = new PIXI.TextStyle({
-              fontSize: 14, // Ajusta este valor al tamaño de fuente que desees
-              fill: '#000000', // Cambia este valor al color que desees para el texto
-              align: 'center'
-          });
-  
-          const text = new PIXI.Text(game.players[index].resources[ordenRecursos[i]], style); // i+1 será el número que se mostrará en el círculo
-            
-          // Posicionar el texto en el centro del círculo
-          text.x = circleX - text.width / 2;
-          text.y = circleY - text.height / 2;
-          g.addChild(text);
-          texts.push(text);
-  
-          }
-          
-          const circleRightX = 30 + width; // Posicionar el centro del círculo en el borde derecho del rectángulo
-          const circleRightY = 540 + height / 2; // Posicionar el centro del círculo en el centro vertical del rectángulo
-          const circleRight = new PIXI.Graphics();
-          circleRight.beginFill(0xaaaa00); // Cambia este valor al color que desees para el círculo
-          circleRight.drawCircle(circleRightX, circleRightY, circleRadius);
-          circleRight.endFill();
-          g.addChild(circleRight);
-          circleRight.interactive = true;
-          circleRight.buttonMode = true;
-          circleRight.on('pointerdown', function() {
-              originalTexturesShowing = !originalTexturesShowing;
-              // Cambiar las texturas de los sprites cuando se haga clic en el círculo
-              for (let i = 0; i < sprites.length; i++) {
-                  if (originalTexturesShowing) {
-                      texts[i].text = game.players[index].resources[ordenRecursos[i]];
-                      console.log('texts[i].text',texts[i].text)
-                      sprites[i].texture = PIXI.Texture.from(routesCartas[i]);
-                      console.log('sprites[i].texture',sprites[i].texture)
-                    } else {
-                      texts[i].text = game.players[index].growth_cards[ordenCartas[i]];
-                      sprites[i].texture = PIXI.Texture.from(routesDesarrollo[i]);
-                    } 
-              }
-              
-          });
-          
-  
-      }, [buildmode, selectedPoint, throwDices, game, turnEnd])
-
-    /*
-    function onButtonClick() {
-        // Código que se ejecuta cuando el botón es pulsado
-        game = JSON.parse(sessionStorage.getItem('game'))
-        let user = JSON.parse(sessionStorage.getItem('user')).name; 
-        console.log(MoveType.next_turn)
-        console.log(MoveType)
-        let move = {
-            id : MoveType.next_turn,
-            }
-        if(JSON.parse(sessionStorage.getItem('players'))[game.current_turn] === user.name){
-            console.log('Cambio de turno(CurrentTurn): ', game.current_turn); 
-        
-            socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, move)
-            //Cambiar turno
-        }else{
-            console.log('No es tu turno(CurrentTurn): ', game.current_turn);
-        }
-      }
-      
-*/
-    
-    const listaDados = [
-        Dice1,
-        Dice2,
-        Dice3,
-        Dice4,
-        Dice5,
-        Dice6
-    ]
-
-    // provisional para ver como queda
-    const [dado1, setDado1] = useState(listaDados[0])
-    const [dado2, setDado2] = useState(listaDados[0])
-
-    const draw_Dice = useCallback((g) => {
-        const container1 = new PIXI.Container();
-        console.log('dice1',game.players[game.current_turn].dices_res[0])
-        const texture1 = PIXI.Texture.from(listaDados[game.players[game.current_turn].dices_res[0] - 1]); // Accede a la imagen correspondiente en listaDados
-        const Dado1 = new PIXI.Sprite(texture1);
-        Dado1.x = 0;
-        Dado1.y = 0;
-        container1.addChild(Dado1);
-        const mask1 = new PIXI.Graphics();
-        mask1.beginFill(0xffffff);
-        mask1.drawRoundedRect(0, 0, 64, 64, 20);
-        mask1.endFill();
-        container1.mask = mask1;
-        container1.addChild(mask1);
-    
-        const container2 = new PIXI.Container();
-        const texture2 = PIXI.Texture.from(listaDados[game.players[game.current_turn].dices_res[1] - 1]); // Accede a la imagen correspondiente en listaDados
-        const Dado2 = new PIXI.Sprite(texture2);
-        Dado2.x = 0;
-        Dado2.y = 0;
-        container2.addChild(Dado2);
-        const mask2 = new PIXI.Graphics();
-        mask2.beginFill(0xffffff);
-        mask2.drawRoundedRect(0, 0, 64, 64, 20);
-        mask2.endFill();
-        container2.mask = mask2;
-        container2.addChild(mask2);
-    
-        container1.x = 945;
-        container1.y = 40;
-        container2.x = 1010;
-        container2.y = 40;
-    
-        g.addChild(container1);
-        g.addChild(container2);
-    }, [game.players[game.current_turn].dices_res]);
-    
-     
+    }, [buildmode, gameChanged, hasToBuild, selectedPoint])
 
     return (
         <div id="game-header">
             <Stage width={appWidth} height={appHeight}>
                 <Graphics draw={draw_game} />
-                <Graphics draw={draw_UI2} />
-                <Graphics draw={draw_Dice} />
             </Stage>
         </div>
     );
