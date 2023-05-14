@@ -1,10 +1,13 @@
 // React
-import React, { useCallback, useState, useContext } from "react";
-import { SocketContext } from './App';
+import React, { useCallback, useContext, useEffect, useState } from "react"
+import io from 'socket.io-client';
+import * as PIXI from 'pixi.js'
+import { SocketContext } from './App'
+
+import Background from './images/game-bg2.png'
 
 // Board
-import * as PIXI from 'pixi.js'
-import { Stage, Graphics } from '@pixi/react';
+import { Stage, Graphics } from '@pixi/react'
 import Desert   from './images/desert.png'
 import Farmland from './images/farmland.png'
 import Forest   from './images/forest.png'
@@ -48,18 +51,17 @@ import ButtonNextTurn from './images/button_next-turn.png'
 import ButtonNextTurnD from './images/button_next-turn_d.png'
 import ButtonBuy from './images/button_buy.png'
 import ButtonBuyD from './images/button_buy_d.png'
-import { create } from "./services/routes";
 
 const MoveType = require( './services/movesTypes.js')
 
 const Biomes = {
-    'Desert': Desert,
-    'Farmland': Farmland,
-    'Forest': Forest,
-    'Hill': Hill,
-    'Mountain': Mountain,
-    'Ocean': Ocean,
-    'Pasture': Pasture
+    'Desierto': Desert,
+    'Cultivo': Farmland,
+    'Bosque': Forest,
+    'Colina': Hill,
+    'Monte': Mountain,
+    'Oceano': Ocean,
+    'Pasto': Pasture
 }
 
 const Resources = [ Wheat, Lumber, Brick, Stone, Wool ]
@@ -80,9 +82,11 @@ function random(min, max) {
 }
 */
 
+/*
 function ncoor_toString(coords) {
     return coords.x.toString() + "," + coords.y.toString()
 }
+*/
 
 function Draw(color, type, ...params) {
     let new_graphic = new PIXI.Graphics()
@@ -128,8 +132,24 @@ function DrawText(text, font, fontSize, fill, align, position, anchor) {
 // ============================================================================
 function Game(props) {
 
-    const { gameChanged } = props
-    let socket = useContext(SocketContext);
+    let { gameChanged } = props
+    let socket = useContext(SocketContext)
+   //const [gameChanged, setGameChanged] = useState(props[0])
+   //const [socket, setSocket] = useState(useContext(SocketContext))
+   //useEffect(() => {
+   //    if (socket == null) {
+   //        let new_socket = io('http://localhost:8080/')
+   //        new_socket.on('error',  (err)  => { console.log('SOCKET ERROR:', err) })
+   //        new_socket.on('update', (game) => {
+   //            sessionStorage.setItem('game', JSON.stringify(game))
+   //            setGameChanged(prevStatus => {
+   //                return !prevStatus
+   //            })
+   //            console.log("LA PARTIDA/TABLERO: ", game)
+   //        });
+   //        setSocket(new_socket)
+   //    }
+   //}, [socket]);
     //socket.on('notify', (data) => {
     //    console.log(data)
     //})
@@ -164,6 +184,7 @@ function Game(props) {
         for (let p = 0; p < players.length; p++) {
             if ((new Set(players[p].villages)).has(id)) {
                 p_i = p
+                break
             }
         }
         if (p_i === -1) {
@@ -188,22 +209,42 @@ function Game(props) {
         for (let p = 0; p < players.length; p++) {
             if ((new Set(players[p].villages)).has(id)) {
                 p_i = p
+                break
             }
         }
+
         if (p_i === -1) {
-            if (free_nodes_set.size > 0) {
-                if (buildmode && free_nodes_set.has(id)) {
-                    let node = Draw(selectedPoint && selectedPoint.id === id ? 0xffff00 : 0xffffff, 'Circle', x, y, 15)
-                    node.interactive = true 
-                    node.on("pointerdown", () => {
-                        setSelectedPoint({id:id, type:'Node'})
-                    })
-                    g.addChild(node)
+            for (let p = 0; p < players.length; p++) {
+                if ((new Set(players[p].cities)).has(id)) {
+                    p_i = p
+                    break
                 }
             }
-
+            if (p_i === -1) {
+                if (free_nodes_set.size > 0) {
+                    if (buildmode && free_nodes_set.has(id)) {
+                        let node = Draw(selectedPoint && selectedPoint.id === id ? 0xffff00 : 0xffffff, 'Circle', x, y, 15)
+                        node.interactive = true 
+                        node.on("pointerdown", () => {
+                            setSelectedPoint({id:id, type:'Node'})
+                        })
+                        g.addChild(node)
+                    }
+                }
+            } else {
+                g.addChild(Draw(PlayersColors[p_i], 'Rect', x - 15, y - 15, 30, 30))
+            }
         } else {
-            g.addChild(Draw(PlayersColors[p_i], 'Circle', x, y, 15))
+            if (buildmode && p_i === parseInt(sessionStorage.getItem('my-turn'))) {
+                let node = Draw(selectedPoint && selectedPoint.id === id ? 0xffff00 : PlayersColors[p_i], 'Circle', x, y, 15)
+                node.interactive = true
+                node.on("pointerdown", () => {
+                    setSelectedPoint({id, type:'Village'})
+                })
+                g.addChild(node)
+            } else {
+                g.addChild(Draw(PlayersColors[p_i], 'Circle', x, y, 15))
+            }
         }
     }
 
@@ -515,16 +556,16 @@ function Game(props) {
             }
             g.addChild(BUTTON)
 
-            // Build button
-            if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && throwDices) {
+            // Buy button
+            if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && me.can_buy) {
                 BUTTON = DrawSprite(ButtonBuy, 1100, 410, 0.1)
                 BUTTON.interactive = true;
                 BUTTON.buttonMode = true;
-                BUTTON.on('pointerdown', () => {              
+                BUTTON.on('pointerdown', () => {    
                     socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id : MoveType.buy_cards })
                 })
             } else {
-                BUTTON = DrawSprite(ButtonNextTurnD, 1100, 410, 0.1)
+                BUTTON = DrawSprite(ButtonBuyD, 1100, 410, 0.1)
             }
             g.addChild(BUTTON)
 
@@ -589,6 +630,8 @@ function Game(props) {
                         socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id : MoveType.build_village, coords: selectedPoint.id })
                     } else if (selectedPoint.type === 'Road') {
                         socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, {id : MoveType.build_road, coords: selectedPoint.id})
+                    } else if (selectedPoint.type === 'Village') {
+                        socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, {id : MoveType.build_city, coords: selectedPoint.id})
                     }
                     setBuildMode(false)
                     setSelectedPoint(null)
@@ -614,6 +657,7 @@ function Game(props) {
             g.removeChild(g.children[i])
         }
         g.addChild(Draw(0x000000, 'Rect', 0, 0, appWidth, appHeight))
+        g.addChild(DrawSpritePro(Background, 0, 0, appWidth, appHeight))
 
         // Drawing the biomes:
         create_biome(g, game.board.biomes, 0, appWidth/2 - cell_hor_offset, appHeight/2 - 2*cell_ver_offset)
@@ -659,14 +703,14 @@ function Game(props) {
         // Drawing the player list:
         let boxes = 0
         for (let p = 0; p < players.length; p++) {
-            if (p != sessionStorage.getItem('my-turn')) {
+            if (p !== parseInt(sessionStorage.getItem('my-turn'))) {
                 g.addChild(Draw((p === game.current_turn) ? PlayersColors[p] : PlayersColorsD[p],  'RoundedRect', 30, 500 - 45*(boxes+1), 200, 35, 5))
                 g.addChild(DrawText(game.players[p].name, 'Arial', 13, 'white', 'left', {x:42, y:(514 - 47*(boxes+1))}, 0))
                 boxes++
             }
         }
 
-    }, [buildmode, gameChanged, hasToBuild, selectedPoint])
+    }, [buildmode, gameChanged, hasToBuild, selectedPoint, socket])
 
     return (
         <div id="game-header">

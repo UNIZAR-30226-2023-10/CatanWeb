@@ -3,12 +3,12 @@ import axios from 'axios'
 import io from 'socket.io-client';
 import Game from "./Game.js"
 import logo from './Catan-logo-4.png'
-import React, { createContext, useMemo, useState } from 'react'
+import React, { createContext, useState } from 'react'
+
+export const SocketContext = createContext();
 
 //import storage from './storage.js'
 const {GameService} = require('./services/game.service')
-
-export const SocketContext = createContext();
 
 //import cbg0 from '../Catan-bg0.jpg'
 //import cbg1 from '../Catan-bg1.jpg'
@@ -147,7 +147,7 @@ function App() {
     // New game action:
     const [socket, setSocket] = useState(null)
     const [lobby, setLobby]   = useState([]);
-    let [gameChanged, setGameChanged] = useState(false)
+    const [gameChanged, setGameChanged] = useState(false)
 
     async function handleSubmit_NewGame(event) {
         // Evita que el formublanklario se envíe de manera predeterminada
@@ -179,9 +179,10 @@ function App() {
                 handleMenuChange('game') // Redirigir a la página de juego
             });
             socket.emit('joinGame', JSON.parse(sessionStorage.getItem('user')).accessToken, data.codigo_partida)
-            sessionStorage.setItem("my-turn", 0)
             setSocket(socket)
-            // Cambiar al conexto del Game lobby:
+            // Guardar mi orden de turno
+            sessionStorage.setItem('my-turn', 0)
+            // Cambiar al conexto del Game lobby
             handleMenuChange('game-lobby')
         }
     }
@@ -229,12 +230,13 @@ function App() {
                 console.log("LA PARTIDA/TABLERO: ", game)
                 handleMenuChange('game') // Redirigir a la página de juego
             });
-  
             socket.emit('joinGame', JSON.parse(sessionStorage.getItem('user')).accessToken, gamecode)
             setSocket(socket)
+
             // Configuración de los nuevos jugadores:
             setLobby(data.jugadores)
-            sessionStorage.setItem("my-turn", 
+            // Guardar mi orden de turno:
+            sessionStorage.setItem('my-turn', 
                 data.jugadores.findIndex(curr_player => curr_player === JSON.parse(sessionStorage.getItem('user')).name))
             // Cambiar al conexto del Game lobby:
             setActiveMenu('game-lobby')
@@ -244,7 +246,6 @@ function App() {
     // ========================================================================
     // GAME
     // ========================================================================
-
     return (
         <SocketContext.Provider value={socket}>
             <div>
