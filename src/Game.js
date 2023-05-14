@@ -46,6 +46,8 @@ import ButtonDices from './images/button_dices.png'
 import ButtonDicesD from './images/button_dices_d.png'
 import ButtonNextTurn from './images/button_next-turn.png'
 import ButtonNextTurnD from './images/button_next-turn_d.png'
+import ButtonBuy from './images/button_buy.png'
+import ButtonBuyD from './images/button_buy_d.png'
 import { create } from "./services/routes";
 
 const MoveType = require( './services/movesTypes.js')
@@ -513,6 +515,20 @@ function Game(props) {
             }
             g.addChild(BUTTON)
 
+            // Build button
+            if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && throwDices) {
+                BUTTON = DrawSprite(ButtonBuy, 1100, 410, 0.1)
+                BUTTON.interactive = true;
+                BUTTON.buttonMode = true;
+                BUTTON.on('pointerdown', () => {              
+                    socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id : MoveType.buy_cards })
+                })
+            } else {
+                BUTTON = DrawSprite(ButtonNextTurnD, 1100, 410, 0.1)
+            }
+            g.addChild(BUTTON)
+
+
             // Next turn button
             if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && throwDices) {
                 BUTTON = DrawSprite(ButtonNextTurn, 1100, 600, 0.1)
@@ -520,6 +536,7 @@ function Game(props) {
                 BUTTON.buttonMode = true;
                 BUTTON.on('pointerdown', () => {
                     socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id : MoveType.next_turn })
+                    setThrowDices(false)
                 })
             } else {
                 BUTTON = DrawSprite(ButtonNextTurnD, 1100, 600, 0.1)
