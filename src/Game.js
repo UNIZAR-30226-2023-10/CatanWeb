@@ -20,7 +20,7 @@ import Brick from './images/brick_card.svg'
 import Stone from './images/stone_card.svg'
 import Wool from './images/sheep_card.svg'
 
-/*
+import Dice0 from './images/Dice00.png'
 import Dice1 from './images/Dice01.png'
 import Dice2 from './images/Dice02.png'
 import Dice3 from './images/Dice03.png'
@@ -28,6 +28,7 @@ import Dice4 from './images/Dice04.png'
 import Dice5 from './images/Dice05.png'
 import Dice6 from './images/Dice06.png'
 
+/*
 import Caballero from './images/card_knight.svg'
 import Monopoly from './images/card_monopoly.svg'
 import ConstruccionCarreteras from './images/card_roadbuilding.svg'
@@ -59,9 +60,8 @@ const Biomes = {
     'Pasture': Pasture
 }
 
-const Resources = [
-    Wheat, Lumber, Brick, Stone, Wool
-]
+const Resources = [ Wheat, Lumber, Brick, Stone, Wool ]
+const Dices = [ Dice0, Dice1, Dice2, Dice3, Dice4, Dice5, Dice6 ]
 
 const borders = [[3,7],[2,8],[2,8],[1,9],[1,9],[0,10],[0,10],[1,9],[1,9],[2,8],[2,8],[3,7]];
 
@@ -284,7 +284,7 @@ function Game(props) {
         create_road_init(g, players, free_roads_set, '2,4:3,5', 561, 181)
         create_road_init(g, players, free_roads_set, '2,6:3,5', 617, 181)
         create_road_init(g, players, free_roads_set, '2,6:3,7', 675, 181)
-        create_road_init(g, players, free_roads_set, '2.8:3,7', 730, 181)
+        create_road_init(g, players, free_roads_set, '2,8:3,7', 730, 181)
         create_road_init(g, players, free_roads_set, '2,8:3,9', 786, 181)
 
         create_road_init(g, players, free_roads_set, '3,1:4,1', 365, 231)
@@ -500,7 +500,7 @@ function Game(props) {
         let BUTTON = null
         if (!buildmode) {
             // Build button
-            if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name) {
+            if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && (me.can_build[0] || me.can_build[1] || me.can_build[2])) {
                 BUTTON = DrawSprite(ButtonBuild, 1100, 505, 0.1)
                 BUTTON.interactive = true;
                 BUTTON.buttonMode = true;
@@ -514,13 +514,12 @@ function Game(props) {
             g.addChild(BUTTON)
 
             // Next turn button
-            if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name) {
+            if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && throwDices) {
                 BUTTON = DrawSprite(ButtonNextTurn, 1100, 600, 0.1)
                 BUTTON.interactive = true;
                 BUTTON.buttonMode = true;
                 BUTTON.on('pointerdown', () => {
-                    console.log('Siguiente turno: ', game.current_turn+1); 
-                    //socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id : MoveType.next_turn })
+                    socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id : MoveType.next_turn })
                 })
             } else {
                 BUTTON = DrawSprite(ButtonNextTurnD, 1100, 600, 0.1)
@@ -535,7 +534,6 @@ function Game(props) {
                 BUTTON.on('pointerdown', () => {
                     setThrowDices(true)
                     socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id : MoveType.roll_dices })
-
                 })
             } else {
                 BUTTON = DrawSprite(ButtonDicesD, 1005, 600, 0.1)
@@ -581,6 +579,10 @@ function Game(props) {
                 g.addChild(BUTTON);
             }
         }
+
+        g.addChild(DrawSprite(Dices[game.dices_res[0]], appWidth-110, 40, 1))
+        g.addChild(DrawSprite(Dices[game.dices_res[1]], appWidth-45, 40, 1))
+
     }
 
     const draw_game = useCallback((g) => {
