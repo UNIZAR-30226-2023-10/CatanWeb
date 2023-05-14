@@ -157,7 +157,7 @@ function Game(props) {
 
     }
 
-    function create_node(g, players, free_nodes_set, id, x, y) {
+    function create_node_init(g, players, free_nodes_set, id, x, y) {
         let p_i = -1
         for (let p = 0; p < players.length; p++) {
             if ((new Set(players[p].villages)).has(id)) {
@@ -166,12 +166,7 @@ function Game(props) {
         }
         if (p_i === -1) {
             if (free_nodes_set.size > 0) {
-                if (
-                    ((hasToBuild[0] && JSON.parse(sessionStorage.getItem('game')).phase !== 3 && JSON.parse(sessionStorage.getItem('game')).current_turn === parseInt(sessionStorage.getItem('my-turn'))) ||
-                        buildmode) && 
-                        free_nodes_set.has(id)
-                ) {
-
+                if (hasToBuild[0] && free_nodes_set.has(id) && JSON.parse(sessionStorage.getItem('game')).current_turn === parseInt(sessionStorage.getItem('my-turn'))) {
                     let node = Draw(selectedPoint && selectedPoint.id === id ? 0xffff00 : 0xffffff, 'Circle', x, y, 15)
                     node.interactive = true 
                     node.on("pointerdown", () => {
@@ -186,7 +181,31 @@ function Game(props) {
         }
     }
 
-    function create_road(g, players, free_roads_set, id, x, y) {
+    function create_node_post(g, players, free_nodes_set, id, x, y) {
+        let p_i = -1
+        for (let p = 0; p < players.length; p++) {
+            if ((new Set(players[p].villages)).has(id)) {
+                p_i = p
+            }
+        }
+        if (p_i === -1) {
+            if (free_nodes_set.size > 0) {
+                if (buildmode && free_nodes_set.has(id)) {
+                    let node = Draw(selectedPoint && selectedPoint.id === id ? 0xffff00 : 0xffffff, 'Circle', x, y, 15)
+                    node.interactive = true 
+                    node.on("pointerdown", () => {
+                        setSelectedPoint({id:id, type:'Node'})
+                    })
+                    g.addChild(node)
+                }
+            }
+
+        } else {
+            g.addChild(Draw(PlayersColors[p_i], 'Circle', x, y, 15))
+        }
+    }
+
+    function create_road_init(g, players, free_roads_set, id, x, y) {
         let p_i = -1
         for (let p = 0; p < players.length; p++) {
             if ((new Set(players[p].roads)).has(id)) {
@@ -195,11 +214,7 @@ function Game(props) {
         }
         if (p_i === -1) {
             if (free_roads_set.size > 0) {
-                if (
-                    ((hasToBuild[1] && JSON.parse(sessionStorage.getItem('game')).phase !== 3 && JSON.parse(sessionStorage.getItem('game')).current_turn === parseInt(sessionStorage.getItem('my-turn'))) ||
-                        buildmode) && 
-                    free_roads_set.has(id)
-                ) {
+                if (hasToBuild[1] && free_roads_set.has(id) && JSON.parse(sessionStorage.getItem('game')).current_turn === parseInt(sessionStorage.getItem('my-turn'))) {
                     let road = new PIXI.Graphics()
                     road.beginFill(selectedPoint && selectedPoint.id === id ? 0x0b04cf : 0x6f5c9c)
                     road.drawRoundedRect(x, y, 17, 17, 5)
@@ -215,7 +230,124 @@ function Game(props) {
         }
     }
 
-    function game_phase_init(g, game, players) {
+    function create_road_post(g, players, free_roads_set, id, x, y) {
+        let p_i = -1
+        for (let p = 0; p < players.length; p++) {
+            if ((new Set(players[p].roads)).has(id)) {
+                p_i = p
+            }
+        }
+        if (p_i === -1) {
+            if (free_roads_set.size > 0) {
+                if (buildmode && free_roads_set.has(id)) {
+                    let road = new PIXI.Graphics()
+                    road.beginFill(selectedPoint && selectedPoint.id === id ? 0x0b04cf : 0x6f5c9c)
+                    road.drawRoundedRect(x, y, 17, 17, 5)
+                    road.endFill()
+                    road.interactive = true
+                    road.on("pointertap", () => {setSelectedPoint({id:id, type:'Road'})})
+                    g.addChild(road)
+                }
+            }
+        } else {
+            g.addChild(Draw(PlayersColors[p_i], 'RoundedRect', x, y, 17, 17, 5))
+        }
+    }
+
+    function game_phase_init(g, game, players, me) {
+
+        // Drawing the building nodes:
+        let free_nodes_set = (me.free_nodes.length > 0) ? new Set(me.free_nodes) : new Set()
+        for (let i = 0; i < 12; i++) {
+            for (let j = borders[i][0]; j <= borders[i][1]; j+=2) {
+                create_node_init(g, players, free_nodes_set, `${i},${j}`, 320 + (j*(cell_hor_offset-4)/2), 76 + (24 * (i%2)) + (Math.floor(i/2) * cell_ver_offset))
+            }
+        }
+
+        // Drawing the road nodes:
+        let free_roads_set = new Set(me.first_roads)
+        create_road_init(g, players, free_roads_set, '0,3:1,2', 450, 81)
+        create_road_init(g, players, free_roads_set, '0,3:1,4', 505, 81)
+        create_road_init(g, players, free_roads_set, '0,5:1,4', 560, 81)
+        create_road_init(g, players, free_roads_set, '0,5:1,6', 616, 81)
+        create_road_init(g, players, free_roads_set, '0,7:1,6', 672, 81)
+        create_road_init(g, players, free_roads_set, '0,7:1,8', 728, 81)
+
+        create_road_init(g, players, free_roads_set, '1,2:2,2', 422, 131)
+        create_road_init(g, players, free_roads_set, '1,4:2,4', 534, 131)
+        create_road_init(g, players, free_roads_set, '1,6:2,6', 648, 131)
+        create_road_init(g, players, free_roads_set, '1,8:2,8', 762, 131)
+
+        create_road_init(g, players, free_roads_set, '2,2:3,1', 391, 181)
+        create_road_init(g, players, free_roads_set, '2,2:3,3', 448, 181)
+        create_road_init(g, players, free_roads_set, '2,4:3,3', 504, 181)
+        create_road_init(g, players, free_roads_set, '2,4:3,5', 561, 181)
+        create_road_init(g, players, free_roads_set, '2,6:3,5', 617, 181)
+        create_road_init(g, players, free_roads_set, '2,6:3,7', 675, 181)
+        create_road_init(g, players, free_roads_set, '2.8:3,7', 730, 181)
+        create_road_init(g, players, free_roads_set, '2,8:3,9', 786, 181)
+
+        create_road_init(g, players, free_roads_set, '3,1:4,1', 365, 231)
+        create_road_init(g, players, free_roads_set, '3,3:4,3', 479, 231)
+        create_road_init(g, players, free_roads_set, '3,5:4,5', 591, 231)
+        create_road_init(g, players, free_roads_set, '3,7:4,7', 703, 231)
+        create_road_init(g, players, free_roads_set, '3,9:4,9', 815, 231)
+
+        create_road_init(g, players, free_roads_set, '4,1:5,0', 335, 281, 17, 17, 5)
+        create_road_init(g, players, free_roads_set, '4,1:5,2', 391, 281, 17, 17, 5)
+        create_road_init(g, players, free_roads_set, '4,3:5,2', 448, 281, 17, 17, 5)
+        create_road_init(g, players, free_roads_set, '4,3:5,4', 504, 281, 17, 17, 5)
+        create_road_init(g, players, free_roads_set, '4,5:5,4', 561, 281, 17, 17, 5)
+        create_road_init(g, players, free_roads_set, '4,5:5,6', 617, 281, 17, 17, 5)
+        create_road_init(g, players, free_roads_set, '4,7:5,6', 675, 281, 17, 17, 5)
+        create_road_init(g, players, free_roads_set, '4,7:5,8', 735, 281, 17, 17, 5)
+        create_road_init(g, players, free_roads_set, '4,9:5,8', 790, 281, 17, 17, 5)
+        create_road_init(g, players, free_roads_set, '4,9:5,10', 845, 281, 17, 17, 5)
+
+        create_road_init(g, players, free_roads_set, '5,0:6,0', 307, 331)
+        create_road_init(g, players, free_roads_set, '5,2:6,2', 421, 331)
+        create_road_init(g, players, free_roads_set, '5,4:6,4', 535, 331)
+        create_road_init(g, players, free_roads_set, '5,6:6,6', 649, 331)
+        create_road_init(g, players, free_roads_set, '5,8:6,8', 763, 331)
+        create_road_init(g, players, free_roads_set, '5,10:6,10', 877, 331)
+
+        create_road_init(g, players, free_roads_set, '6,0:7,1', 335, 381)
+        create_road_init(g, players, free_roads_set, '6,2:7,1', 391, 381)
+        create_road_init(g, players, free_roads_set, '6,2:7,3', 448, 381)
+        create_road_init(g, players, free_roads_set, '6,4:7,3', 504, 381)
+        create_road_init(g, players, free_roads_set, '6,4:7,5', 561, 381)
+        create_road_init(g, players, free_roads_set, '6,6:7,5', 617, 381)
+        create_road_init(g, players, free_roads_set, '6,6:7,7', 675, 381)
+        create_road_init(g, players, free_roads_set, '6,8:7,7', 735, 381)
+        create_road_init(g, players, free_roads_set, '6,8:7,9', 790, 381)
+        create_road_init(g, players, free_roads_set, '6,10:7,9', 845, 381)
+
+        create_road_init(g, players, free_roads_set, '7,1:8,1', 365, 430)
+        create_road_init(g, players, free_roads_set, '7,3:8,3', 479, 430)
+        create_road_init(g, players, free_roads_set, '7,5:8,5', 591, 430)
+        create_road_init(g, players, free_roads_set, '7,7:8,7', 703, 430)
+        create_road_init(g, players, free_roads_set, '7,9:8,9', 815, 430)
+
+        create_road_init(g, players, free_roads_set, '8,1:9,2', 391, 480)
+        create_road_init(g, players, free_roads_set, '8,3:9,2', 448, 480)
+        create_road_init(g, players, free_roads_set, '8,3:9,4', 504, 480)
+        create_road_init(g, players, free_roads_set, '8,5:9,4', 561, 480)
+        create_road_init(g, players, free_roads_set, '8,5:9,6', 617, 480)
+        create_road_init(g, players, free_roads_set, '8,7:9,6', 675, 480)
+        create_road_init(g, players, free_roads_set, '8,7:9,8', 730, 480)
+        create_road_init(g, players, free_roads_set, '8,9:9,8', 786, 480)
+
+        create_road_init(g, players, free_roads_set, '9,2:10,2', 422, 530)
+        create_road_init(g, players, free_roads_set, '9,4:10,4', 534, 530)
+        create_road_init(g, players, free_roads_set, '9,6:10,6', 648, 530)
+        create_road_init(g, players, free_roads_set, '9,8:10,8', 762, 530)
+
+        create_road_init(g, players, free_roads_set, '10,2:11,3', 450, 580)
+        create_road_init(g, players, free_roads_set, '10,4:11,3', 505, 580)
+        create_road_init(g, players, free_roads_set, '10,4:11,5', 560, 580)
+        create_road_init(g, players, free_roads_set, '10,6:11,5', 616, 580)
+        create_road_init(g, players, free_roads_set, '10,6:11,7', 672, 580)
+        create_road_init(g, players, free_roads_set, '10,8:11,7', 728, 580)
 
         if (game.current_turn === parseInt(sessionStorage.getItem('my-turn'))) {
             let BUTTON = null
@@ -269,7 +401,100 @@ function Game(props) {
         }
     }
 
-    function game_phase_post(g, game, players) {
+    function game_phase_post(g, game, players, me) {
+
+        // Drawing the building nodes:
+        let free_nodes_set = (me.free_nodes.length > 0) ? new Set(me.free_nodes) : new Set()
+        for (let i = 0; i < 12; i++) {
+            for (let j = borders[i][0]; j <= borders[i][1]; j+=2) {
+                create_node_post(g, players, free_nodes_set, `${i},${j}`, 320 + (j*(cell_hor_offset-4)/2), 76 + (24 * (i%2)) + (Math.floor(i/2) * cell_ver_offset))
+            }
+        }
+
+        // Drawing the road nodes:
+        let free_roads_set = (me.free_roads.length > 0) ? new Set(me.free_roads) : new Set()
+        create_road_post(g, players, free_roads_set, '0,3:1,2', 450, 81)
+        create_road_post(g, players, free_roads_set, '0,3:1,4', 505, 81)
+        create_road_post(g, players, free_roads_set, '0,5:1,4', 560, 81)
+        create_road_post(g, players, free_roads_set, '0,5:1,6', 616, 81)
+        create_road_post(g, players, free_roads_set, '0,7:1,6', 672, 81)
+        create_road_post(g, players, free_roads_set, '0,7:1,8', 728, 81)
+
+        create_road_post(g, players, free_roads_set, '1,2:2,2', 422, 131)
+        create_road_post(g, players, free_roads_set, '1,4:2,4', 534, 131)
+        create_road_post(g, players, free_roads_set, '1,6:2,6', 648, 131)
+        create_road_post(g, players, free_roads_set, '1,8:2,8', 762, 131)
+
+        create_road_post(g, players, free_roads_set, '2,2:3,1', 391, 181)
+        create_road_post(g, players, free_roads_set, '2,2:3,3', 448, 181)
+        create_road_post(g, players, free_roads_set, '2,4:3,3', 504, 181)
+        create_road_post(g, players, free_roads_set, '2,4:3,5', 561, 181)
+        create_road_post(g, players, free_roads_set, '2,6:3,5', 617, 181)
+        create_road_post(g, players, free_roads_set, '2,6:3,7', 675, 181)
+        create_road_post(g, players, free_roads_set, '2.8:3,7', 730, 181)
+        create_road_post(g, players, free_roads_set, '2,8:3,9', 786, 181)
+
+        create_road_post(g, players, free_roads_set, '3,1:4,1', 365, 231)
+        create_road_post(g, players, free_roads_set, '3,3:4,3', 479, 231)
+        create_road_post(g, players, free_roads_set, '3,5:4,5', 591, 231)
+        create_road_post(g, players, free_roads_set, '3,7:4,7', 703, 231)
+        create_road_post(g, players, free_roads_set, '3,9:4,9', 815, 231)
+
+        create_road_post(g, players, free_roads_set, '4,1:5,0', 335, 281, 17, 17, 5)
+        create_road_post(g, players, free_roads_set, '4,1:5,2', 391, 281, 17, 17, 5)
+        create_road_post(g, players, free_roads_set, '4,3:5,2', 448, 281, 17, 17, 5)
+        create_road_post(g, players, free_roads_set, '4,3:5,4', 504, 281, 17, 17, 5)
+        create_road_post(g, players, free_roads_set, '4,5:5,4', 561, 281, 17, 17, 5)
+        create_road_post(g, players, free_roads_set, '4,5:5,6', 617, 281, 17, 17, 5)
+        create_road_post(g, players, free_roads_set, '4,7:5,6', 675, 281, 17, 17, 5)
+        create_road_post(g, players, free_roads_set, '4,7:5,8', 735, 281, 17, 17, 5)
+        create_road_post(g, players, free_roads_set, '4,9:5,8', 790, 281, 17, 17, 5)
+        create_road_post(g, players, free_roads_set, '4,9:5,10', 845, 281, 17, 17, 5)
+
+        create_road_post(g, players, free_roads_set, '5,0:6,0', 307, 331)
+        create_road_post(g, players, free_roads_set, '5,2:6,2', 421, 331)
+        create_road_post(g, players, free_roads_set, '5,4:6,4', 535, 331)
+        create_road_post(g, players, free_roads_set, '5,6:6,6', 649, 331)
+        create_road_post(g, players, free_roads_set, '5,8:6,8', 763, 331)
+        create_road_post(g, players, free_roads_set, '5,10:6,10', 877, 331)
+
+        create_road_post(g, players, free_roads_set, '6,0:7,1', 335, 381)
+        create_road_post(g, players, free_roads_set, '6,2:7,1', 391, 381)
+        create_road_post(g, players, free_roads_set, '6,2:7,3', 448, 381)
+        create_road_post(g, players, free_roads_set, '6,4:7,3', 504, 381)
+        create_road_post(g, players, free_roads_set, '6,4:7,5', 561, 381)
+        create_road_post(g, players, free_roads_set, '6,6:7,5', 617, 381)
+        create_road_post(g, players, free_roads_set, '6,6:7,7', 675, 381)
+        create_road_post(g, players, free_roads_set, '6,8:7,7', 735, 381)
+        create_road_post(g, players, free_roads_set, '6,8:7,9', 790, 381)
+        create_road_post(g, players, free_roads_set, '6,10:7,9', 845, 381)
+
+        create_road_post(g, players, free_roads_set, '7,1:8,1', 365, 430)
+        create_road_post(g, players, free_roads_set, '7,3:8,3', 479, 430)
+        create_road_post(g, players, free_roads_set, '7,5:8,5', 591, 430)
+        create_road_post(g, players, free_roads_set, '7,7:8,7', 703, 430)
+        create_road_post(g, players, free_roads_set, '7,9:8,9', 815, 430)
+
+        create_road_post(g, players, free_roads_set, '8,1:9,2', 391, 480)
+        create_road_post(g, players, free_roads_set, '8,3:9,2', 448, 480)
+        create_road_post(g, players, free_roads_set, '8,3:9,4', 504, 480)
+        create_road_post(g, players, free_roads_set, '8,5:9,4', 561, 480)
+        create_road_post(g, players, free_roads_set, '8,5:9,6', 617, 480)
+        create_road_post(g, players, free_roads_set, '8,7:9,6', 675, 480)
+        create_road_post(g, players, free_roads_set, '8,7:9,8', 730, 480)
+        create_road_post(g, players, free_roads_set, '8,9:9,8', 786, 480)
+
+        create_road_post(g, players, free_roads_set, '9,2:10,2', 422, 530)
+        create_road_post(g, players, free_roads_set, '9,4:10,4', 534, 530)
+        create_road_post(g, players, free_roads_set, '9,6:10,6', 648, 530)
+        create_road_post(g, players, free_roads_set, '9,8:10,8', 762, 530)
+
+        create_road_post(g, players, free_roads_set, '10,2:11,3', 450, 580)
+        create_road_post(g, players, free_roads_set, '10,4:11,3', 505, 580)
+        create_road_post(g, players, free_roads_set, '10,4:11,5', 560, 580)
+        create_road_post(g, players, free_roads_set, '10,6:11,5', 616, 580)
+        create_road_post(g, players, free_roads_set, '10,6:11,7', 672, 580)
+        create_road_post(g, players, free_roads_set, '10,8:11,7', 728, 580)
 
         // Drawing the buttons
         let BUTTON = null
@@ -392,103 +617,10 @@ function Game(props) {
         create_biome(g, game.board.biomes, 7,  appWidth/2, appHeight/2 + 2*cell_ver_offset)
         create_biome(g, game.board.biomes, 8,  appWidth/2 + cell_hor_offset, appHeight/2 + 2*cell_ver_offset)
 
-        // Drawing the building nodes:
-        let free_nodes_set = (me.free_nodes.length > 0) ? new Set(me.free_nodes) : new Set()
-        for (let i = 0; i < 12; i++) {
-            for (let j = borders[i][0]; j <= borders[i][1]; j+=2) {
-                create_node(g, players, free_nodes_set, `${i},${j}`, 320 + (j*(cell_hor_offset-4)/2), 76 + (24 * (i%2)) + (Math.floor(i/2) * cell_ver_offset))
-            }
-        }
-
-        // Drawing the road nodes:
-        let free_roads_set = (me.free_roads.length > 0) ? new Set(me.free_roads) : new Set()
-        create_road(g, players, free_roads_set, '0,3:1,2', 450, 81)
-        create_road(g, players, free_roads_set, '0,3:1,4', 505, 81)
-        create_road(g, players, free_roads_set, '0,5:1,4', 560, 81)
-        create_road(g, players, free_roads_set, '0,5:1,6', 616, 81)
-        create_road(g, players, free_roads_set, '0,7:1,6', 672, 81)
-        create_road(g, players, free_roads_set, '0,7:1,8', 728, 81)
-
-        create_road(g, players, free_roads_set, '1,2:2,2', 422, 131)
-        create_road(g, players, free_roads_set, '1,4:2,4', 534, 131)
-        create_road(g, players, free_roads_set, '1,6:2,6', 648, 131)
-        create_road(g, players, free_roads_set, '1,8:2,8', 762, 131)
-
-        create_road(g, players, free_roads_set, '2,2:3,1', 391, 181)
-        create_road(g, players, free_roads_set, '2,2:3,3', 448, 181)
-        create_road(g, players, free_roads_set, '2,4:3,3', 504, 181)
-        create_road(g, players, free_roads_set, '2,4:3,5', 561, 181)
-        create_road(g, players, free_roads_set, '2,6:3,5', 617, 181)
-        create_road(g, players, free_roads_set, '2,6:3,7', 675, 181)
-        create_road(g, players, free_roads_set, '2.8:3,7', 730, 181)
-        create_road(g, players, free_roads_set, '2,8:3,9', 786, 181)
-
-        create_road(g, players, free_roads_set, '3,1:4,1', 365, 231)
-        create_road(g, players, free_roads_set, '3,3:4,3', 479, 231)
-        create_road(g, players, free_roads_set, '3,5:4,5', 591, 231)
-        create_road(g, players, free_roads_set, '3,7:4,7', 703, 231)
-        create_road(g, players, free_roads_set, '3,9:4,9', 815, 231)
-
-        create_road(g, players, free_roads_set, '4,1:5,0', 335, 281, 17, 17, 5)
-        create_road(g, players, free_roads_set, '4,1:5,2', 391, 281, 17, 17, 5)
-        create_road(g, players, free_roads_set, '4,3:5,2', 448, 281, 17, 17, 5)
-        create_road(g, players, free_roads_set, '4,3:5,4', 504, 281, 17, 17, 5)
-        create_road(g, players, free_roads_set, '4,5:5,4', 561, 281, 17, 17, 5)
-        create_road(g, players, free_roads_set, '4,5:5,6', 617, 281, 17, 17, 5)
-        create_road(g, players, free_roads_set, '4,7:5,6', 675, 281, 17, 17, 5)
-        create_road(g, players, free_roads_set, '4,7:5,8', 735, 281, 17, 17, 5)
-        create_road(g, players, free_roads_set, '4,9:5,8', 790, 281, 17, 17, 5)
-        create_road(g, players, free_roads_set, '4,9:5,10', 845, 281, 17, 17, 5)
-
-        create_road(g, players, free_roads_set, '5,0:6,0', 307, 331)
-        create_road(g, players, free_roads_set, '5,2:6,2', 421, 331)
-        create_road(g, players, free_roads_set, '5,4:6,4', 535, 331)
-        create_road(g, players, free_roads_set, '5,6:6,6', 649, 331)
-        create_road(g, players, free_roads_set, '5,8:6,8', 763, 331)
-        create_road(g, players, free_roads_set, '5,10:6,10', 877, 331)
-
-        create_road(g, players, free_roads_set, '6,0:7,1', 335, 381)
-        create_road(g, players, free_roads_set, '6,2:7,1', 391, 381)
-        create_road(g, players, free_roads_set, '6,2:7,3', 448, 381)
-        create_road(g, players, free_roads_set, '6,4:7,3', 504, 381)
-        create_road(g, players, free_roads_set, '6,4:7,5', 561, 381)
-        create_road(g, players, free_roads_set, '6,6:7,5', 617, 381)
-        create_road(g, players, free_roads_set, '6,6:7,7', 675, 381)
-        create_road(g, players, free_roads_set, '6,8:7,7', 735, 381)
-        create_road(g, players, free_roads_set, '6,8:7,9', 790, 381)
-        create_road(g, players, free_roads_set, '6,10:7,9', 845, 381)
-
-        create_road(g, players, free_roads_set, '7,1:8,1', 365, 430)
-        create_road(g, players, free_roads_set, '7,3:8,3', 479, 430)
-        create_road(g, players, free_roads_set, '7,5:8,5', 591, 430)
-        create_road(g, players, free_roads_set, '7,7:8,7', 703, 430)
-        create_road(g, players, free_roads_set, '7,9:8,9', 815, 430)
-
-        create_road(g, players, free_roads_set, '8,1:9,2', 391, 480)
-        create_road(g, players, free_roads_set, '8,3:9,2', 448, 480)
-        create_road(g, players, free_roads_set, '8,3:9,4', 504, 480)
-        create_road(g, players, free_roads_set, '8,5:9,4', 561, 480)
-        create_road(g, players, free_roads_set, '8,5:9,6', 617, 480)
-        create_road(g, players, free_roads_set, '8,7:9,6', 675, 480)
-        create_road(g, players, free_roads_set, '8,7:9,8', 730, 480)
-        create_road(g, players, free_roads_set, '8,9:9,8', 786, 480)
-
-        create_road(g, players, free_roads_set, '9,2:10,2', 422, 530)
-        create_road(g, players, free_roads_set, '9,4:10,4', 534, 530)
-        create_road(g, players, free_roads_set, '9,6:10,6', 648, 530)
-        create_road(g, players, free_roads_set, '9,8:10,8', 762, 530)
-
-        create_road(g, players, free_roads_set, '10,2:11,3', 450, 580)
-        create_road(g, players, free_roads_set, '10,4:11,3', 505, 580)
-        create_road(g, players, free_roads_set, '10,4:11,5', 560, 580)
-        create_road(g, players, free_roads_set, '10,6:11,5', 616, 580)
-        create_road(g, players, free_roads_set, '10,6:11,7', 672, 580)
-        create_road(g, players, free_roads_set, '10,8:11,7', 728, 580)
-
         if (game.phase !== 3) {
-            game_phase_init(g, game, players)
+            game_phase_init(g, game, players, me)
         } else {
-            game_phase_post(g, game, players)
+            game_phase_post(g, game, players, me)
         }
 
         // Drawing the player box
