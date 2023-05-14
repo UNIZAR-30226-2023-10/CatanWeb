@@ -132,7 +132,7 @@ function Game(props) {
             }
         }
         if (p_i === -1) {
-            if (buildmode && free_roads_set.has(id) && (game.phase === 3 || (game.phase !== 3 && builtVillage))) {
+            if (buildmode && free_roads_set.has(id) && (game.phase === 2 || (game.phase !== 2 && builtVillage))) {
                 let road = new PIXI.Graphics()
                 //road.id  = id
                 road.beginFill(selectedPoint && selectedPoint.id === id ? 0x0b04cf : 0x6f5c9c)
@@ -202,6 +202,7 @@ function Game(props) {
 
         // Drawing the building nodes:
         let start_width = 320;
+        console.log ('me: ', me)
         let free_nodes_set = new Set(me.free_nodes)
         for (let i = 0; i < 12; i++) {
             for (let j = borders[i][0]; j <= borders[i][1]; j+=2) {
@@ -316,65 +317,7 @@ function Game(props) {
         create_road(g, players, free_roads_set, '10,8:11,7', 728, 580)
 
 
-        // Drawing the interface:
-        let BUTTON = null
-        if (!buildmode) {
-            // Build button
-            if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && !turnEnd) {
-                BUTTON = NewSprite(ButtonBuild, 1100, 505, 0.1)
-                BUTTON.interactive = true;
-                BUTTON.buttonMode = true;
-                BUTTON.on('pointerdown', () => {
-                    setBuildMode(true)
-                    setSelectedPoint(null)
-                })
-            } else {
-                BUTTON = NewSprite(ButtonBuildD, 1100, 505, 0.1)
-            }
-            g.addChild(BUTTON)
-
-        } else {
-            // Build button cancel
-            BUTTON = NewSprite(ButtonBuildCancel, 1100, 505, 0.1)
-            BUTTON.interactive = true;
-            BUTTON.buttonMode = true;
-            BUTTON.on('pointerdown', () => {
-                if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name) {
-                    setBuildMode(false)
-                    setSelectedPoint(null)
-                    g.clear()
-                }
-            })
-            g.addChild(BUTTON)
-
-            // Only if player has selected a place to build
-            if (selectedPoint) {
-                // Cancel building selection
-                BUTTON = NewSprite(ButtonCancel, 1005, 600, 0.1)
-                BUTTON.interactive = true;
-                BUTTON.buttonMode = true;
-                BUTTON.on('pointerdown', () => {
-                    setSelectedPoint(null)
-                })
-                g.addChild(BUTTON);
-
-                // Confirm building selection
-                BUTTON = NewSprite(ButtonConfirm, 1100, 600, 0.1)
-                BUTTON.interactive = true;
-                BUTTON.buttonMode = true;
-                BUTTON.on('pointerdown', () => {
-                    console.log("CONSTRUYO EN ", selectedPoint)
-                    if (selectedPoint.type === 'Node') {
-                        socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id : MoveType.build_village, coords: selectedPoint.id })
-                    } else if (selectedPoint.type === 'Road') {
-                        socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, {id : MoveType.build_road, coords: selectedPoint.id})
-                    }
-                    setBuildMode(false)
-                    setSelectedPoint(null)
-                })
-                g.addChild(BUTTON);
-            }
-        }
+        
 
     }, [buildmode, gameChanged, selectedPoint, turnEnd])
 
@@ -588,7 +531,8 @@ function Game(props) {
             // Build button
             let BUTTON = null
             console.log('turnEnd: ', turnEnd)
-            if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && !turnEnd) {
+            console.log('game.phase: ',game.phase)
+            if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && ((!turnEnd && game.phase !==2) || (me.resources.Madera > 0 && me.resources.Ladrillo > 0 && throwDices))) {
                 BUTTON = NewSprite(ButtonBuild, 1100, 410, 0.1)
                 BUTTON.interactive = true;
                 BUTTON.buttonMode = true;
@@ -602,14 +546,15 @@ function Game(props) {
             g.addChild(BUTTON);
 
             // Dice button
-            if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && !throwDices && game.phase === 3) {
+            if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && !throwDices && game.phase === 2) {
                 BUTTON = NewSprite(ButtonDices, 1100, 505, 0.1)
                 BUTTON.interactive = true
                 BUTTON.buttonMode  = true
                 BUTTON.on('pointerdown', () => {
                     setThrowDices(true)
                     socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id : MoveType.roll_dices })
-
+                    setDado1(game.dice1)
+                    setDado2(game.dice2)
                 })
             } else {
                 BUTTON = NewSprite(ButtonDicesD, 1100, 505, 0.1)
@@ -618,7 +563,7 @@ function Game(props) {
             g.addChild(BUTTON);
 
             // Next turn button
-            if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && (game.phase !==3 && turnEnd)) {
+            if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && ((game.phase !==2 && turnEnd) || (throwDices && game.phase===2))) {
                 BUTTON = NewSprite(ButtonNextTurn, 1100, 600, 0.1)
                 BUTTON.interactive = true;
                 BUTTON.buttonMode = true;
@@ -627,6 +572,7 @@ function Game(props) {
                     socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id : MoveType.next_turn })
                     setTurnEnd(false)
                     setBuiltVillage(false)
+                    setThrowDices(false)
                 })
             } else {
                 BUTTON = NewSprite(ButtonNextTurnD, 1100, 600, 0.1)
@@ -811,7 +757,9 @@ function Game(props) {
               for (let i = 0; i < sprites.length; i++) {
                   if (originalTexturesShowing) {
                       texts[i].text = game.players[index].resources[ordenRecursos[i]];
+                      console.log('texts[i].text',texts[i].text)
                       sprites[i].texture = PIXI.Texture.from(routesCartas[i]);
+                      console.log('sprites[i].texture',sprites[i].texture)
                     } else {
                       texts[i].text = game.players[index].growth_cards[ordenCartas[i]];
                       sprites[i].texture = PIXI.Texture.from(routesDesarrollo[i]);
@@ -859,9 +807,9 @@ function Game(props) {
     const [dado2, setDado2] = useState(listaDados[0])
 
     const draw_Dice = useCallback((g) => {
-
         const container1 = new PIXI.Container();
-        const texture1 = PIXI.Texture.from(dado1);
+        console.log('dice1',game.players[game.current_turn].dices_res[0])
+        const texture1 = PIXI.Texture.from(listaDados[game.players[game.current_turn].dices_res[0] - 1]); // Accede a la imagen correspondiente en listaDados
         const Dado1 = new PIXI.Sprite(texture1);
         Dado1.x = 0;
         Dado1.y = 0;
@@ -872,10 +820,9 @@ function Game(props) {
         mask1.endFill();
         container1.mask = mask1;
         container1.addChild(mask1);
- 
-        // Crear el contenedor para el dado 2
+    
         const container2 = new PIXI.Container();
-        const texture2 = PIXI.Texture.from(dado2);
+        const texture2 = PIXI.Texture.from(listaDados[game.players[game.current_turn].dices_res[1] - 1]); // Accede a la imagen correspondiente en listaDados
         const Dado2 = new PIXI.Sprite(texture2);
         Dado2.x = 0;
         Dado2.y = 0;
@@ -886,18 +833,16 @@ function Game(props) {
         mask2.endFill();
         container2.mask = mask2;
         container2.addChild(mask2);
- 
-        // Ajusta la posición de los contenedores de los dados
+    
         container1.x = 945;
         container1.y = 40;
         container2.x = 1010;
         container2.y = 40;
- 
-        // Añade los contenedores de los dados al contenedor principal
+    
         g.addChild(container1);
         g.addChild(container2);
- 
-     }, [dado1,dado2])
+    }, [game.players[game.current_turn].dices_res]);
+    
      
 
     return (
@@ -905,6 +850,7 @@ function Game(props) {
             <Stage width={appWidth} height={appHeight}>
                 <Graphics draw={draw_game} />
                 <Graphics draw={draw_UI2} />
+                <Graphics draw={draw_Dice} />
             </Stage>
         </div>
     );
