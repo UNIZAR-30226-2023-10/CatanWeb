@@ -9,19 +9,29 @@ import Background from './images/game-bg2.png'
 // Board
 import { Stage, Graphics } from '@pixi/react'
 import Desert   from './images/desert.png'
-import Farmland from './images/farmland.png'
+import Farmland from './images/field.png'
 import Forest   from './images/forest.png'
 import Hill     from './images/hill.png'
 import Mountain from './images/mountain.png'
-import Ocean    from './images/ocean.png'
+import Harbor    from './images/harbor.png'
 import Pasture  from './images/pasture.png'
 
 // Resources
-import Wheat from './images/wheat_card.svg'
-import Lumber from './images/lumber_card.svg'
-import Brick from './images/brick_card.svg'
-import Stone from './images/stone_card.svg'
-import Wool from './images/sheep_card.svg'
+import Wheat from './images/resources_wheat.png'
+import Lumber from './images/resources_lumber.png'
+import Brick from './images/resources_brick.png'
+import Stone from './images/resources_ore.png'
+import Wool from './images/resources_wool.png'
+
+import Knight       from './images/dcs_knight.png'
+import Monopoly     from './images/dcs_monopoly.png'
+import RoadBuilding from './images/dcs_roadBuilding.png'
+import YearOfPlenty from './images/dcs_yearOfPlenty.png'
+import Chapel       from './images/dcs_chapel.png'
+import Library      from './images/dcs_library.png'
+import Market       from './images/dcs_market.png'
+import Palace       from './images/dcs_palace.png'
+import University   from './images/dcs_university.png'
 
 import Dice0 from './images/Dice00.png'
 import Dice1 from './images/Dice01.png'
@@ -31,26 +41,20 @@ import Dice4 from './images/Dice04.png'
 import Dice5 from './images/Dice05.png'
 import Dice6 from './images/Dice06.png'
 
-/*
-import Caballero from './images/card_knight.svg'
-import Monopoly from './images/card_monopoly.svg'
-import ConstruccionCarreteras from './images/card_roadbuilding.svg'
-import PuntosVictoria from './images/card_vp.svg'
-import AgnoAbundancia from './images/card_yearofplenty.svg'
-*/
-
 // Buttons
 import ButtonBuild from './images/button_build.png'
 import ButtonBuildD from './images/button_build_d.png'
 import ButtonBuildCancel from './images/button_build-cancel.png'
+import ButtonBuy from './images/button_buy.png'
+import ButtonBuyD from './images/button_buy_d.png'
 import ButtonCancel  from './images/button_cancel.png'
 import ButtonConfirm from './images/button_confirm.png'
 import ButtonDices from './images/button_dices.png'
 import ButtonDicesD from './images/button_dices_d.png'
 import ButtonNextTurn from './images/button_next-turn.png'
 import ButtonNextTurnD from './images/button_next-turn_d.png'
-import ButtonBuy from './images/button_buy.png'
-import ButtonBuyD from './images/button_buy_d.png'
+import ButtonSeeMore from './images/button_see_cards_more.png'
+import ButtonSeeLess from './images/button_see_cards_less.png'
 
 const MoveType = require( './services/movesTypes.js')
 
@@ -60,7 +64,7 @@ const Biomes = {
     'Bosque': Forest,
     'Colina': Hill,
     'Monte': Mountain,
-    'Oceano': Ocean,
+    'Puerto': Harbor,
     'Pasto': Pasture
 }
 
@@ -161,10 +165,11 @@ function Game(props) {
     const [throwDices, setThrowDices] = useState(false)
     const [selectedPoint, setSelectedPoint] = useState(null);
     const [hasToBuild, setHasToBuild] = useState([true, false])
+    const [seeCards, setSeeCards] = useState(false)
 
     function create_biome(g, biomes, i, x, y) {
 
-        let sprite = DrawSprite(Biomes[biomes[i].type], x, y)
+        let sprite = DrawSprite(Biomes[biomes[i].type], x, y, 0.26)
         g.addChild(sprite)
 
         if (biomes[i].token !== 0) {
@@ -700,17 +705,48 @@ function Game(props) {
             g.addChild(DrawText(Object.values(me.resources)[i], 'Arial', 14, 'black', 'center', {x:78+(71*i), y:621}, 0.5))
         }
 
+        // Drawing develop cards box
+        let BOTTON = null
+        if (!seeCards) {
+            BOTTON = DrawSprite(ButtonSeeMore, 60, 60, 0.1)
+            BOTTON.interactive = true
+            BOTTON.on('pointerdown', () => {
+                setSeeCards(true)
+            })
+            g.addChild(BOTTON)
+        } else {
+            g.addChild(Draw(0x420001, 'RoundedRect', 50, 50, 380, 300, 10))
+            g.addChild(DrawSprite(Knight,       100, 130, 0.25))
+            g.addChild(DrawSprite(Monopoly,     193, 130, 0.25))
+            g.addChild(DrawSprite(RoadBuilding, 287, 130, 0.25))
+            g.addChild(DrawSprite(YearOfPlenty, 380, 130, 0.25))
+
+            g.addChild(DrawSprite(Chapel,      93, 265, 0.21))
+            g.addChild(DrawSprite(Library,    167, 265, 0.21))
+            g.addChild(DrawSprite(Market,     240, 265, 0.21))
+            g.addChild(DrawSprite(Palace,     313, 265, 0.21))
+            g.addChild(DrawSprite(University, 386, 265, 0.21))
+
+            BOTTON = DrawSprite(ButtonSeeLess, 60, 60, 0.1)
+            BOTTON.interactive = true
+            BOTTON.on('pointerdown', () => {
+                setSeeCards(false)
+            })
+            g.addChild(BOTTON)
+        }
+
+
         // Drawing the player list:
         let boxes = 0
         for (let p = 0; p < players.length; p++) {
             if (p !== parseInt(sessionStorage.getItem('my-turn'))) {
-                g.addChild(Draw((p === game.current_turn) ? PlayersColors[p] : PlayersColorsD[p],  'RoundedRect', 30, 500 - 45*(boxes+1), 200, 35, 5))
-                g.addChild(DrawText(game.players[p].name, 'Arial', 13, 'white', 'left', {x:42, y:(514 - 47*(boxes+1))}, 0))
+                g.addChild(Draw((p === game.current_turn) ? PlayersColors[p] : PlayersColorsD[p],  'RoundedRect', 32, 500 - 45*(boxes+1), 200, 35, 5))
+                g.addChild(DrawText(game.players[p].name, 'Arial', 13, 'white', 'left', {x:47, y:(514 - 47*(boxes+1))}, 0))
                 boxes++
             }
         }
 
-    }, [buildmode, gameChanged, hasToBuild, selectedPoint, socket])
+    }, [buildmode, gameChanged, hasToBuild, selectedPoint, seeCards])
 
     return (
         <div id="game-header">
