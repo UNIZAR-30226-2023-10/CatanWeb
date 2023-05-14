@@ -5,6 +5,7 @@ import * as PIXI from 'pixi.js'
 import { SocketContext } from './App'
 
 import Background from './images/game-bg2.png'
+import EBGaramondFont from './fonts/EB_Garmond/EBGaramond-Medium.ttf'
 
 // Board
 import { Stage, Graphics } from '@pixi/react'
@@ -132,6 +133,111 @@ function DrawText(text, font, fontSize, fill, align, position, anchor) {
 }
 
 // ============================================================================
+// Auxiliar variables
+// ============================================================================
+const appWidth = 1200, appHeight = 675
+const cell_hor_offset = 115, cell_ver_offset = 100;
+
+const BiomesOrder = [0,1,2,11,12,13,3,10,17,18,14,4,9,16,15,5,6,7,8]
+const BiomesPos = [
+    [appWidth/2 - cell_hor_offset, appHeight/2 - 2*cell_ver_offset],
+    [appWidth/2, appHeight/2 - 2*cell_ver_offset],
+    [appWidth/2 + cell_hor_offset, appHeight/2 - 2*cell_ver_offset],
+    [appWidth/2 - 1.5*cell_hor_offset, appHeight/2 - cell_ver_offset],
+    [appWidth/2 - 0.5*cell_hor_offset, appHeight/2 - cell_ver_offset],
+    [appWidth/2 + 0.5*cell_hor_offset, appHeight/2 - cell_ver_offset],
+    [appWidth/2 + 1.5*cell_hor_offset, appHeight/2 - cell_ver_offset],
+    [appWidth/2 - 2*cell_hor_offset, appHeight/2],
+    [appWidth/2 - cell_hor_offset, appHeight/2],
+    [appWidth/2,appHeight/2],
+    [appWidth/2 + cell_hor_offset, appHeight/2],
+    [appWidth/2 + 2*cell_hor_offset, appHeight/2],
+    [appWidth/2 - 1.5*cell_hor_offset, appHeight/2 + cell_ver_offset],
+    [appWidth/2 - 0.5*cell_hor_offset, appHeight/2 + cell_ver_offset],
+    [appWidth/2 + 0.5*cell_hor_offset, appHeight/2 + cell_ver_offset],
+    [appWidth/2 + 1.5*cell_hor_offset, appHeight/2 + cell_ver_offset],
+    [appWidth/2 - cell_hor_offset, appHeight/2 + 2*cell_ver_offset],
+    [appWidth/2, appHeight/2 + 2*cell_ver_offset],
+    [appWidth/2 + cell_hor_offset, appHeight/2 + 2*cell_ver_offset]
+]
+
+const RoadsInfo = [
+    ['0,3:1,2', 450, 81],
+    ['0,3:1,4', 505, 81],
+    ['0,5:1,4', 560, 81],
+    ['0,5:1,6', 616, 81],
+    ['0,7:1,6', 672, 81],
+    ['0,7:1,8', 728, 81],
+    ['1,2:2,2', 422, 131],
+    ['1,4:2,4', 534, 131],
+    ['1,6:2,6', 648, 131],
+    ['1,8:2,8', 762, 131],
+    ['2,2:3,1', 391, 181],
+    ['2,2:3,3', 448, 181],
+    ['2,4:3,3', 504, 181],
+    ['2,4:3,5', 561, 181],
+    ['2,6:3,5', 617, 181],
+    ['2,6:3,7', 675, 181],
+    ['2,8:3,7', 730, 181],
+    ['2,8:3,9', 786, 181],
+    ['3,1:4,1', 365, 231],
+    ['3,3:4,3', 479, 231],
+    ['3,5:4,5', 591, 231],
+    ['3,7:4,7', 703, 231],
+    ['3,9:4,9', 815, 231],
+    ['4,1:5,0', 335, 281],
+    ['4,1:5,2', 391, 281],
+    ['4,3:5,2', 448, 281],
+    ['4,3:5,4', 504, 281],
+    ['4,5:5,4', 561, 281],
+    ['4,5:5,6', 617, 281],
+    ['4,7:5,6', 675, 281],
+    ['4,7:5,8', 735, 281],
+    ['4,9:5,8', 790, 281],
+    ['4,9:5,10', 845, 281],
+    ['5,0:6,0', 307, 331],
+    ['5,2:6,2', 421, 331],
+    ['5,4:6,4', 535, 331],
+    ['5,6:6,6', 649, 331],
+    ['5,8:6,8', 763, 331],
+    ['5,10:6,10', 877, 331],
+    ['6,0:7,1', 335, 381],
+    ['6,2:7,1', 391, 381],
+    ['6,2:7,3', 448, 381],
+    ['6,4:7,3', 504, 381],
+    ['6,4:7,5', 561, 381],
+    ['6,6:7,5', 617, 381],
+    ['6,6:7,7', 675, 381],
+    ['6,8:7,7', 735, 381],
+    ['6,8:7,9', 790, 381],
+    ['6,10:7,9', 845, 381],
+    ['7,1:8,1', 365, 430],
+    ['7,3:8,3', 479, 430],
+    ['7,5:8,5', 591, 430],
+    ['7,7:8,7', 703, 430],
+    ['7,9:8,9', 815, 430],
+    ['8,1:9,2', 391, 480],
+    ['8,3:9,2', 448, 480],
+    ['8,3:9,4', 504, 480],
+    ['8,5:9,4', 561, 480],
+    ['8,5:9,6', 617, 480],
+    ['8,7:9,6', 675, 480],
+    ['8,7:9,8', 730, 480],
+    ['8,9:9,8', 786, 480],
+    ['9,2:10,2', 422, 530],
+    ['9,4:10,4', 534, 530],
+    ['9,6:10,6', 648, 530],
+    ['9,8:10,8', 762, 530],
+    ['10,2:11,3', 450, 580],
+    ['10,4:11,3', 505, 580],
+    ['10,4:11,5', 560, 580],
+    ['10,6:11,5', 616, 580],
+    ['10,6:11,7', 672, 580],
+    ['10,8:11,7', 728, 580],
+]
+
+
+// ============================================================================
 // GAME
 // ============================================================================
 function Game(props) {
@@ -158,29 +264,42 @@ function Game(props) {
     //    console.log(data)
     //})
 
-    const appWidth = 1200, appHeight = 675
-    const cell_hor_offset = 115, cell_ver_offset = 100;
+    // Build state: select node to build the correspondant building on
+    const [buildMode,  setBuildMode ] = useState(true)
+    // Knight state: select biome to put the robber on
+    const [knightMode, setKnightMode] = useState(false)
 
-    const [buildmode, setBuildMode] = useState(true)
     const [throwDices, setThrowDices] = useState(false)
     const [selectedPoint, setSelectedPoint] = useState(null);
     const [hasToBuild, setHasToBuild] = useState([true, false])
     const [seeCards, setSeeCards] = useState(false)
 
+
+    console.log(selectedPoint)
     function create_biome(g, biomes, i, x, y) {
 
-        let sprite = DrawSprite(Biomes[biomes[i].type], x, y, 0.26)
+        let sprite = null
+        if (knightMode) {
+            sprite = DrawSprite(Biomes[biomes[i].type], x, y, selectedPoint && selectedPoint.id === i ? 0.3 : 0.26)
+            sprite.interactive = true
+            sprite.buttonMode  = true
+            sprite.on('pointerdown', () => {
+                setSelectedPoint({id:i, type:'Biome'})
+            })
+        } else {
+            sprite = DrawSprite(Biomes[biomes[i].type], x, y, 0.26)
+        }
         g.addChild(sprite)
 
-        if (biomes[i].token !== 0) {
-            let token = Draw(0xe8a85a, 'Circle', sprite.x, sprite.y, 20)
-            if (biomes[i].token === 6 || biomes[i].token === 8) {
-                token.addChild(DrawText(biomes[i].token, "Arial", 16, "red", 'center', {x: sprite.x, y: sprite.y }, 0.5))
-            } else {
-                token.addChild(DrawText(biomes[i].token, "Arial", 16, "white", 'center', {x: sprite.x, y: sprite.y }, 0.5))
-            }
-            g.addChild(token)
-        }
+        //if (biomes[i].token !== 0) {
+        //    let token = Draw(0xe8a85a, 'Circle', sprite.x, sprite.y, 20)
+        //    if (biomes[i].token === 6 || biomes[i].token === 8) {
+        //        token.addChild(DrawText(biomes[i].token, 'EBGaramond', 16, "red", 'center', {x: sprite.x, y: sprite.y }, 0.5))
+        //    } else {
+        //        token.addChild(DrawText(biomes[i].token, 'EBGaramond', 16, "white", 'center', {x: sprite.x, y: sprite.y }, 0.5))
+        //    }
+        //    g.addChild(token)
+        //}
 
     }
 
@@ -227,7 +346,7 @@ function Game(props) {
             }
             if (p_i === -1) {
                 if (free_nodes_set.size > 0) {
-                    if (buildmode && free_nodes_set.has(id)) {
+                    if (buildMode && !knightMode && free_nodes_set.has(id)) {
                         let node = Draw(selectedPoint && selectedPoint.id === id ? 0xffff00 : 0xffffff, 'Circle', x, y, 15)
                         node.interactive = true 
                         node.on("pointerdown", () => {
@@ -240,7 +359,7 @@ function Game(props) {
                 g.addChild(Draw(PlayersColors[p_i], 'Rect', x - 15, y - 15, 30, 30))
             }
         } else {
-            if (buildmode && p_i === parseInt(sessionStorage.getItem('my-turn'))) {
+            if (buildMode && !knightMode && p_i === parseInt(sessionStorage.getItem('my-turn'))) {
                 let node = Draw(selectedPoint && selectedPoint.id === id ? 0xffff00 : PlayersColors[p_i], 'Circle', x, y, 15)
                 node.interactive = true
                 node.on("pointerdown", () => {
@@ -287,7 +406,7 @@ function Game(props) {
         }
         if (p_i === -1) {
             if (free_roads_set.size > 0) {
-                if (buildmode && free_roads_set.has(id)) {
+                if (buildMode && !knightMode && free_roads_set.has(id)) {
                     let road = new PIXI.Graphics()
                     road.beginFill(selectedPoint && selectedPoint.id === id ? 0x0b04cf : 0x6f5c9c)
                     road.drawRoundedRect(x, y, 17, 17, 5)
@@ -304,6 +423,11 @@ function Game(props) {
 
     function game_phase_init(g, game, players, me) {
 
+        // Drawing the biomes:
+        for (let i = 0; i < 19; i++) {
+            create_biome(g, game.board.biomes, BiomesOrder[i], ...BiomesPos[i])
+        }
+
         // Drawing the building nodes:
         let free_nodes_set = (me.free_nodes.length > 0) ? new Set(me.free_nodes) : new Set()
         for (let i = 0; i < 12; i++) {
@@ -314,88 +438,10 @@ function Game(props) {
 
         // Drawing the road nodes:
         let free_roads_set = new Set(me.first_roads)
-        create_road_init(g, players, free_roads_set, '0,3:1,2', 450, 81)
-        create_road_init(g, players, free_roads_set, '0,3:1,4', 505, 81)
-        create_road_init(g, players, free_roads_set, '0,5:1,4', 560, 81)
-        create_road_init(g, players, free_roads_set, '0,5:1,6', 616, 81)
-        create_road_init(g, players, free_roads_set, '0,7:1,6', 672, 81)
-        create_road_init(g, players, free_roads_set, '0,7:1,8', 728, 81)
-
-        create_road_init(g, players, free_roads_set, '1,2:2,2', 422, 131)
-        create_road_init(g, players, free_roads_set, '1,4:2,4', 534, 131)
-        create_road_init(g, players, free_roads_set, '1,6:2,6', 648, 131)
-        create_road_init(g, players, free_roads_set, '1,8:2,8', 762, 131)
-
-        create_road_init(g, players, free_roads_set, '2,2:3,1', 391, 181)
-        create_road_init(g, players, free_roads_set, '2,2:3,3', 448, 181)
-        create_road_init(g, players, free_roads_set, '2,4:3,3', 504, 181)
-        create_road_init(g, players, free_roads_set, '2,4:3,5', 561, 181)
-        create_road_init(g, players, free_roads_set, '2,6:3,5', 617, 181)
-        create_road_init(g, players, free_roads_set, '2,6:3,7', 675, 181)
-        create_road_init(g, players, free_roads_set, '2,8:3,7', 730, 181)
-        create_road_init(g, players, free_roads_set, '2,8:3,9', 786, 181)
-
-        create_road_init(g, players, free_roads_set, '3,1:4,1', 365, 231)
-        create_road_init(g, players, free_roads_set, '3,3:4,3', 479, 231)
-        create_road_init(g, players, free_roads_set, '3,5:4,5', 591, 231)
-        create_road_init(g, players, free_roads_set, '3,7:4,7', 703, 231)
-        create_road_init(g, players, free_roads_set, '3,9:4,9', 815, 231)
-
-        create_road_init(g, players, free_roads_set, '4,1:5,0', 335, 281, 17, 17, 5)
-        create_road_init(g, players, free_roads_set, '4,1:5,2', 391, 281, 17, 17, 5)
-        create_road_init(g, players, free_roads_set, '4,3:5,2', 448, 281, 17, 17, 5)
-        create_road_init(g, players, free_roads_set, '4,3:5,4', 504, 281, 17, 17, 5)
-        create_road_init(g, players, free_roads_set, '4,5:5,4', 561, 281, 17, 17, 5)
-        create_road_init(g, players, free_roads_set, '4,5:5,6', 617, 281, 17, 17, 5)
-        create_road_init(g, players, free_roads_set, '4,7:5,6', 675, 281, 17, 17, 5)
-        create_road_init(g, players, free_roads_set, '4,7:5,8', 735, 281, 17, 17, 5)
-        create_road_init(g, players, free_roads_set, '4,9:5,8', 790, 281, 17, 17, 5)
-        create_road_init(g, players, free_roads_set, '4,9:5,10', 845, 281, 17, 17, 5)
-
-        create_road_init(g, players, free_roads_set, '5,0:6,0', 307, 331)
-        create_road_init(g, players, free_roads_set, '5,2:6,2', 421, 331)
-        create_road_init(g, players, free_roads_set, '5,4:6,4', 535, 331)
-        create_road_init(g, players, free_roads_set, '5,6:6,6', 649, 331)
-        create_road_init(g, players, free_roads_set, '5,8:6,8', 763, 331)
-        create_road_init(g, players, free_roads_set, '5,10:6,10', 877, 331)
-
-        create_road_init(g, players, free_roads_set, '6,0:7,1', 335, 381)
-        create_road_init(g, players, free_roads_set, '6,2:7,1', 391, 381)
-        create_road_init(g, players, free_roads_set, '6,2:7,3', 448, 381)
-        create_road_init(g, players, free_roads_set, '6,4:7,3', 504, 381)
-        create_road_init(g, players, free_roads_set, '6,4:7,5', 561, 381)
-        create_road_init(g, players, free_roads_set, '6,6:7,5', 617, 381)
-        create_road_init(g, players, free_roads_set, '6,6:7,7', 675, 381)
-        create_road_init(g, players, free_roads_set, '6,8:7,7', 735, 381)
-        create_road_init(g, players, free_roads_set, '6,8:7,9', 790, 381)
-        create_road_init(g, players, free_roads_set, '6,10:7,9', 845, 381)
-
-        create_road_init(g, players, free_roads_set, '7,1:8,1', 365, 430)
-        create_road_init(g, players, free_roads_set, '7,3:8,3', 479, 430)
-        create_road_init(g, players, free_roads_set, '7,5:8,5', 591, 430)
-        create_road_init(g, players, free_roads_set, '7,7:8,7', 703, 430)
-        create_road_init(g, players, free_roads_set, '7,9:8,9', 815, 430)
-
-        create_road_init(g, players, free_roads_set, '8,1:9,2', 391, 480)
-        create_road_init(g, players, free_roads_set, '8,3:9,2', 448, 480)
-        create_road_init(g, players, free_roads_set, '8,3:9,4', 504, 480)
-        create_road_init(g, players, free_roads_set, '8,5:9,4', 561, 480)
-        create_road_init(g, players, free_roads_set, '8,5:9,6', 617, 480)
-        create_road_init(g, players, free_roads_set, '8,7:9,6', 675, 480)
-        create_road_init(g, players, free_roads_set, '8,7:9,8', 730, 480)
-        create_road_init(g, players, free_roads_set, '8,9:9,8', 786, 480)
-
-        create_road_init(g, players, free_roads_set, '9,2:10,2', 422, 530)
-        create_road_init(g, players, free_roads_set, '9,4:10,4', 534, 530)
-        create_road_init(g, players, free_roads_set, '9,6:10,6', 648, 530)
-        create_road_init(g, players, free_roads_set, '9,8:10,8', 762, 530)
-
-        create_road_init(g, players, free_roads_set, '10,2:11,3', 450, 580)
-        create_road_init(g, players, free_roads_set, '10,4:11,3', 505, 580)
-        create_road_init(g, players, free_roads_set, '10,4:11,5', 560, 580)
-        create_road_init(g, players, free_roads_set, '10,6:11,5', 616, 580)
-        create_road_init(g, players, free_roads_set, '10,6:11,7', 672, 580)
-        create_road_init(g, players, free_roads_set, '10,8:11,7', 728, 580)
+        for (let road_info of RoadsInfo) {
+            create_road_init(g, players, free_roads_set, ...road_info)
+        }
+        
 
         if (game.current_turn === parseInt(sessionStorage.getItem('my-turn'))) {
             let BUTTON = null
@@ -451,6 +497,54 @@ function Game(props) {
 
     function game_phase_post(g, game, players, me) {
 
+        // Drawing the biomes:
+        if (knightMode) {
+            if (selectedPoint) {
+                let exact_i = 0
+                for (let i = 0; i < 19; i++) {
+                    if (BiomesOrder[i] !== selectedPoint.id) {
+                        create_biome(g, game.board.biomes, BiomesOrder[i], ...BiomesPos[i])
+                    } else {
+                        exact_i = i
+                    }
+                }
+                create_biome(g, game.board.biomes, BiomesOrder[exact_i], ...BiomesPos[exact_i])
+
+
+                // Cancel building selection
+                let BUTTON = DrawSprite(ButtonCancel, 1005, 600, 0.1)
+                BUTTON.interactive = true;
+                BUTTON.buttonMode = true;
+                BUTTON.on('pointerdown', () => {
+                    setSelectedPoint(null)
+                })
+                g.addChild(BUTTON);
+
+                // Confirm building selection
+                BUTTON = DrawSprite(ButtonConfirm, 1100, 600, 0.1)
+                BUTTON.interactive = true;
+                BUTTON.buttonMode = true;
+                BUTTON.on('pointerdown', () => {
+                    console.log("CONSTRUYO EN ", selectedPoint)
+                    socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id: MoveType.use_knight, robber_biome: selectedPoint.id})
+                    setBuildMode(false)
+                    setSelectedPoint(null)
+                })
+                g.addChild(BUTTON);
+
+            } else {
+                for (let i = 0; i < 19; i++) {
+                    create_biome(g, game.board.biomes, BiomesOrder[i], ...BiomesPos[i])
+                }
+            }
+            return
+        }
+
+        // Drawing the biomes
+        for (let i = 0; i < 19; i++) {
+            create_biome(g, game.board.biomes, BiomesOrder[i], ...BiomesPos[i])
+        }
+
         // Drawing the building nodes:
         let free_nodes_set = (me.free_nodes.length > 0) ? new Set(me.free_nodes) : new Set()
         for (let i = 0; i < 12; i++) {
@@ -461,149 +555,16 @@ function Game(props) {
 
         // Drawing the road nodes:
         let free_roads_set = (me.free_roads.length > 0) ? new Set(me.free_roads) : new Set()
-        create_road_post(g, players, free_roads_set, '0,3:1,2', 450, 81)
-        create_road_post(g, players, free_roads_set, '0,3:1,4', 505, 81)
-        create_road_post(g, players, free_roads_set, '0,5:1,4', 560, 81)
-        create_road_post(g, players, free_roads_set, '0,5:1,6', 616, 81)
-        create_road_post(g, players, free_roads_set, '0,7:1,6', 672, 81)
-        create_road_post(g, players, free_roads_set, '0,7:1,8', 728, 81)
-
-        create_road_post(g, players, free_roads_set, '1,2:2,2', 422, 131)
-        create_road_post(g, players, free_roads_set, '1,4:2,4', 534, 131)
-        create_road_post(g, players, free_roads_set, '1,6:2,6', 648, 131)
-        create_road_post(g, players, free_roads_set, '1,8:2,8', 762, 131)
-
-        create_road_post(g, players, free_roads_set, '2,2:3,1', 391, 181)
-        create_road_post(g, players, free_roads_set, '2,2:3,3', 448, 181)
-        create_road_post(g, players, free_roads_set, '2,4:3,3', 504, 181)
-        create_road_post(g, players, free_roads_set, '2,4:3,5', 561, 181)
-        create_road_post(g, players, free_roads_set, '2,6:3,5', 617, 181)
-        create_road_post(g, players, free_roads_set, '2,6:3,7', 675, 181)
-        create_road_post(g, players, free_roads_set, '2.8:3,7', 730, 181)
-        create_road_post(g, players, free_roads_set, '2,8:3,9', 786, 181)
-
-        create_road_post(g, players, free_roads_set, '3,1:4,1', 365, 231)
-        create_road_post(g, players, free_roads_set, '3,3:4,3', 479, 231)
-        create_road_post(g, players, free_roads_set, '3,5:4,5', 591, 231)
-        create_road_post(g, players, free_roads_set, '3,7:4,7', 703, 231)
-        create_road_post(g, players, free_roads_set, '3,9:4,9', 815, 231)
-
-        create_road_post(g, players, free_roads_set, '4,1:5,0', 335, 281, 17, 17, 5)
-        create_road_post(g, players, free_roads_set, '4,1:5,2', 391, 281, 17, 17, 5)
-        create_road_post(g, players, free_roads_set, '4,3:5,2', 448, 281, 17, 17, 5)
-        create_road_post(g, players, free_roads_set, '4,3:5,4', 504, 281, 17, 17, 5)
-        create_road_post(g, players, free_roads_set, '4,5:5,4', 561, 281, 17, 17, 5)
-        create_road_post(g, players, free_roads_set, '4,5:5,6', 617, 281, 17, 17, 5)
-        create_road_post(g, players, free_roads_set, '4,7:5,6', 675, 281, 17, 17, 5)
-        create_road_post(g, players, free_roads_set, '4,7:5,8', 735, 281, 17, 17, 5)
-        create_road_post(g, players, free_roads_set, '4,9:5,8', 790, 281, 17, 17, 5)
-        create_road_post(g, players, free_roads_set, '4,9:5,10', 845, 281, 17, 17, 5)
-
-        create_road_post(g, players, free_roads_set, '5,0:6,0', 307, 331)
-        create_road_post(g, players, free_roads_set, '5,2:6,2', 421, 331)
-        create_road_post(g, players, free_roads_set, '5,4:6,4', 535, 331)
-        create_road_post(g, players, free_roads_set, '5,6:6,6', 649, 331)
-        create_road_post(g, players, free_roads_set, '5,8:6,8', 763, 331)
-        create_road_post(g, players, free_roads_set, '5,10:6,10', 877, 331)
-
-        create_road_post(g, players, free_roads_set, '6,0:7,1', 335, 381)
-        create_road_post(g, players, free_roads_set, '6,2:7,1', 391, 381)
-        create_road_post(g, players, free_roads_set, '6,2:7,3', 448, 381)
-        create_road_post(g, players, free_roads_set, '6,4:7,3', 504, 381)
-        create_road_post(g, players, free_roads_set, '6,4:7,5', 561, 381)
-        create_road_post(g, players, free_roads_set, '6,6:7,5', 617, 381)
-        create_road_post(g, players, free_roads_set, '6,6:7,7', 675, 381)
-        create_road_post(g, players, free_roads_set, '6,8:7,7', 735, 381)
-        create_road_post(g, players, free_roads_set, '6,8:7,9', 790, 381)
-        create_road_post(g, players, free_roads_set, '6,10:7,9', 845, 381)
-
-        create_road_post(g, players, free_roads_set, '7,1:8,1', 365, 430)
-        create_road_post(g, players, free_roads_set, '7,3:8,3', 479, 430)
-        create_road_post(g, players, free_roads_set, '7,5:8,5', 591, 430)
-        create_road_post(g, players, free_roads_set, '7,7:8,7', 703, 430)
-        create_road_post(g, players, free_roads_set, '7,9:8,9', 815, 430)
-
-        create_road_post(g, players, free_roads_set, '8,1:9,2', 391, 480)
-        create_road_post(g, players, free_roads_set, '8,3:9,2', 448, 480)
-        create_road_post(g, players, free_roads_set, '8,3:9,4', 504, 480)
-        create_road_post(g, players, free_roads_set, '8,5:9,4', 561, 480)
-        create_road_post(g, players, free_roads_set, '8,5:9,6', 617, 480)
-        create_road_post(g, players, free_roads_set, '8,7:9,6', 675, 480)
-        create_road_post(g, players, free_roads_set, '8,7:9,8', 730, 480)
-        create_road_post(g, players, free_roads_set, '8,9:9,8', 786, 480)
-
-        create_road_post(g, players, free_roads_set, '9,2:10,2', 422, 530)
-        create_road_post(g, players, free_roads_set, '9,4:10,4', 534, 530)
-        create_road_post(g, players, free_roads_set, '9,6:10,6', 648, 530)
-        create_road_post(g, players, free_roads_set, '9,8:10,8', 762, 530)
-
-        create_road_post(g, players, free_roads_set, '10,2:11,3', 450, 580)
-        create_road_post(g, players, free_roads_set, '10,4:11,3', 505, 580)
-        create_road_post(g, players, free_roads_set, '10,4:11,5', 560, 580)
-        create_road_post(g, players, free_roads_set, '10,6:11,5', 616, 580)
-        create_road_post(g, players, free_roads_set, '10,6:11,7', 672, 580)
-        create_road_post(g, players, free_roads_set, '10,8:11,7', 728, 580)
+        for (let road_info of RoadsInfo) {
+            create_road_post(g, players, free_roads_set, ...road_info)
+        }
+        
+        g.addChild(DrawSprite(Dices[game.dices_res[0]], appWidth-110, 40, 1))
+        g.addChild(DrawSprite(Dices[game.dices_res[1]], appWidth-45, 40, 1))
 
         // Drawing the buttons
         let BUTTON = null
-        if (!buildmode) {
-            // Build button
-            if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && (me.can_build[0] || me.can_build[1] || me.can_build[2])) {
-                BUTTON = DrawSprite(ButtonBuild, 1100, 505, 0.1)
-                BUTTON.interactive = true;
-                BUTTON.buttonMode = true;
-                BUTTON.on('pointerdown', () => {
-                    setBuildMode(true)
-                    setSelectedPoint(null)
-                })
-            } else {
-                BUTTON = DrawSprite(ButtonBuildD, 1100, 505, 0.1)
-            }
-            g.addChild(BUTTON)
-
-            // Buy button
-            if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && me.can_buy) {
-                BUTTON = DrawSprite(ButtonBuy, 1100, 410, 0.1)
-                BUTTON.interactive = true;
-                BUTTON.buttonMode = true;
-                BUTTON.on('pointerdown', () => {    
-                    socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id : MoveType.buy_cards })
-                })
-            } else {
-                BUTTON = DrawSprite(ButtonBuyD, 1100, 410, 0.1)
-            }
-            g.addChild(BUTTON)
-
-
-            // Next turn button
-            if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && throwDices) {
-                BUTTON = DrawSprite(ButtonNextTurn, 1100, 600, 0.1)
-                BUTTON.interactive = true;
-                BUTTON.buttonMode = true;
-                BUTTON.on('pointerdown', () => {
-                    socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id : MoveType.next_turn })
-                    setThrowDices(false)
-                })
-            } else {
-                BUTTON = DrawSprite(ButtonNextTurnD, 1100, 600, 0.1)
-            }
-            g.addChild(BUTTON)
-
-            // Dice button
-            if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && !throwDices) {
-                BUTTON = DrawSprite(ButtonDices, 1005, 600, 0.1)
-                BUTTON.interactive = true
-                BUTTON.buttonMode  = true
-                BUTTON.on('pointerdown', () => {
-                    setThrowDices(true)
-                    socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id : MoveType.roll_dices })
-                })
-            } else {
-                BUTTON = DrawSprite(ButtonDicesD, 1005, 600, 0.1)
-            }
-            g.addChild(BUTTON);
-
-        } else {
+        if (buildMode) {
             // Build button cancel
             BUTTON = DrawSprite(ButtonBuildCancel, 1100, 505, 0.1)
             BUTTON.interactive = true;
@@ -643,10 +604,65 @@ function Game(props) {
                 })
                 g.addChild(BUTTON);
             }
+
+            return
         }
 
-        g.addChild(DrawSprite(Dices[game.dices_res[0]], appWidth-110, 40, 1))
-        g.addChild(DrawSprite(Dices[game.dices_res[1]], appWidth-45, 40, 1))
+        // Build button
+        //if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && (me.can_build[0] || me.can_build[1] || me.can_build[2])) {
+            BUTTON = DrawSprite(ButtonBuild, 1100, 505, 0.1)
+            BUTTON.interactive = true;
+            BUTTON.buttonMode = true;
+            BUTTON.on('pointerdown', () => {
+                setBuildMode(true)
+                setSelectedPoint(null)
+            })
+        //} else {
+        //    BUTTON = DrawSprite(ButtonBuildD, 1100, 505, 0.1)
+        //}
+        g.addChild(BUTTON)
+
+        // Buy button
+        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && me.can_buy) {
+            BUTTON = DrawSprite(ButtonBuy, 1100, 410, 0.1)
+            BUTTON.interactive = true;
+            BUTTON.buttonMode = true;
+            BUTTON.on('pointerdown', () => {    
+                socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id : MoveType.buy_cards })
+            })
+        } else {
+            BUTTON = DrawSprite(ButtonBuyD, 1100, 410, 0.1)
+        }
+        g.addChild(BUTTON)
+
+
+        // Next turn button
+        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && throwDices) {
+            BUTTON = DrawSprite(ButtonNextTurn, 1100, 600, 0.1)
+            BUTTON.interactive = true;
+            BUTTON.buttonMode = true;
+            BUTTON.on('pointerdown', () => {
+                socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id : MoveType.next_turn })
+                setThrowDices(false)
+            })
+        } else {
+            BUTTON = DrawSprite(ButtonNextTurnD, 1100, 600, 0.1)
+        }
+        g.addChild(BUTTON)
+
+        // Dice button
+        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && !throwDices) {
+            BUTTON = DrawSprite(ButtonDices, 1005, 600, 0.1)
+            BUTTON.interactive = true
+            BUTTON.buttonMode  = true
+            BUTTON.on('pointerdown', () => {
+                setThrowDices(true)
+                socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id : MoveType.roll_dices })
+            })
+        } else {
+            BUTTON = DrawSprite(ButtonDicesD, 1005, 600, 0.1)
+        }
+        g.addChild(BUTTON);
 
     }
 
@@ -664,27 +680,6 @@ function Game(props) {
         g.addChild(Draw(0x000000, 'Rect', 0, 0, appWidth, appHeight))
         g.addChild(DrawSpritePro(Background, 0, 0, appWidth, appHeight))
 
-        // Drawing the biomes:
-        create_biome(g, game.board.biomes, 0, appWidth/2 - cell_hor_offset, appHeight/2 - 2*cell_ver_offset)
-        create_biome(g, game.board.biomes, 1,  appWidth/2, appHeight/2 - 2*cell_ver_offset)
-        create_biome(g, game.board.biomes, 2,  appWidth/2 + cell_hor_offset, appHeight/2 - 2*cell_ver_offset)
-        create_biome(g, game.board.biomes, 11, appWidth/2 - 1.5*cell_hor_offset, appHeight/2 - cell_ver_offset)
-        create_biome(g, game.board.biomes, 12, appWidth/2 - 0.5*cell_hor_offset, appHeight/2 - cell_ver_offset)
-        create_biome(g, game.board.biomes, 13, appWidth/2 + 0.5*cell_hor_offset, appHeight/2 - cell_ver_offset)
-        create_biome(g, game.board.biomes, 3,  appWidth/2 + 1.5*cell_hor_offset, appHeight/2 - cell_ver_offset)
-        create_biome(g, game.board.biomes, 10, appWidth/2 - 2*cell_hor_offset, appHeight/2)
-        create_biome(g, game.board.biomes, 17, appWidth/2 - cell_hor_offset, appHeight/2)
-        create_biome(g, game.board.biomes, 18, appWidth/2,appHeight/2)
-        create_biome(g, game.board.biomes, 14, appWidth/2 + cell_hor_offset, appHeight/2)
-        create_biome(g, game.board.biomes, 4,  appWidth/2 + 2*cell_hor_offset, appHeight/2)
-        create_biome(g, game.board.biomes, 9,  appWidth/2 - 1.5*cell_hor_offset, appHeight/2 + cell_ver_offset)
-        create_biome(g, game.board.biomes, 16, appWidth/2 - 0.5*cell_hor_offset, appHeight/2 + cell_ver_offset)
-        create_biome(g, game.board.biomes, 15, appWidth/2 + 0.5*cell_hor_offset, appHeight/2 + cell_ver_offset)
-        create_biome(g, game.board.biomes, 5,  appWidth/2 + 1.5*cell_hor_offset, appHeight/2 + cell_ver_offset)
-        create_biome(g, game.board.biomes, 6,  appWidth/2 - cell_hor_offset, appHeight/2 + 2*cell_ver_offset)
-        create_biome(g, game.board.biomes, 7,  appWidth/2, appHeight/2 + 2*cell_ver_offset)
-        create_biome(g, game.board.biomes, 8,  appWidth/2 + cell_hor_offset, appHeight/2 + 2*cell_ver_offset)
-
         if (game.phase !== 3) {
             game_phase_init(g, game, players, me)
         } else {
@@ -698,11 +693,11 @@ function Game(props) {
         } else {
             g.addChild(Draw(PlayersColorsD[sessionStorage.getItem('my-turn')], 'RoundedRect', 57, 510, 327, 30, 5))
         }
-        g.addChild(DrawText(me.name, 'Arial', 22, 'white', 'left', {x: 65, y:513}, 0))
+        g.addChild(DrawText(me.name, 'EBGaramond', 22, 'white', 'left', {x: 65, y:513}, 0))
         for (let i = 0; i < 5; i++) {
             g.addChild(DrawSpritePro(Resources[i], 55+(71*i), 555, 46, 66))
             g.addChild(Draw(0xe8a85a, 'Circle', 78+(71*i), 621, 15))
-            g.addChild(DrawText(Object.values(me.resources)[i], 'Arial', 14, 'black', 'center', {x:78+(71*i), y:621}, 0.5))
+            g.addChild(DrawText(Object.values(me.resources)[i], 'EBGaramond', 14, 'black', 'center', {x:78+(71*i), y:621}, 0.5))
         }
 
         // Drawing develop cards box
@@ -716,7 +711,18 @@ function Game(props) {
             g.addChild(BOTTON)
         } else {
             g.addChild(Draw(0x420001, 'RoundedRect', 50, 50, 380, 300, 10))
-            g.addChild(DrawSprite(Knight,       100, 130, 0.25))
+
+            BOTTON = DrawSprite(Knight, 100, 130, 0.25)
+            BOTTON.interactive = true
+            BOTTON.on('pointerdown', () => {
+                //if (me.develop_cards['Caballero'] > 0) {
+                    setKnightMode(prevStatus => {
+                        return !prevStatus
+                    })
+                //}
+            })
+            g.addChild(BOTTON)
+
             g.addChild(DrawSprite(Monopoly,     193, 130, 0.25))
             g.addChild(DrawSprite(RoadBuilding, 287, 130, 0.25))
             g.addChild(DrawSprite(YearOfPlenty, 380, 130, 0.25))
@@ -741,12 +747,12 @@ function Game(props) {
         for (let p = 0; p < players.length; p++) {
             if (p !== parseInt(sessionStorage.getItem('my-turn'))) {
                 g.addChild(Draw((p === game.current_turn) ? PlayersColors[p] : PlayersColorsD[p],  'RoundedRect', 32, 500 - 45*(boxes+1), 200, 35, 5))
-                g.addChild(DrawText(game.players[p].name, 'Arial', 13, 'white', 'left', {x:47, y:(514 - 47*(boxes+1))}, 0))
+                g.addChild(DrawText(game.players[p].name, 'EBGaramond', 13, 'white', 'left', {x:47, y:(514 - 47*(boxes+1))}, 0))
                 boxes++
             }
         }
 
-    }, [buildmode, gameChanged, hasToBuild, selectedPoint, seeCards])
+    }, [buildMode, gameChanged, hasToBuild, knightMode, selectedPoint, seeCards])
 
     return (
         <div id="game-header">

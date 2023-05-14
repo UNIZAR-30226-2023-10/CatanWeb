@@ -1,4 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=EB+Garamond&display=swap');
+@font-face {
+  font-family: 'EBGaramond';
+  src: url('./fonts/EB_Garmond/EBGaramond-Medium.ttf');
+}
+
 
 body {
   margin: 0;
