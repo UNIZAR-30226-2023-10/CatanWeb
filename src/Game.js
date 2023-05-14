@@ -630,7 +630,7 @@ function Game(props) {
         } else {
             g.addChild(Draw(PlayersColorsD[sessionStorage.getItem('my-turn')], 'RoundedRect', 57, 510, 327, 30, 5))
         }
-        g.addChild(DrawText(me.name, 'Arial', 25, 'white', 'center', {x: 75, y:525}, 0.5))
+        g.addChild(DrawText(me.name, 'Arial', 22, 'white', 'left', {x: 65, y:513}, 0))
         for (let i = 0; i < 5; i++) {
             g.addChild(DrawSpritePro(Resources[i], 55+(71*i), 555, 46, 66))
             g.addChild(Draw(0xe8a85a, 'Circle', 78+(71*i), 621, 15))
@@ -642,7 +642,7 @@ function Game(props) {
         for (let p = 0; p < players.length; p++) {
             if (p != sessionStorage.getItem('my-turn')) {
                 g.addChild(Draw((p === game.current_turn) ? PlayersColors[p] : PlayersColorsD[p],  'RoundedRect', 30, 500 - 45*(boxes+1), 200, 35, 5))
-                g.addChild(DrawText(game.players[p].name, 'Arial', 20, 'white', 'center', {x:57, y:(515 - 45*(boxes+1))}, 0.5))
+                g.addChild(DrawText(game.players[p].name, 'Arial', 13, 'white', 'left', {x:42, y:(514 - 47*(boxes+1))}, 0))
                 boxes++
             }
         }
