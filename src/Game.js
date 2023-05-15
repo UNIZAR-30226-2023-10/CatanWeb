@@ -71,6 +71,7 @@ import ButtonBuildCancel from './images/button_build-cancel.png'
 import ButtonBuy from './images/button_buy.png'
 import ButtonBuyD from './images/button_buy_d.png'
 import ButtonCancel  from './images/button_cancel.png'
+import ButtonCardsExit from './images/button_cards_exit.png'
 import ButtonConfirm from './images/button_confirm.png'
 import ButtonDices from './images/button_dices.png'
 import ButtonDicesD from './images/button_dices_d.png'
@@ -310,14 +311,21 @@ function Game(props) {
     //})
 
     // Build state: select node to build the correspondant building on
-    const [buildMode,  setBuildMode ] = useState(true)
+    const [buildMode,  setBuildMode]              = useState(true)
     // Knight state: select biome to put the robber on
-    const [knightMode, setKnightMode] = useState(false)
-    const [buildRoads, setBuildRoads] = useState(false)
+    const [knightMode, setKnightMode]             = useState(false)
+    // Building roads state: 
+    const [buildRoads, setBuildRoads]             = useState(false)
+    const [hasToBuildRoads, setHasToBuildRoads]   = useState([true, false])
+    // Monopoly state:
+    const [monopolyMode, setMonopolyMode]         = useState(false)
+    // Year of plenty state:
+    const [yearOfPlentyMode, setYearOfPlentyMode] = useState(false)
+
+
     const [throwDices, setThrowDices] = useState(false)
     const [selectedPoint, setSelectedPoint] = useState(null);
     const [hasToBuild, setHasToBuild] = useState([true, false])
-    const [hasToBuildRoads, setHasToBuildRoads] = useState([true, false])
     const [seeCards, setSeeCards] = useState(false)
 
 
@@ -340,17 +348,6 @@ function Game(props) {
         if (biomes[i].token.letter !== 'S') {
             g.addChild(DrawSprite(Tokens[biomes[i].token.letter], sprite.x, sprite.y, 0.15))
         }
-
-        //if (biomes[i].token !== 0) {
-        //    let token = Draw(0xe8a85a, 'Circle', sprite.x, sprite.y, 20)
-        //    if (biomes[i].token === 6 || biomes[i].token === 8) {
-        //        token.addChild(DrawText(biomes[i].token, 'EBGaramond', 16, "red", 'center', {x: sprite.x, y: sprite.y }, 0.5))
-        //    } else {
-        //        token.addChild(DrawText(biomes[i].token, 'EBGaramond', 16, "white", 'center', {x: sprite.x, y: sprite.y }, 0.5))
-        //    }
-        //    g.addChild(token)
-        //}
-
     }
 
     function create_node_init(g, players, free_nodes_set, id, x, y) {
@@ -471,6 +468,253 @@ function Game(props) {
         }
     }
 
+    // ========================================================================
+    // DEFAULT MODE
+    // ========================================================================
+    function DrawBiomes_Default(g, biomes, id, x, y) {
+        let sprite = DrawSprite(Biomes[biomes[id].type], x, y, 0.26)
+        g.addChild(sprite)
+        if (biomes[id].token.letter !== 'S') {
+            g.addChild(DrawSprite(Tokens[biomes[id].token.letter], sprite.x, sprite.y, 0.3))
+        }
+    }
+
+    function DrawNodes_Default(g, players, id, x, y) {
+        let p_i = -1
+        // If any player has the node as a village
+        for (let p = 0; p < players.length; p++) {
+            let villages_set = (players[p].villages.length > 0) ? new Set(players[p].villages) : new Set()
+            if (villages_set.has(id)) {
+                p_i = p
+                break
+            }
+        }
+        if (p_i !== -1) {
+            g.addChild(Draw(PlayersColors[p_i], 'Circle', x, y, 15))
+            return
+        }
+
+        // If any player has the node as a city
+        for (let p = 0; p < players.length; p++) {
+            let cities_set = (players[p].cities.length > 0) ? new Set(players[p].cities) : new Set()
+            if (cities_set.has(id)) {
+                p_i = p
+                break
+            }
+        }
+        if (p_i !== -1) {
+            g.addChild(Draw(PlayersColors[p_i], 'Rect', x - 15, y - 15, 30, 30))
+        }
+    }
+
+    function DrawRoads_Default(g, players, id, x, y) {
+        let p_i = -1
+        // If any player has the road
+        for (let p = 0; p < players.length; p++) {
+            let roads_set = (players[p].roads.length > 0) ? new Set(players[p].roads) : new Set()
+            if (roads_set.has(id)) {
+                p_i = p
+            }
+        }
+        if (p_i !== -1) {
+            g.addChild(Draw(PlayersColors[p_i], 'RoundedRect', x, y, 17, 17, 5))
+        }
+    }
+
+    // ========================================================================
+    // BUILD MODE
+    // ========================================================================
+    function DrawBiomes_Build(g, biomes, id, x, y) {
+        let sprite = DrawSprite(Biomes[biomes[id].type], x, y, 0.26)
+        g.addChild(sprite)
+        if (biomes[id].token.letter !== 'S') {
+            g.addChild(DrawSprite(Tokens[biomes[id].token.letter], sprite.x, sprite.y, 0.3))
+        }
+    }
+
+    function DrawNodes_Build(g, players, free_nodes_set, id, x, y) {
+
+        let p_i = -1
+        // If any player has the node as a village
+        for (let p = 0; p < players.length; p++) {
+            let villages_set = (players[p].villages.length > 0) ? new Set(players[p].villages) : new Set()
+            if (villages_set.has(id)) {
+                p_i = p
+                break
+            }
+        }
+        if (p_i !== -1) {
+            if (p_i === parseInt(sessionStorage.getItem('my-turn'))) {
+                let node = Draw(selectedPoint && selectedPoint.id === id ? 0xffff00 : PlayersColors[p_i], 'Circle', x, y, 15)
+                node.interactive = true
+                node.on('pointerdown', () => {
+                    setSelectedPoint({id:id, type:'Village'})
+                })
+                g.addChild(node)
+            } else {
+                g.addChild(Draw(PlayersColors[p_i], 'Circle', x, y, 15))
+            }
+            return
+        }
+
+        // If any player has the node as a city
+        for (let p = 0; p < players.length; p++) {
+            let cities_set = (players[p].cities.length > 0) ? new Set(players[p].cities) : new Set()
+            if (cities_set.has(id)) {
+                p_i = p
+                break
+            }
+        }
+        if (p_i !== -1) {
+            g.addChild(Draw(PlayersColors[p_i], 'Rect', x - 15, y - 15, 30, 30))
+            return
+        }
+
+        // If any player have not the node, then is a free node
+        if (free_nodes_set.has(id)) {
+            let node = Draw(selectedPoint && selectedPoint.id === id ? 0xffff00 : 0xffffff, 'Circle', x, y, 15)
+            node.interactive = true 
+            node.on("pointerdown", () => {
+                setSelectedPoint({id:id, type:'Node'})
+            })
+            g.addChild(node)
+        }
+    }
+
+    function DrawRoads_Build(g, players, free_roads_set, id, x, y) {
+
+        let p_i = -1
+        // If any player has the road
+        for (let p = 0; p < players.length; p++) {
+            let roads_set = (players[p].roads.length > 0) ? new Set(players[p].roads) : new Set()
+            if (roads_set.has(id)) {
+                p_i = p
+            }
+        }
+        if (p_i !== -1) {
+            g.addChild(Draw(PlayersColors[p_i], 'RoundedRect', x, y, 17, 17, 5))
+        }
+
+        if (free_roads_set.size > 0) {
+            if ((buildMode || buildRoads)  && !knightMode && free_roads_set.has(id)) {
+                let road = Draw(selectedPoint && selectedPoint.id === id ? 0x0b04cf : 0x6f5c9c, 'RoundedRect', x, y, 17, 17, 5)
+                road.interactive = true
+                road.on("pointertap", () => {setSelectedPoint({id:id, type:'Road'})})
+                g.addChild(road)
+            }
+        }
+        
+    }
+
+    // ========================================================================
+    // KNIGHT MODE
+    // ========================================================================
+    function DrawBiomes_Knight(g, biomes, id, x, y) {
+        let sprite = DrawSprite(Biomes[biomes[id].type], x, y, selectedPoint && selectedPoint.id === id ? 0.3 : 0.26)
+        sprite.interactive = true
+        sprite.buttonMode  = true
+        sprite.on('pointerdown', () => {
+            if (!selectedPoint || (selectedPoint && selectedPoint.id !== id)) {
+                setSelectedPoint({id:id, type:'Biome'})
+            } else {
+                setSelectedPoint(null)
+            }
+        })
+        g.addChild(sprite)
+
+        if (biomes[id].token.letter !== 'S' && (!selectedPoint || (selectedPoint && selectedPoint.id !== id))) {
+            g.addChild(DrawSprite(Tokens[biomes[id].token.letter], sprite.x, sprite.y, 0.3))
+        }
+    }
+
+    function DrawNodes_Knight(g, players, id, x, y) {
+        let p_i = -1
+        // If any player has the node as a village
+        for (let p = 0; p < players.length; p++) {
+            let villages_set = (players[p].villages.length > 0) ? new Set(players[p].villages) : new Set()
+            if (villages_set.has(id)) {
+                p_i = p
+                break
+            }
+        }
+        if (p_i !== -1) {
+            g.addChild(Draw(PlayersColors[p_i], 'Circle', x, y, 15))
+            return
+        }
+
+        // If any player has the node as a city
+        for (let p = 0; p < players.length; p++) {
+            let cities_set = (players[p].cities.length > 0) ? new Set(players[p].cities) : new Set()
+            if (cities_set.has(id)) {
+                p_i = p
+                break
+            }
+        }
+        if (p_i !== -1) {
+            g.addChild(Draw(PlayersColors[p_i], 'Rect', x - 15, y - 15, 30, 30))
+        }
+    }
+
+
+    // ========================================================================
+    // ROAD BUILDING MODE
+    // ========================================================================
+    function DrawNodes_RoadBuilding(g, players, id, x, y) {
+        let p_i = -1
+        // If any player has the node as a village
+        for (let p = 0; p < players.length; p++) {
+            let villages_set = (players[p].villages.length > 0) ? new Set(players[p].villages) : new Set()
+            if (villages_set.has(id)) {
+                p_i = p
+                break
+            }
+        }
+        if (p_i !== -1) {
+            g.addChild(Draw(PlayersColors[p_i], 'Circle', x, y, 15))
+            return
+        }
+
+        // If any player has the node as a city
+        for (let p = 0; p < players.length; p++) {
+            let cities_set = (players[p].cities.length > 0) ? new Set(players[p].cities) : new Set()
+            if (cities_set.has(id)) {
+                p_i = p
+                break
+            }
+        }
+        if (p_i !== -1) {
+            g.addChild(Draw(PlayersColors[p_i], 'Rect', x - 15, y - 15, 30, 30))
+        }
+    }
+
+    function DrawRoads_RoadBuilding(g, players, free_roads_set, id, x, y) {
+
+        let p_i = -1
+        // If any player has the road
+        for (let p = 0; p < players.length; p++) {
+            let roads_set = (players[p].roads.length > 0) ? new Set(players[p].roads) : new Set()
+            if (roads_set.has(id)) {
+                p_i = p
+            }
+        }
+        if (p_i !== -1) {
+            g.addChild(Draw(PlayersColors[p_i], 'RoundedRect', x, y, 17, 17, 5))
+        }
+
+        if (free_roads_set.size > 0) {
+            if ((buildMode || buildRoads)  && !knightMode && free_roads_set.has(id)) {
+                let road = Draw(selectedPoint && selectedPoint.id === id ? 0x0b04cf : 0x6f5c9c, 'RoundedRect', x, y, 17, 17, 5)
+                road.interactive = true
+                road.on("pointertap", () => {setSelectedPoint({id:id, type:'Road'})})
+                g.addChild(road)
+            }
+        }
+        
+    }
+
+    // ========================================================================
+    // GANE PHASES
+    // ========================================================================
     function game_phase_init(g, game, players, me) {
 
         // Drawing the biomes:
@@ -492,7 +736,6 @@ function Game(props) {
             create_road_init(g, players, free_roads_set, ...road_info)
         }
         
-
         if (game.current_turn === parseInt(sessionStorage.getItem('my-turn'))) {
             let BUTTON = null
             // Only if player has selected a place to build
@@ -547,85 +790,30 @@ function Game(props) {
 
     function game_phase_post(g, game, players, me) {
 
-        // Drawing the biomes:
-        if (knightMode) {
-            if (selectedPoint) {
-                let exact_i = 0
-                for (let i = 0; i < 19; i++) {
-                    if (BiomesOrder[i] !== selectedPoint.id) {
-                        create_biome(g, game.board.biomes, BiomesOrder[i], ...BiomesPos[i])
-                    } else {
-                        exact_i = i
-                    }
-                }
-                create_biome(g, game.board.biomes, BiomesOrder[exact_i], ...BiomesPos[exact_i])
-
-
-                // Cancel building selection
-                let BUTTON = DrawSprite(ButtonCancel, 1005, 600, 0.1)
-                BUTTON.interactive = true;
-                BUTTON.buttonMode = true;
-                BUTTON.on('pointerdown', () => {
-                    setSelectedPoint(null)
-                })
-                g.addChild(BUTTON);
-
-                // Confirm building selection
-                BUTTON = DrawSprite(ButtonConfirm, 1100, 600, 0.1)
-                BUTTON.interactive = true;
-                BUTTON.buttonMode = true;
-                BUTTON.on('pointerdown', () => {
-                    console.log("CONSTRUYO EN ", selectedPoint)
-                    socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id: MoveType.use_knight, robber_biome: selectedPoint.id})
-                    setBuildMode(false)
-                    setSelectedPoint(null)
-                })
-                g.addChild(BUTTON);
-
-            } else {
-                for (let i = 0; i < 19; i++) {
-                    create_biome(g, game.board.biomes, BiomesOrder[i], ...BiomesPos[i])
-                }
-            }
-            if (game.board.robber_biome !== -1) {
-                let i = BiomesOrder.findIndex(x => x === game.board.robber_biome)
-                g.addChild(DrawSprite(TheRobber, BiomesPos[i][0], BiomesPos[i][1]-10, 0.35))
-            }
-            return
-        }
-
-        // Drawing the biomes
-        for (let i = 0; i < 19; i++) {
-            create_biome(g, game.board.biomes, BiomesOrder[i], ...BiomesPos[i])
-        }
-        if (game.board.robber_biome !== -1) {
-            let i = BiomesOrder.findIndex(x => x === game.board.robber_biome)
-            g.addChild(DrawSprite(TheRobber, BiomesPos[i][0], BiomesPos[i][1]-10, 0.35))
-        }
-
-
-        // Drawing the building nodes:
-        let free_nodes_set = (me.free_nodes.length > 0) ? new Set(me.free_nodes) : new Set()
-        for (let i = 0; i < 12; i++) {
-            for (let j = borders[i][0]; j <= borders[i][1]; j+=2) {
-                create_node_post(g, players, free_nodes_set, `${i},${j}`, 320 + (j*(cell_hor_offset-4)/2), 76 + (24 * (i%2)) + (Math.floor(i/2) * cell_ver_offset))
-            }
-        }
-
-        // Drawing the road nodes:
-        let free_roads_set = (me.free_roads.length > 0) ? new Set(me.free_roads) : new Set()
-        for (let road_info of RoadsInfo) {
-            create_road_post(g, players, free_roads_set, ...road_info)
-        }
-        
-        g.addChild(DrawSprite(Dices[game.dices_res[0]], appWidth-110, 40, 1))
-        g.addChild(DrawSprite(Dices[game.dices_res[1]], appWidth-45, 40, 1))
-
-        // Drawing the buttons
-        let BUTTON = null
+        // Use build mode:
         if (buildMode) {
+
+            // Drawing the biomes
+            for (let i = 0; i < 19; i++) {
+                DrawBiomes_Build(g, game.board.biomes, BiomesOrder[i], ...BiomesPos[i])
+            }
+
+            // Drawing the nodes
+            let free_nodes_set = (me.free_nodes.length > 0) ? new Set(me.free_nodes) : new Set()
+            for (let i = 0; i < 12; i++) {
+                for (let j = borders[i][0]; j <= borders[i][1]; j+=2) {
+                    DrawNodes_Build(g, players, free_nodes_set, `${i},${j}`, 320 + (j*(cell_hor_offset-4)/2), 76 + (24 * (i%2)) + (Math.floor(i/2) * cell_ver_offset))
+                }
+            }
+
+            // Drawing the road nodes:
+            let free_roads_set = (me.free_roads.length > 0) ? new Set(me.free_roads) : new Set()
+            for (let road_info of RoadsInfo) {
+                DrawRoads_Build(g, players, free_roads_set, ...road_info)
+            }
+        
             // Build button cancel
-            BUTTON = DrawSprite(ButtonBuildCancel, 1100, 505, 0.1)
+            let BUTTON = DrawSprite(ButtonBuildCancel, 1100, 505, 0.1)
             BUTTON.interactive = true;
             BUTTON.buttonMode = true;
             BUTTON.on('pointerdown', () => {
@@ -663,23 +851,66 @@ function Game(props) {
                 })
                 g.addChild(BUTTON);
             }
-
             return
         }
 
-        if (buildRoads) {
-            // Build button cancel
-            BUTTON = DrawSprite(ButtonBuildCancel, 1100, 505, 0.1)
-            BUTTON.interactive = true;
-            BUTTON.buttonMode = true;
-            BUTTON.on('pointerdown', () => {
-                setBuildMode(false)
+        // Use knight mode: 
+        if (knightMode) {
+
+            let BOTTON = DrawSprite(ButtonCardsExit, 60, 60, 0.1)
+            BOTTON.interactive = true
+            BOTTON.on('pointerdown', () => {
+                setKnightMode(false)
                 setSelectedPoint(null)
             })
-            g.addChild(BUTTON)
-        
-            // Only if player has selected a place to build
-            if (selectedPoint && selectedPoint.type === 'Road') {
+            g.addChild(BOTTON)
+
+            if (!selectedPoint) {
+                // Drawing the biomes
+                for (let i = 0; i < 19; i++) {
+                    DrawBiomes_Knight(g, game.board.biomes, BiomesOrder[i], ...BiomesPos[i])
+                }
+
+                // Drawing the nodes
+                for (let i = 0; i < 12; i++) {
+                    for (let j = borders[i][0]; j <= borders[i][1]; j+=2) {
+                        DrawNodes_Knight(g, players, `${i},${j}`, 320 + (j*(cell_hor_offset-4)/2), 76 + (24 * (i%2)) + (Math.floor(i/2) * cell_ver_offset))
+                    }
+                }
+
+                // Drawing the robber
+                if (game.board.robber_biome !== -1) {
+                    let i = BiomesOrder.findIndex(x => x === game.board.robber_biome)
+                    g.addChild(DrawSprite(TheRobber, BiomesPos[i][0], BiomesPos[i][1]-10, 0.35))
+                }
+            // Some biome was selected
+            } else { 
+                // Drawing the biomes
+                let biome = 0
+                for (let i = 0; i < 19; i++) {
+                    if (BiomesOrder[i] !== selectedPoint.id) {
+                        DrawBiomes_Knight(g, game.board.biomes, BiomesOrder[i], ...BiomesPos[i])
+                    } else {
+                        biome = i
+                    }
+                }
+
+                // Drawing the nodes
+                for (let i = 0; i < 12; i++) {
+                    for (let j = borders[i][0]; j <= borders[i][1]; j+=2) {
+                        DrawNodes_Knight(g, players, `${i},${j}`, 320 + (j*(cell_hor_offset-4)/2), 76 + (24 * (i%2)) + (Math.floor(i/2) * cell_ver_offset))
+                    }
+                }
+
+                // Drawing the robber
+                if (game.board.robber_biome !== -1) {
+                    let i = BiomesOrder.findIndex(x => x === game.board.robber_biome)
+                    g.addChild(DrawSprite(TheRobber, BiomesPos[i][0], BiomesPos[i][1]-10, 0.35))
+                }
+
+                // Drawing the selected biome
+                DrawBiomes_Knight(g, game.board.biomes, BiomesOrder[biome], ...BiomesPos[biome])
+
                 // Cancel building selection
                 BUTTON = DrawSprite(ButtonCancel, 1005, 600, 0.1)
                 BUTTON.interactive = true;
@@ -688,14 +919,68 @@ function Game(props) {
                     setSelectedPoint(null)
                 })
                 g.addChild(BUTTON);
-        
+
                 // Confirm building selection
                 BUTTON = DrawSprite(ButtonConfirm, 1100, 600, 0.1)
                 BUTTON.interactive = true;
                 BUTTON.buttonMode = true;
                 BUTTON.on('pointerdown', () => {
                     console.log("CONSTRUYO EN ", selectedPoint)
-                    socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, {id : MoveType.build_road, coords: selectedPoint.id})
+                    socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id: MoveType.use_knight, robber_biome: selectedPoint.id})
+                    setKnightMode(false)
+                    setSelectedPoint(null)
+                })
+                g.addChild(BUTTON);
+            }
+
+            return
+        }
+
+        // Use building roads mode:
+        if (buildRoads) {
+
+            // Drawing the biomes
+            for (let i = 0; i < 19; i++) {
+                DrawBiomes_Default(g, game.board.biomes, BiomesOrder[i], ...BiomesPos[i])
+            }
+
+            // Drawing the nodes
+            for (let i = 0; i < 12; i++) {
+                for (let j = borders[i][0]; j <= borders[i][1]; j+=2) {
+                    DrawNodes_RoadBuilding(g, players, `${i},${j}`, 320 + (j*(cell_hor_offset-4)/2), 76 + (24 * (i%2)) + (Math.floor(i/2) * cell_ver_offset))
+                }
+            }
+
+            // Drawing the road nodes:
+            let free_roads_set = (me.free_roads.length > 0) ? new Set(me.free_roads) : new Set()
+            for (let road_info of RoadsInfo) {
+                DrawRoads_Build(g, players, free_roads_set, ...road_info)
+            }
+
+            let BOTTON = DrawSprite(ButtonCardsExit, 60, 60, 0.1)
+            BOTTON.interactive = true
+            BOTTON.on('pointerdown', () => {
+                setBuildRoads(false)
+            })
+            g.addChild(BOTTON)
+
+            if (selectedPoint) {
+                // Cancel building selection
+                BUTTON = DrawSprite(ButtonCancel, 1005, 600, 0.1)
+                BUTTON.interactive = true;
+                BUTTON.buttonMode = true;
+                BUTTON.on('pointerdown', () => {
+                    setSelectedPoint(null)
+                })
+                g.addChild(BUTTON);
+
+                // Confirm building selection
+                BUTTON = DrawSprite(ButtonConfirm, 1100, 600, 0.1)
+                BUTTON.interactive = true;
+                BUTTON.buttonMode = true;
+                BUTTON.on('pointerdown', () => {
+                    console.log("CONSTRUYO EN ", selectedPoint)
+                    //socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, {id : MoveType.build_road, coords: selectedPoint.id})
                     console.log('buildRoads',buildRoads)
                     if (hasToBuildRoads[0]) {
                         console.log('Primera')
@@ -705,17 +990,48 @@ function Game(props) {
                         setHasToBuildRoads([true, false])
                         setBuildRoads(false)
                         console.log('Carreteras: ',game.players[game.current_turn].develop_cards.Carreteras)
-                        game.players[game.current_turn].develop_cards.Carreteras--
                         console.log('Carreteras: ',game.players[game.current_turn].develop_cards.Carreteras)
                     }
                     setSelectedPoint(null)
                 })
-                g.addChild(BUTTON);
             }
-        
             return
-        } 
+        }
 
+        if (monopolyMode) {
+
+            return
+        }
+
+        if (yearOfPlentyMode) {
+
+            return
+        }
+
+
+        // Drawing the biomes
+        for (let i = 0; i < 19; i++) {
+            DrawBiomes_Default(g, game.board.biomes, BiomesOrder[i], ...BiomesPos[i])
+        }
+        if (game.board.robber_biome !== -1) {
+            let i = BiomesOrder.findIndex(x => x === game.board.robber_biome)
+            g.addChild(DrawSprite(TheRobber, BiomesPos[i][0], BiomesPos[i][1]-10, 0.35))
+        }
+
+        // Drawing the building nodes:
+        for (let i = 0; i < 12; i++) {
+            for (let j = borders[i][0]; j <= borders[i][1]; j+=2) {
+                DrawNodes_Default(g, players, `${i},${j}`, 320 + (j*(cell_hor_offset-4)/2), 76 + (24 * (i%2)) + (Math.floor(i/2) * cell_ver_offset))
+            }
+        }
+
+        // Drawing the road nodes:
+        for (let road_info of RoadsInfo) {
+            DrawRoads_Default(g, players, ...road_info)
+        }
+        
+        // Drawing the buttons
+        let BUTTON = null
         // Build button
         //if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && (me.can_build[0] || me.can_build[1] || me.can_build[2])) {
             BUTTON = DrawSprite(ButtonBuild, 1100, 505, 0.1)
@@ -742,7 +1058,6 @@ function Game(props) {
             BUTTON = DrawSprite(ButtonBuyD, 1100, 410, 0.1)
         }
         g.addChild(BUTTON)
-
 
         // Next turn button
         if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && throwDices) {
@@ -771,6 +1086,62 @@ function Game(props) {
             BUTTON = DrawSprite(ButtonDicesD, 1005, 600, 0.1)
         }
         g.addChild(BUTTON);
+
+        // Drawing develop cards box
+        let BOTTON = null
+        if (!seeCards) {
+            BOTTON = DrawSprite(ButtonSeeMore, 60, 60, 0.1)
+            BOTTON.interactive = true
+            BOTTON.on('pointerdown', () => {
+                setSeeCards(true)
+            })
+            g.addChild(BOTTON)
+        } else {
+            g.addChild(Draw(0x420001, 'RoundedRect', 50, 50, 380, 300, 10))
+
+            BOTTON = DrawSprite(Knight, 100, 130, 0.25)
+            BOTTON.interactive = true
+            BOTTON.on('pointerdown', () => {
+                //if (me.develop_cards['Caballero'] > 0) {
+                    setKnightMode(prevStatus => {
+                        return !prevStatus
+                    })
+                //}
+            })
+            g.addChild(BOTTON)
+
+            g.addChild(DrawSprite(Monopoly,     193, 130, 0.25))
+            BOTTON = DrawSprite(RoadBuilding, 287, 130, 0.25)
+            BOTTON.interactive = true
+            BOTTON.on('pointerdown', () => {
+                //if (me.develop_cards.Carreteras > 0) {
+                    console.log ('Carta carreteras')
+                    setBuildRoads(prevStatus => {
+                        return !prevStatus
+                    })
+                //}
+            })
+            g.addChild(BOTTON)
+            //g.addChild(DrawSprite(RoadBuilding, 287, 130, 0.25))
+            g.addChild(DrawSprite(YearOfPlenty, 380, 130, 0.25))
+
+            g.addChild(DrawSprite(Chapel,      93, 265, 0.21))
+            g.addChild(DrawSprite(Library,    167, 265, 0.21))
+            g.addChild(DrawSprite(Market,     240, 265, 0.21))
+            g.addChild(DrawSprite(Palace,     313, 265, 0.21))
+            g.addChild(DrawSprite(University, 386, 265, 0.21))
+
+            BOTTON = DrawSprite(ButtonSeeLess, 60, 60, 0.1)
+            BOTTON.interactive = true
+            BOTTON.on('pointerdown', () => {
+                setSeeCards(false)
+            })
+            g.addChild(BOTTON)
+        }
+
+
+        g.addChild(DrawSprite(Dices[game.dices_res[0]], appWidth-110, 40, 1))
+        g.addChild(DrawSprite(Dices[game.dices_res[1]], appWidth-45, 40, 1))
 
     }
 
@@ -808,59 +1179,6 @@ function Game(props) {
             g.addChild(Draw(0xe8a85a, 'Circle', 78+(71*i), 621, 15))
             g.addChild(DrawText(Object.values(me.resources)[i], 'EBGaramond', 14, 'black', 'center', {x:78+(71*i), y:621}, 0.5))
         }
-
-        // Drawing develop cards box
-        let BOTTON = null
-        if (!seeCards) {
-            BOTTON = DrawSprite(ButtonSeeMore, 60, 60, 0.1)
-            BOTTON.interactive = true
-            BOTTON.on('pointerdown', () => {
-                setSeeCards(true)
-            })
-            g.addChild(BOTTON)
-        } else {
-            g.addChild(Draw(0x420001, 'RoundedRect', 50, 50, 380, 300, 10))
-
-            BOTTON = DrawSprite(Knight, 100, 130, 0.25)
-            BOTTON.interactive = true
-            BOTTON.on('pointerdown', () => {
-                //if (me.develop_cards['Caballero'] > 0) {
-                    setKnightMode(prevStatus => {
-                        return !prevStatus
-                    })
-                //}
-            })
-            g.addChild(BOTTON)
-
-            g.addChild(DrawSprite(Monopoly,     193, 130, 0.25))
-            BOTTON = DrawSprite(RoadBuilding, 287, 130, 0.25)
-            BOTTON.interactive = true
-            BOTTON.on('pointerdown', () => {
-                if (me.develop_cards.Carreteras > 0) {
-                    console.log ('Carta carreteras')
-                    setBuildRoads(prevStatus => {
-                        return !prevStatus
-                    })
-                }
-            })
-            g.addChild(BOTTON)
-            //g.addChild(DrawSprite(RoadBuilding, 287, 130, 0.25))
-            g.addChild(DrawSprite(YearOfPlenty, 380, 130, 0.25))
-
-            g.addChild(DrawSprite(Chapel,      93, 265, 0.21))
-            g.addChild(DrawSprite(Library,    167, 265, 0.21))
-            g.addChild(DrawSprite(Market,     240, 265, 0.21))
-            g.addChild(DrawSprite(Palace,     313, 265, 0.21))
-            g.addChild(DrawSprite(University, 386, 265, 0.21))
-
-            BOTTON = DrawSprite(ButtonSeeLess, 60, 60, 0.1)
-            BOTTON.interactive = true
-            BOTTON.on('pointerdown', () => {
-                setSeeCards(false)
-            })
-            g.addChild(BOTTON)
-        }
-
 
         // Drawing the player list:
         let boxes = 0

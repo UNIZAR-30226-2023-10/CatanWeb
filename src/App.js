@@ -19,7 +19,7 @@ const {GameService} = require('./services/game.service')
 
 /**
  * Cosas que faltan por hacer:
- *  - Mejorar los PUTOS mensajes de error. (PRIORIDAD MAXIMA).
+ *  - Mejorar los mensajes de error. (PRIORIDAD MAXIMA).
  *  - Mantener la sesión iniciada.
  *  - Si el usuario ya ha iniciado sesión, no puede iniciar en otra parte.
  *  - Hacer el diseño responsive (muy opcional).
