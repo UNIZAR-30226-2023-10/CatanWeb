@@ -355,6 +355,7 @@ function App() {
                                     <button className={lobby.length < 4 ? 'common-button | common-button-deactivated' : 'common-button | common-button-activated'} onClick={() => {GameService.start(JSON.parse(sessionStorage.getItem('game-token')) ); console.log("Empiezo startGame");}}>Play</button>
                                 )}
                                 <button className='common-button | common-button-activated' onClick={() => { handleMenuChange('main-menu')} }>Return</button>
+                                
                             </div>
                         )}
 
@@ -364,7 +365,10 @@ function App() {
                                     <input name='gamecode' id='gamecode' className='common-input' type="text" placeholder="Game code" value={gamecodeInput} maxLength={6} onChange={handleChange} required />
                                     <button className='common-button | common-button-activated' type='submit'>Join</button>
                                 </form>
-                                <button className='common-button | common-button-activated' onClick={() => handleMenuChange('main-menu')}>Return</button>
+                                <button className='common-button | common-button-activated' onClick={() => { 
+                                    handleMenuChange('main-menu');
+                                    socket.emit('unjoin', JSON.parse(sessionStorage.getItem('game-token')));
+                                }}>Return</button>
                             </div>
                         )}
                     </div>

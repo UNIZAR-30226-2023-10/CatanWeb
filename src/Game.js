@@ -317,6 +317,14 @@ function Game(props) {
     //    console.log(data)
     //})
 
+    socket.on('wait_reconnect', (game) => {
+        console.log("ESPERANDO RECONEXION");
+        setGamePaused(true);
+    })
+    socket.on('reconnected', (game) => {
+        setGamePaused(false);
+    });
+
     // Build state: select node to build the correspondant building on
     const [buildMode,  setBuildMode]              = useState(true)
     // Knight state: select biome to put the robber on
@@ -334,6 +342,7 @@ function Game(props) {
     const [selectedPoint, setSelectedPoint] = useState(null);
     const [hasToBuild, setHasToBuild] = useState([true, false])
     const [seeCards, setSeeCards] = useState(false)
+    const [isGamePaused, setGamePaused] = useState(false);
 
 
     console.log(selectedPoint)
@@ -1279,7 +1288,7 @@ function Game(props) {
         g.addChild(BUTTON)
 
         // Buy button
-        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && me.can_buy) {
+        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && me.can_buy && !isGamePaused) {
             BUTTON = DrawSprite(ButtonBuy, 1100, 410, 0.1)
             BUTTON.interactive = true;
             BUTTON.buttonMode = true;
@@ -1292,7 +1301,7 @@ function Game(props) {
         g.addChild(BUTTON)
 
         // Next turn button
-        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && throwDices) {
+        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && throwDices && !isGamePaused) {
             BUTTON = DrawSprite(ButtonNextTurn, 1100, 600, 0.1)
             BUTTON.interactive = true;
             BUTTON.buttonMode = true;
@@ -1306,7 +1315,7 @@ function Game(props) {
         g.addChild(BUTTON)
 
         // Dice button
-        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && !throwDices) {
+        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && !throwDices && !isGamePaused) {
             BUTTON = DrawSprite(ButtonDices, 1005, 600, 0.1)
             BUTTON.interactive = true
             BUTTON.buttonMode  = true
