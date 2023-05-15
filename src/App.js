@@ -240,6 +240,9 @@ function App() {
                 data.jugadores.findIndex(curr_player => curr_player === JSON.parse(sessionStorage.getItem('user')).name))
             // Cambiar al conexto del Game lobby:
             setActiveMenu('game-lobby')
+
+            // Persistencia de datos para el juego
+            
         }
     }
 

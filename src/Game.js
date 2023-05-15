@@ -165,8 +165,6 @@ const PlayersColors  = [0xd60000, 0x06b300, 0x005bb5, 0xd4b700]
 const PlayersColorsD = [0x6e2323, 0x2f662d, 0x2e4a66, 0x706939]
 
 // TODO:
-// Cartas de desarrollo:
-//      Sacar 7 = caballero
 // Puntuacion
 //      Suma de puntos
 //      Visualizacion de los jugadores y sus puntos
@@ -920,10 +918,7 @@ function Game(props) {
         }
 
         // Use knight mode:
-        if (!knightMode && (game.dices_res[0] + game.dices_res[1]) === 7) {
-            setKnightMode(true)
-        }
-        if (knightMode) {
+        if (me.force_knight || knightMode) {
 
             BUTTON =  DrawSprite(Knight, 150, 150, 0.45)
             BUTTON.interactive = true
