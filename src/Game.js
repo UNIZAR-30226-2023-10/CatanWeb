@@ -5,7 +5,6 @@ import * as PIXI from 'pixi.js'
 import { SocketContext } from './App'
 
 import Background from './images/game-bg2.png'
-import EBGaramondFont from './fonts/EB_Garmond/EBGaramond-Medium.ttf'
 
 // Board
 import { Stage, Graphics } from '@pixi/react'
@@ -17,6 +16,26 @@ import Mountain from './images/mountain.png'
 import Harbor    from './images/harbor.png'
 import Pasture  from './images/pasture.png'
 
+// Tokens
+import A from './images/tokens/A5.png'
+import B from './images/tokens/B2.png'
+import C from './images/tokens/C6.png'
+import D from './images/tokens/D3.png'
+import E from './images/tokens/E8.png'
+import F from './images/tokens/F10.png'
+import G from './images/tokens/G9.png'
+import H from './images/tokens/H12.png'
+import I from './images/tokens/I11.png'
+import J from './images/tokens/J4.png'
+import K from './images/tokens/K8.png'
+import L from './images/tokens/L10.png'
+import M from './images/tokens/M9.png'
+import N from './images/tokens/N4.png'
+import O from './images/tokens/O5.png'
+import P from './images/tokens/P6.png'
+import Q from './images/tokens/Q3.png'
+import R from './images/tokens/R11.png'
+
 // Resources
 import Wheat from './images/resources_wheat.png'
 import Lumber from './images/resources_lumber.png'
@@ -24,6 +43,7 @@ import Brick from './images/resources_brick.png'
 import Stone from './images/resources_ore.png'
 import Wool from './images/resources_wool.png'
 
+// Develop cards
 import Knight       from './images/dcs_knight.png'
 import Monopoly     from './images/dcs_monopoly.png'
 import RoadBuilding from './images/dcs_roadBuilding.png'
@@ -33,6 +53,8 @@ import Library      from './images/dcs_library.png'
 import Market       from './images/dcs_market.png'
 import Palace       from './images/dcs_palace.png'
 import University   from './images/dcs_university.png'
+
+import TheRobber from './images/the_robber.png'
 
 import Dice0 from './images/Dice00.png'
 import Dice1 from './images/Dice01.png'
@@ -68,6 +90,29 @@ const Biomes = {
     'Puerto': Harbor,
     'Pasto': Pasture
 }
+// Fichas numericas  5  2  6  3  8 10  9 12 11  4  8 10  9  4  5  6  3 11
+const Tokens = {
+    'A': A, 
+    'B': B, 
+    'C': C,
+    'D': D,
+    'E': E,
+    'F': F,
+    'G': G,
+    'H': H,
+    'I': I,
+    'J': J,
+    'K': K,
+    'L': L,
+    'M': M,
+    'N': N,
+    'O': O,
+    'P': P,
+    'Q': Q,
+    'R': R
+}
+let   TokenStart  = 0
+
 
 const Resources = [ Wheat, Lumber, Brick, Stone, Wool ]
 const Dices = [ Dice0, Dice1, Dice2, Dice3, Dice4, Dice5, Dice6 ]
@@ -290,6 +335,10 @@ function Game(props) {
             sprite = DrawSprite(Biomes[biomes[i].type], x, y, 0.26)
         }
         g.addChild(sprite)
+
+        if (biomes[i].token.letter !== 'S') {
+            g.addChild(DrawSprite(Tokens[biomes[i].token.letter], sprite.x, sprite.y, 0.15))
+        }
 
         //if (biomes[i].token !== 0) {
         //    let token = Draw(0xe8a85a, 'Circle', sprite.x, sprite.y, 20)
@@ -537,6 +586,10 @@ function Game(props) {
                     create_biome(g, game.board.biomes, BiomesOrder[i], ...BiomesPos[i])
                 }
             }
+            if (game.board.robber_biome !== -1) {
+                let i = BiomesOrder.findIndex(x => x === game.board.robber_biome)
+                g.addChild(DrawSprite(TheRobber, BiomesPos[i][0], BiomesPos[i][1]-10, 0.35))
+            }
             return
         }
 
@@ -544,6 +597,11 @@ function Game(props) {
         for (let i = 0; i < 19; i++) {
             create_biome(g, game.board.biomes, BiomesOrder[i], ...BiomesPos[i])
         }
+        if (game.board.robber_biome !== -1) {
+            let i = BiomesOrder.findIndex(x => x === game.board.robber_biome)
+            g.addChild(DrawSprite(TheRobber, BiomesPos[i][0], BiomesPos[i][1]-10, 0.35))
+        }
+
 
         // Drawing the building nodes:
         let free_nodes_set = (me.free_nodes.length > 0) ? new Set(me.free_nodes) : new Set()
@@ -672,6 +730,7 @@ function Game(props) {
         let game    = JSON.parse(sessionStorage.getItem('game'))
         let players = game.players 
         let me      = players[sessionStorage.getItem('my-turn')]
+        TokenStart  = game.board.biomes.findIndex(biome => biome.token === 2)
 
         // Clear background:
         for (let i = g.children.length - 1; i >= 0; i--) {
