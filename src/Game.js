@@ -1085,7 +1085,7 @@ function Game(props) {
                 BUTTON.buttonMode = true;
                 BUTTON.on('pointerdown', () => {
                     console.log("CONSTRUYO EN ", selectedPoint)
-                    //socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, {id : MoveType.build_road, coords: selectedPoint.id})
+                    socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, {id : MoveType.build_road, coords: selectedPoint.id})
                     console.log('buildRoads',buildRoads)
                     if (hasToBuildRoads[0]) {
                         console.log('Primera')
@@ -1094,8 +1094,7 @@ function Game(props) {
                         console.log('Segunda')
                         setHasToBuildRoads([true, false])
                         setBuildRoads(false)
-                        console.log('Carreteras: ',game.players[game.current_turn].develop_cards.Carreteras)
-                        console.log('Carreteras: ',game.players[game.current_turn].develop_cards.Carreteras)
+                        socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id : MoveType.builtRoadFree })
                     }
                     setSelectedPoint(null)
                 })
@@ -1274,7 +1273,7 @@ function Game(props) {
         // Drawing the buttons
         let BUTTON = null
         // Build button
-        //if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && (me.can_build[0] || me.can_build[1] || me.can_build[2])) {
+        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && (me.can_build[0] || me.can_build[1] || me.can_build[2])) {
             BUTTON = DrawSprite(ButtonBuild, 1100, 505, 0.1)
             BUTTON.interactive = true;
             BUTTON.buttonMode = true;
@@ -1282,9 +1281,9 @@ function Game(props) {
                 setBuildMode(true)
                 setSelectedPoint(null)
             })
-        //} else {
-        //    BUTTON = DrawSprite(ButtonBuildD, 1100, 505, 0.1)
-        //}
+        } else {
+            BUTTON = DrawSprite(ButtonBuildD, 1100, 505, 0.1)
+        }
         g.addChild(BUTTON)
 
         // Buy button
@@ -1363,10 +1362,11 @@ function Game(props) {
             BUTTON = DrawSprite(RoadBuilding, 287, 130, 0.25)
             BUTTON.interactive = true
             BUTTON.on('pointerdown', () => {
-                //if (me.develop_cards.Carreteras > 0) {
+                if (me.develop_cards.Carreteras > 0) {
                     console.log ('Usando construccion de carreteras')
+                    socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id : MoveType.builtRoadFree })
                     setBuildRoads(true)
-                //}
+                }
             })
             g.addChild(BUTTON)
 
