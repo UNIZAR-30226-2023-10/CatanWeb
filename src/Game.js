@@ -313,10 +313,11 @@ function Game(props) {
     const [buildMode,  setBuildMode ] = useState(true)
     // Knight state: select biome to put the robber on
     const [knightMode, setKnightMode] = useState(false)
-
+    const [buildRoads, setBuildRoads] = useState(false)
     const [throwDices, setThrowDices] = useState(false)
     const [selectedPoint, setSelectedPoint] = useState(null);
     const [hasToBuild, setHasToBuild] = useState([true, false])
+    const [hasToBuildRoads, setHasToBuildRoads] = useState([true, false])
     const [seeCards, setSeeCards] = useState(false)
 
 
@@ -455,7 +456,7 @@ function Game(props) {
         }
         if (p_i === -1) {
             if (free_roads_set.size > 0) {
-                if (buildMode && !knightMode && free_roads_set.has(id)) {
+                if ((buildMode || buildRoads)  && !knightMode && free_roads_set.has(id)) {
                     let road = new PIXI.Graphics()
                     road.beginFill(selectedPoint && selectedPoint.id === id ? 0x0b04cf : 0x6f5c9c)
                     road.drawRoundedRect(x, y, 17, 17, 5)
@@ -666,6 +667,55 @@ function Game(props) {
             return
         }
 
+        if (buildRoads) {
+            // Build button cancel
+            BUTTON = DrawSprite(ButtonBuildCancel, 1100, 505, 0.1)
+            BUTTON.interactive = true;
+            BUTTON.buttonMode = true;
+            BUTTON.on('pointerdown', () => {
+                setBuildMode(false)
+                setSelectedPoint(null)
+            })
+            g.addChild(BUTTON)
+        
+            // Only if player has selected a place to build
+            if (selectedPoint && selectedPoint.type === 'Road') {
+                // Cancel building selection
+                BUTTON = DrawSprite(ButtonCancel, 1005, 600, 0.1)
+                BUTTON.interactive = true;
+                BUTTON.buttonMode = true;
+                BUTTON.on('pointerdown', () => {
+                    setSelectedPoint(null)
+                })
+                g.addChild(BUTTON);
+        
+                // Confirm building selection
+                BUTTON = DrawSprite(ButtonConfirm, 1100, 600, 0.1)
+                BUTTON.interactive = true;
+                BUTTON.buttonMode = true;
+                BUTTON.on('pointerdown', () => {
+                    console.log("CONSTRUYO EN ", selectedPoint)
+                    socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, {id : MoveType.build_road, coords: selectedPoint.id})
+                    console.log('buildRoads',buildRoads)
+                    if (hasToBuildRoads[0]) {
+                        console.log('Primera')
+                        setHasToBuildRoads([false, true])
+                    } else if (hasToBuildRoads[1]) {
+                        console.log('Segunda')
+                        setHasToBuildRoads([true, false])
+                        setBuildRoads(false)
+                        console.log('Carreteras: ',game.players[game.current_turn].develop_cards.Carreteras)
+                        game.players[game.current_turn].develop_cards.Carreteras--
+                        console.log('Carreteras: ',game.players[game.current_turn].develop_cards.Carreteras)
+                    }
+                    setSelectedPoint(null)
+                })
+                g.addChild(BUTTON);
+            }
+        
+            return
+        } 
+
         // Build button
         //if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && (me.can_build[0] || me.can_build[1] || me.can_build[2])) {
             BUTTON = DrawSprite(ButtonBuild, 1100, 505, 0.1)
@@ -783,7 +833,18 @@ function Game(props) {
             g.addChild(BOTTON)
 
             g.addChild(DrawSprite(Monopoly,     193, 130, 0.25))
-            g.addChild(DrawSprite(RoadBuilding, 287, 130, 0.25))
+            BOTTON = DrawSprite(RoadBuilding, 287, 130, 0.25)
+            BOTTON.interactive = true
+            BOTTON.on('pointerdown', () => {
+                if (me.develop_cards.Carreteras > 0) {
+                    console.log ('Carta carreteras')
+                    setBuildRoads(prevStatus => {
+                        return !prevStatus
+                    })
+                }
+            })
+            g.addChild(BOTTON)
+            //g.addChild(DrawSprite(RoadBuilding, 287, 130, 0.25))
             g.addChild(DrawSprite(YearOfPlenty, 380, 130, 0.25))
 
             g.addChild(DrawSprite(Chapel,      93, 265, 0.21))
@@ -811,7 +872,7 @@ function Game(props) {
             }
         }
 
-    }, [buildMode, gameChanged, hasToBuild, knightMode, selectedPoint, seeCards])
+    }, [buildMode, gameChanged, hasToBuild, knightMode, selectedPoint, seeCards, buildRoads])
 
     return (
         <div id="game-header">
