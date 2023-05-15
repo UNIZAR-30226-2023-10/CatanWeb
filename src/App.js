@@ -10,6 +10,7 @@ export const SocketContext = createContext();
 //import storage from './storage.js'
 const {GameService} = require('./services/game.service')
 
+
 //import cbg0 from '../Catan-bg0.jpg'
 //import cbg1 from '../Catan-bg1.jpg'
 //import cbg2 from '../Catan-bg2.jpg'
@@ -32,18 +33,19 @@ function App() {
     //        setBackgroundImg(`url(${backgrounds[Math.floor(Math.random() * 5)]})`)
     //    }, 5000);
     //})
-
     // ========================================================================
     // MAIN MENU STATE
     // ========================================================================
     // New game action:
-    const [socket, setSocket] = useState(null)
+    const [socket, setSocket] = useState(io('http://localhost:8080/'))
     const [lobby, setLobby]   = useState([]);
     const [gameChanged, setGameChanged] = useState(false)
-
-
     const [activeMenu, setActiveMenu] = useState(JSON.parse(sessionStorage.getItem('active-menu')) || 'login')
     const handleMenuChange = (menu) => {
+        if (JSON.parse(sessionStorage.getItem('game-token'))){
+            // let socket   = io('http://localhost:8080/')
+            socket.emit('unjoin', JSON.parse(sessionStorage.getItem('user')).accessToken,JSON.parse(sessionStorage.getItem('game-token')))
+        }
         sessionStorage.setItem('active-menu', JSON.stringify(menu))
         setActiveMenu(menu);
     }
@@ -72,7 +74,6 @@ function App() {
         const plainFormData = Object.fromEntries(formData.entries());
     
         // Enviar los datos del formulario a través de una solicitud
-        
         let partidasEmpezadas;
         let email    = plainFormData.email;
         let password = plainFormData.password;
@@ -185,12 +186,19 @@ function App() {
             sessionStorage.setItem('game-token', JSON.stringify(data.codigo_partida))
 
             // Creacion y configuracion del nuevo socket:
-            let socket = io('http://localhost:8080/')
+            // let socket = io('http://localhost:8080/')
             socket.on('error', (err) => { console.log('SOCKET ERROR: ', err)})
             socket.on('new_player', (socket_data) => {
                 setLobby(prevStatus => {
                     const nextStatus = [...prevStatus]
                     nextStatus.push(socket_data.username);
+                    return nextStatus
+                })
+            })
+            socket.on('delete_player', (username) => {
+                
+                setLobby(prevStatus =>{
+                    let nextStatus = prevStatus.filter(user => user != username)
                     return nextStatus
                 })
             })
@@ -237,7 +245,7 @@ function App() {
         console.log("JOINING GAME DATA: ", data)
         if (data.status === 'success') {
             // Creacion y configuracion del nuevo socket:
-            let socket   = io('http://localhost:8080/')
+            // let socket   = io('http://localhost:8080/')
             socket.on('error', (err) => { console.log('SOCKET ERROR:', err) })
             socket.on('new_player', (socket_data) => {
                 setLobby(prevStatus => {
@@ -245,6 +253,17 @@ function App() {
                     nextStatus.push(socket_data.username);
                     return nextStatus
                 })
+            })
+            socket.on('delete_player', (username) => {
+                
+                setLobby(prevStatus =>{
+                    let nextStatus = prevStatus.filter(user => user != username)
+                    return nextStatus
+                })
+            })
+
+            socket.on('cancel_game', ()=>{
+                handleMenuChange('main-menu')
             })
             socket.on('update', (game) => {
                 sessionStorage.setItem('game', JSON.stringify(game))
