@@ -295,6 +295,7 @@ const RoadsInfo = [
 // ============================================================================
 function Game(props) {
 
+    let desconectados = [];
     let { gameChanged } = props
     let socket = useContext(SocketContext)
    //const [gameChanged, setGameChanged] = useState(props[0])
@@ -317,12 +318,16 @@ function Game(props) {
     //    console.log(data)
     //})
 
-    socket.on('wait_reconnect', (game) => {
+    socket.on('wait_reconnect', (username) => {
         console.log("ESPERANDO RECONEXION");
+        desconectados.push(username);
         setGamePaused(true);
     })
-    socket.on('reconnected', (game) => {
-        setGamePaused(false);
+    socket.on('reconnected', (username) => {
+         desconectados = desconectados.filter(username => username != username);
+         if (desconectados.length === 0) {
+            setGamePaused(false);
+         }
     });
 
     // Build state: select node to build the correspondant building on
