@@ -33,15 +33,6 @@ function App() {
     //    }, 5000);
     //})
 
-    // ========================================================================
-    // MAIN MENU STATE
-    // ========================================================================
-    // New game action:
-    const [socket, setSocket] = useState(null)
-    const [lobby, setLobby]   = useState([]);
-    const [gameChanged, setGameChanged] = useState(false)
-
-
     const [activeMenu, setActiveMenu] = useState(JSON.parse(sessionStorage.getItem('active-menu')) || 'login')
     const handleMenuChange = (menu) => {
         sessionStorage.setItem('active-menu', JSON.stringify(menu))
@@ -72,8 +63,6 @@ function App() {
         const plainFormData = Object.fromEntries(formData.entries());
     
         // Enviar los datos del formulario a través de una solicitud
-        
-        let partidasEmpezadas;
         let email    = plainFormData.email;
         let password = plainFormData.password;
         axios.post('http://localhost:8080/api/login', {
@@ -84,27 +73,6 @@ function App() {
             if (response.data.accessToken) {
                 user.name        = response.data.username;
                 user.accessToken = response.data.accessToken;
-                partidasEmpezadas = response.data.partidas;
-                sessionStorage.setItem('user', JSON.stringify(user));
-                if (!partidasEmpezadas || partidasEmpezadas.length === 0) {
-                    let socket = io('http://localhost:8080/')
-                    socket.on('update', (game) => {
-                        sessionStorage.setItem('game', JSON.stringify(game))
-                        sessionStorage.setItem('my-turn', 
-                            game.players.findIndex(curr_player => curr_player === JSON.parse(sessionStorage.getItem('user')).name))
-                        setGameChanged(prevStatus => {
-                            return !prevStatus
-                        })
-                        console.log("LA PARTIDA/TABLERO: ", game)
-                        handleMenuChange('game') // Redirigir a la página de juego
-                    });
-                    socket.emit('joinGame', JSON.parse(sessionStorage.getItem('user')).accessToken,partidasEmpezadas[0]);
-                    setSocket(socket)
-                    // Cambiar al conexto del Game lobby
-                    handleMenuChange('game-lobby')
-                    
-
-                }
                 sessionStorage.setItem('user', JSON.stringify(user))
                 console.log("NEW LOGIN: ", response.data, user)
                 handleMenuChange('main-menu')
@@ -172,6 +140,14 @@ function App() {
             setErrorMessage(error.toString());
         })
     }
+
+    // ========================================================================
+    // MAIN MENU STATE
+    // ========================================================================
+    // New game action:
+    const [socket, setSocket] = useState(null)
+    const [lobby, setLobby]   = useState([]);
+    const [gameChanged, setGameChanged] = useState(false)
 
     async function handleSubmit_NewGame(event) {
         // Evita que el formublanklario se envíe de manera predeterminada
@@ -379,7 +355,6 @@ function App() {
                                     <button className={lobby.length < 4 ? 'common-button | common-button-deactivated' : 'common-button | common-button-activated'} onClick={() => {GameService.start(JSON.parse(sessionStorage.getItem('game-token')) ); console.log("Empiezo startGame");}}>Play</button>
                                 )}
                                 <button className='common-button | common-button-activated' onClick={() => { handleMenuChange('main-menu')} }>Return</button>
-                                
                             </div>
                         )}
 
@@ -389,10 +364,7 @@ function App() {
                                     <input name='gamecode' id='gamecode' className='common-input' type="text" placeholder="Game code" value={gamecodeInput} maxLength={6} onChange={handleChange} required />
                                     <button className='common-button | common-button-activated' type='submit'>Join</button>
                                 </form>
-                                <button className='common-button | common-button-activated' onClick={() => { 
-                                    handleMenuChange('main-menu');
-                                    socket.emit('unjoin', JSON.parse(sessionStorage.getItem('game-token')));
-                                }}>Return</button>
+                                <button className='common-button | common-button-activated' onClick={() => handleMenuChange('main-menu')}>Return</button>
                             </div>
                         )}
                     </div>
