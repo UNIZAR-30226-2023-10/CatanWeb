@@ -15,6 +15,21 @@ import Dice4 from './images/Dice04.png'
 import Dice5 from './images/Dice05.png'
 import Dice6 from './images/Dice06.png'
 
+import RedVillage from './images/pieces/red_village.png'
+import GreenVillage from './images/pieces/green_village.png'
+import BlueVillage from './images/pieces/blue_village.png'
+import YellowVillage from './images/pieces/yellow_village.png'
+
+import RedCity from './images/pieces/red_city.png'
+import GreenCity from './images/pieces/green_city.png'
+import BlueCity from './images/pieces/blue_city.png'
+import YellowCity from './images/pieces/yellow_city.png'
+
+import RedRoad from './images/pieces/red_road.png'
+import GreenRoad from './images/pieces/green_road.png'
+import BlueRoad from './images/pieces/blue_road.png'
+import YellowRoad from './images/pieces/yellow_road.png'
+
 import { Stage, Graphics } from '@pixi/react'
 import Desert   from './images/desert.png'
 import Farmland from './images/field.png'
@@ -69,16 +84,16 @@ import RoadBuildingD from './images/dcs_roadBuilding_d.png'
 import YearOfPlenty  from './images/dcs_yearOfPlenty.png'
 import YearOfPlentyD from './images/dcs_yearOfPlenty_d.png'
 
-import Chapel       from './images/dcs_chapel.jpg'
-import ChapelD      from './images/dcs_chapel_d.jpg'
-import Library      from './images/dcs_library.jpg'
-import LibraryD     from './images/dcs_library_d.jpg'
-import Market       from './images/dcs_market.jpg'
-import MarketD      from './images/dcs_market_d.jpg'
-import Palace       from './images/dcs_palace.jpg'
-import PalaceD      from './images/dcs_palace_d.jpg'
-import University   from './images/dcs_university.jpg'
-import UniversityD  from './images/dcs_university_d.jpg'
+import Chapel       from './images/dcs_chapel.png'
+import ChapelD      from './images/dcs_chapel_d.png'
+import Library      from './images/dcs_library.png'
+import LibraryD     from './images/dcs_library_d.png'
+import Market       from './images/dcs_market.png'
+import MarketD      from './images/dcs_market_d.png'
+import Palace       from './images/dcs_palace.png'
+import PalaceD      from './images/dcs_palace_d.png'
+import University   from './images/dcs_university.png'
+import UniversityD  from './images/dcs_university_d.png'
 
 // Buttons
 import ButtonBuild from './images/button_build.png'
@@ -95,6 +110,10 @@ import ButtonNextTurnD from './images/button_next-turn_d.png'
 import ButtonQuitResource from './images/button_quit_resource.png'
 
 const MoveType = require( './services/movesTypes.js')
+
+const ColorVillages = [RedVillage, GreenVillage, BlueVillage, YellowVillage]
+const ColorCities   = [RedCity, GreenCity, BlueCity, YellowCity]
+const ColorRoads    = [RedRoad, GreenRoad, BlueRoad, YellowRoad]
 
 const Biomes = {
     'Desierto': Desert,
@@ -147,9 +166,7 @@ const PlayersColorsD = [0x6e2323, 0x2f662d, 0x2e4a66, 0x706939]
 
 // TODO:
 // Cartas de desarrollo:
-//      Ver donde poner las cartas de puntos
-//      Capar las construcciones a un numero limitado de construcciones (opcional)
-// Sacar 7 = caballero
+//      Sacar 7 = caballero
 // Puntuacion
 //      Suma de puntos
 //      Visualizacion de los jugadores y sus puntos
@@ -564,21 +581,24 @@ function Game(props) {
     // ========================================================================
     // KNIGHT MODE
     // ========================================================================
-    function DrawBiomes_Knight(g, biomes, id, x, y) {
-        let sprite = DrawSprite(Biomes[biomes[id].type], x, y, selectedPoint && selectedPoint.id === id ? 0.3 : 0.26)
-        sprite.interactive = true
-        sprite.buttonMode  = true
-        sprite.on('pointerdown', () => {
-            if (!selectedPoint || (selectedPoint && selectedPoint.id !== id)) {
-                setSelectedPoint({id:id, type:'Biome'})
-            } else {
-                setSelectedPoint(null)
-            }
-        })
+    function DrawBiomes_Knight(g, board, id, x, y) {
+
+        let sprite = DrawSprite(Biomes[board.biomes[id].type], x, y, selectedPoint && selectedPoint.id === id ? 0.3 : 0.26)
+        if (id !== board.robber_biome) {
+            sprite.interactive = true
+            sprite.on('pointerdown', () => {
+                if (!selectedPoint || (selectedPoint && selectedPoint.id !== id)) {
+                    setSelectedPoint({id:id, type:'Biome'})
+                } else {
+                    setSelectedPoint(null)
+                }
+            })
+        }
+
         g.addChild(sprite)
 
-        if (biomes[id].token.letter !== 'S' && (!selectedPoint || (selectedPoint && selectedPoint.id !== id))) {
-            g.addChild(DrawSprite(Tokens[biomes[id].token.letter], sprite.x, sprite.y, 0.3))
+        if (board.biomes[id].token.letter !== 'S' && (!selectedPoint || (selectedPoint && selectedPoint.id !== id))) {
+            g.addChild(DrawSprite(Tokens[board.biomes[id].token.letter], sprite.x, sprite.y, 0.3))
         }
     }
 
@@ -702,7 +722,7 @@ function Game(props) {
             if (hasToBuild[0] || hasToBuild[1]) {
                 if (selectedPoint) {
                     // Cancel building selection
-                    BUTTON = DrawSprite(ButtonCancel, 1005, 510, 0.1)
+                    BUTTON = DrawSprite(ButtonCancel, 1015, 510, 0.1)
                     BUTTON.interactive = true;
                     BUTTON.buttonMode = true;
                     BUTTON.on('pointerdown', () => {
@@ -711,7 +731,7 @@ function Game(props) {
                     g.addChild(BUTTON);
 
                     // Confirm building selection
-                    BUTTON = DrawSprite(ButtonConfirm, 1100, 510, 0.1)
+                    BUTTON = DrawSprite(ButtonConfirm, 1110, 510, 0.1)
                     BUTTON.interactive = true;
                     BUTTON.buttonMode = true;
                     BUTTON.on('pointerdown', () => {
@@ -856,7 +876,7 @@ function Game(props) {
             }
         
             // Build button cancel
-            BUTTON = DrawSprite(ButtonBuildCancel, 900, 510, 0.1)
+            BUTTON = DrawSprite(ButtonBuildCancel, 920, 475, 0.1)
             BUTTON.interactive = true;
             BUTTON.buttonMode = true;
             BUTTON.on('pointerdown', () => {
@@ -899,7 +919,10 @@ function Game(props) {
             return
         }
 
-        // Use knight mode: 
+        // Use knight mode:
+        if (!knightMode && (game.dices_res[0] + game.dices_res[1]) === 7) {
+            setKnightMode(true)
+        }
         if (knightMode) {
 
             BUTTON =  DrawSprite(Knight, 150, 150, 0.45)
@@ -913,7 +936,7 @@ function Game(props) {
             if (!selectedPoint) {
                 // Drawing the biomes
                 for (let i = 0; i < 19; i++) {
-                    DrawBiomes_Knight(g, game.board.biomes, BiomesOrder[i], ...BiomesPos[i])
+                    DrawBiomes_Knight(g, game.board, BiomesOrder[i], ...BiomesPos[i])
                 }
 
                 // Drawing the nodes
@@ -935,7 +958,7 @@ function Game(props) {
                 let biome = 0
                 for (let i = 0; i < 19; i++) {
                     if (BiomesOrder[i] !== selectedPoint.id) {
-                        DrawBiomes_Knight(g, game.board.biomes, BiomesOrder[i], ...BiomesPos[i])
+                        DrawBiomes_Knight(g, game.board, BiomesOrder[i], ...BiomesPos[i])
                     } else {
                         biome = i
                     }
@@ -955,10 +978,10 @@ function Game(props) {
                 }
 
                 // Drawing the selected biome
-                DrawBiomes_Knight(g, game.board.biomes, BiomesOrder[biome], ...BiomesPos[biome])
+                DrawBiomes_Knight(g, game.board, BiomesOrder[biome], ...BiomesPos[biome])
 
                 // Cancel building selection
-                BUTTON = DrawSprite(ButtonCancel, 1005, 600, 0.1)
+                BUTTON = DrawSprite(ButtonCancel, 1015, 510, 0.1)
                 BUTTON.interactive = true;
                 BUTTON.buttonMode = true;
                 BUTTON.on('pointerdown', () => {
@@ -967,7 +990,7 @@ function Game(props) {
                 g.addChild(BUTTON);
 
                 // Confirm building selection
-                BUTTON = DrawSprite(ButtonConfirm, 1100, 600, 0.1)
+                BUTTON = DrawSprite(ButtonConfirm, 1110, 510, 0.1)
                 BUTTON.interactive = true;
                 BUTTON.buttonMode = true;
                 BUTTON.on('pointerdown', () => {
@@ -1151,7 +1174,7 @@ function Game(props) {
 
             if (selectedPoint) {
                 // Cancel building selection
-                BUTTON = DrawSprite(ButtonCancel, 1005, 600, 0.1)
+                BUTTON = DrawSprite(ButtonCancel, 1015, 510, 0.1)
                 BUTTON.interactive = true;
                 BUTTON.buttonMode = true;
                 BUTTON.on('pointerdown', () => {
@@ -1160,7 +1183,7 @@ function Game(props) {
                 g.addChild(BUTTON)
 
                 // Confirm building selection
-                BUTTON = DrawSprite(ButtonConfirm, 1100, 600, 0.1)
+                BUTTON = DrawSprite(ButtonConfirm, 1110, 510, 0.1)
                 BUTTON.interactive = true;
                 BUTTON.buttonMode = true;
                 BUTTON.on('pointerdown', () => {
@@ -1356,8 +1379,8 @@ function Game(props) {
         // Drawing the buttons
         BUTTON = null
         // Build button
-        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && (me.can_build[0] || me.can_build[1] || me.can_build[2])) {
-            BUTTON = DrawSprite(ButtonBuild, 900, 510, 0.1)
+        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && (me.can_build[0] || me.can_build[1] || me.can_build[2]) && throwDices) {
+            BUTTON = DrawSprite(ButtonBuild, 920, 475, 0.1)
             BUTTON.interactive = true;
             BUTTON.buttonMode = true;
             BUTTON.on('pointerdown', () => {
@@ -1365,12 +1388,12 @@ function Game(props) {
                 setSelectedPoint(null)
             })
         } else {
-            BUTTON = DrawSprite(ButtonBuildD, 900, 510, 0.1)
+            BUTTON = DrawSprite(ButtonBuildD, 920, 475, 0.1)
         }
         g.addChild(BUTTON)
 
         // Buy button
-        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && me.can_buy) {
+        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && me.can_buy && throwDices) {
             BUTTON = DrawSprite(ButtonBuy, 1063, appHeight/2-10-2*(game.develop_cards.length), 0.1)
             BUTTON.interactive = true;
             BUTTON.buttonMode = true;
@@ -1384,7 +1407,7 @@ function Game(props) {
 
         // Next turn button
         if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && throwDices) {
-            BUTTON = DrawSprite(ButtonNextTurn, 1040, 490, 0.1)
+            BUTTON = DrawSprite(ButtonNextTurn, 1065, 490, 0.1)
             BUTTON.interactive = true;
             BUTTON.buttonMode = true;
             BUTTON.on('pointerdown', () => {
@@ -1392,15 +1415,15 @@ function Game(props) {
                 setThrowDices(false)
             })
         } else {
-            BUTTON = DrawSprite(ButtonNextTurnD, 1040, 490, 0.1)
+            BUTTON = DrawSprite(ButtonNextTurnD, 1065, 490, 0.1)
         }
         g.addChild(BUTTON)
 
         // Dice button
-        g.addChild(DrawSprite(Dices[game.dices_res[0]], appWidth-280, 90, 1))
-        g.addChild(DrawSprite(Dices[game.dices_res[1]], appWidth-210, 90, 1))
+        g.addChild(DrawSprite(Dices[game.dices_res[0]], appWidth-300, 80, 1))
+        g.addChild(DrawSprite(Dices[game.dices_res[1]], appWidth-230, 80, 1))
         if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && !throwDices) {
-            BUTTON = DrawSprite(ButtonDices, 1030, 130, 0.1)
+            BUTTON = DrawSprite(ButtonDices, 1015, 115, 0.1)
             BUTTON.interactive = true
             BUTTON.buttonMode  = true
             BUTTON.on('pointerdown', () => {
@@ -1408,7 +1431,7 @@ function Game(props) {
                 socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id : MoveType.roll_dices })
             })
         } else {
-            BUTTON = DrawSprite(ButtonDicesD, 1030, 130, 0.1)
+            BUTTON = DrawSprite(ButtonDicesD, 1015, 115, 0.1)
         }
         g.addChild(BUTTON);
     }
@@ -1431,6 +1454,22 @@ function Game(props) {
         for (let i = 0; i < game.develop_cards.length; i++) {
             g.addChild(DrawSprite(CardBackground, appWidth-140, appHeight/2-10 - 2*i, 0.2))
         }
+        g.addChild(Draw(0xe8a85a, 'Circle', appWidth-40, 430, 15))
+        g.addChild(DrawText(game.develop_cards.length, 'EBGaramond', 22, 'black', 'center', {x:appWidth-40, y:430}, 0.5))
+
+
+        g.addChild(DrawSprite(ColorVillages[parseInt(sessionStorage.getItem('my-turn'))], 965, 500, 0.3))
+        g.addChild(Draw(0xe8a85a, 'Circle', 1000, 525, 15))
+        g.addChild(DrawText(me.buildings['Villages'], 'EBGaramond', 22, 'black', 'center', {x:1000,y:525}, 0.5))
+        
+        g.addChild(DrawSprite(ColorCities[parseInt(sessionStorage.getItem('my-turn'))], 890, 500, 0.3))
+        g.addChild(Draw(0xe8a85a, 'Circle', 840, 530, 15))
+        g.addChild(DrawText(me.buildings['Cities'], 'EBGaramond', 22, 'black', 'center', {x:840,y:530}, 0.5))
+        
+        g.addChild(DrawSprite(ColorRoads[parseInt(sessionStorage.getItem('my-turn'))], 920 , 445, 0.3))
+        g.addChild(Draw(0xe8a85a, 'Circle', 890, 400, 15))
+        g.addChild(DrawText(me.buildings['Roads'], 'EBGaramond', 22, 'black', 'center', {x:890,y:400}, 0.5))
+        
 
         // Drawing the board and the UI
         if (game.phase < 3) {
@@ -1462,6 +1501,7 @@ function Game(props) {
         g.addChild(DrawText(me.name, 'EBGaramond', 22, 'white', 'left', {x: 44, y:appHeight-165}, 0))
         g.addChild(DrawText('PTS', 'EBGaramond', 22, 'white', 'left', {x: 280, y:appHeight-165}, 0))
         for (let i = 0; i < 5; i++) {
+            g.addChild(Draw(UIColor, 'RoundedRect',  27+(71*i), 562, 66, 94, 6))
             g.addChild(DrawSpritePro(Resources[i], 30+(71*i), 565, 60, 86))
             g.addChild(Draw(0xe8a85a, 'Circle', 60+(71*i), 650, 15))
             g.addChild(DrawText(Object.values(me.resources)[i], 'EBGaramond', 14, 'black', 'center', {x:60+(71*i), y:650}, 0.5))
@@ -1469,11 +1509,11 @@ function Game(props) {
 
         // Draw special points
         for (let i = 0; i < 5; i++) {
-            g.addChild(Draw(UIColor, 'Rect',  appWidth-(120*(i+1)), 580, 108, 79))
+            g.addChild(Draw(UIColor, 'RoundedRect',  appWidth-28-(71*(i+1)), 562, 66, 94, 6))
             if (me.develop_cards[PointsNames[4-i]] > 0) {
-                g.addChild(DrawSpritePro(Points[4-i], appWidth+4-(120*(i+1)), 585, 100, 75))
+                g.addChild(DrawSpritePro(Points[4-i], appWidth-25-(70*(i+1)), 565, 60, 86))
             } else {
-                g.addChild(DrawSpritePro(PointsD[4-i], appWidth+4-(120*(i+1)), 585, 100, 75))
+                g.addChild(DrawSpritePro(PointsD[4-i], appWidth-25-(71*(i+1)), 565, 60, 86))
             }
         }
 
