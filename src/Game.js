@@ -702,7 +702,7 @@ function Game(props) {
             if (hasToBuild[0] || hasToBuild[1]) {
                 if (selectedPoint) {
                     // Cancel building selection
-                    BUTTON = DrawSprite(ButtonCancel, 1005, 613, 0.1)
+                    BUTTON = DrawSprite(ButtonCancel, 1005, 510, 0.1)
                     BUTTON.interactive = true;
                     BUTTON.buttonMode = true;
                     BUTTON.on('pointerdown', () => {
@@ -711,7 +711,7 @@ function Game(props) {
                     g.addChild(BUTTON);
 
                     // Confirm building selection
-                    BUTTON = DrawSprite(ButtonConfirm, 1100, 613, 0.1)
+                    BUTTON = DrawSprite(ButtonConfirm, 1100, 510, 0.1)
                     BUTTON.interactive = true;
                     BUTTON.buttonMode = true;
                     BUTTON.on('pointerdown', () => {
@@ -733,7 +733,7 @@ function Game(props) {
                 }
             } else {
                 // Next turn button
-                BUTTON = DrawSprite(ButtonNextTurn, 1100, 613, 0.1)
+                BUTTON = DrawSprite(ButtonNextTurn, 1100, 510, 0.1)
                 BUTTON.interactive = true;
                 BUTTON.buttonMode  = true;
                 BUTTON.on('pointerdown', () => {
@@ -1365,8 +1365,7 @@ function Game(props) {
                 setSelectedPoint(null)
             })
         } else {
-            BUTTON = DrawSprite(ButtonBuildD, 900, 50, 0.1)
-            BUTTON = DrawSprite(ButtonBuildD, 900, 50, 0.1)
+            BUTTON = DrawSprite(ButtonBuildD, 900, 510, 0.1)
         }
         g.addChild(BUTTON)
 
@@ -1428,6 +1427,31 @@ function Game(props) {
         g.addChild(Draw(0x000000, 'Rect', 0, 0, appWidth, appHeight))
         g.addChild(DrawSpritePro(Background, 0, 0, appWidth, appHeight))
 
+        // Drawing the develop cards deck
+        for (let i = 0; i < game.develop_cards.length; i++) {
+            g.addChild(DrawSprite(CardBackground, appWidth-140, appHeight/2-10 - 2*i, 0.2))
+        }
+
+        // Drawing the board and the UI
+        if (game.phase < 3) {
+            game_phase_init(g, game, players, me)
+        } else if (game.phase === 3) {
+            game_phase_post(g, game, players, me)
+        } else {
+            console.log("Ha ganado tal player")
+        }
+
+        // Drawing the player list:
+        let boxes = 0
+        for (let p = 0; p < players.length; p++) {
+            if (p !== parseInt(sessionStorage.getItem('my-turn'))) {
+                g.addChild(Draw((p === game.current_turn) ? PlayersColors[p] : PlayersColorsD[p],  'RoundedRect', 32, 500 - 45*(boxes+1), 200, 35, 5))
+                g.addChild(DrawText(game.players[p].name, 'EBGaramond', 15, 'white', 'left', {x:47, y:(514 - 47*(boxes+1))}, 0))
+                g.addChild(DrawText('PTS', 'EBGaramond', 15, 'white', 'left', {x:195, y:(514 - 47*(boxes+1))}, 0))
+                boxes++
+            }
+        }
+
         // Drawing the player box
         g.addChild(Draw(UIColor, 'Rect', 0, appHeight-60, appWidth, 60))
         if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name) {
@@ -1450,29 +1474,6 @@ function Game(props) {
                 g.addChild(DrawSpritePro(Points[4-i], appWidth+4-(120*(i+1)), 585, 100, 75))
             } else {
                 g.addChild(DrawSpritePro(PointsD[4-i], appWidth+4-(120*(i+1)), 585, 100, 75))
-            }
-        }
-
-        // Drawing the develop cards deck
-        for (let i = 0; i < game.develop_cards.length; i++) {
-            g.addChild(DrawSprite(CardBackground, appWidth-140, appHeight/2-10 - 2*i, 0.2))
-        }
-
-        // Drawing the board and the UI
-        if (game.phase !== 3) {
-            game_phase_init(g, game, players, me)
-        } else {
-            game_phase_post(g, game, players, me)
-        }
-
-        // Drawing the player list:
-        let boxes = 0
-        for (let p = 0; p < players.length; p++) {
-            if (p !== parseInt(sessionStorage.getItem('my-turn'))) {
-                g.addChild(Draw((p === game.current_turn) ? PlayersColors[p] : PlayersColorsD[p],  'RoundedRect', 32, 500 - 45*(boxes+1), 200, 35, 5))
-                g.addChild(DrawText(game.players[p].name, 'EBGaramond', 15, 'white', 'left', {x:47, y:(514 - 47*(boxes+1))}, 0))
-                g.addChild(DrawText('PTS', 'EBGaramond', 15, 'white', 'left', {x:195, y:(514 - 47*(boxes+1))}, 0))
-                boxes++
             }
         }
 
