@@ -3,11 +3,9 @@ import axios from 'axios'
 import io from 'socket.io-client';
 import Game from "./Game.js"
 import logo from './Catan-logo-4.png'
-import React, { createContext, useState } from 'react'
+import React, { createContext, useState, useEffect } from 'react'
 import Routes from './services/routes';
-
-export const SocketContext = createContext();
-
+import { SocketContext } from './SocketContext';
 //import storage from './storage.js'
 const {GameService} = require('./services/game.service')
 
@@ -28,6 +26,13 @@ const {GameService} = require('./services/game.service')
  */
 function App() {
 
+    const [socket, setSocket] = useState(null);
+    useEffect(() => {
+        const newSocket = io.connect('http://localhost:8080');
+        setSocket(newSocket);
+        return () => newSocket.close();
+      }, []);
+
     //const [backgroundImg, setBackgroundImg] = useState(`url(${backgrounds[Math.floor(Math.random() * 5)]})`)
     //useEffect(() => {
     //    const intervalId = setInterval(() => {
@@ -38,7 +43,6 @@ function App() {
     // MAIN MENU STATE
     // ========================================================================
     // New game action:
-    const [socket, setSocket] = useState(io('http://localhost:8080/'))
     const [lobby, setLobby]   = useState([]);
     const [gameChanged, setGameChanged] = useState(false)
     const [activeMenu, setActiveMenu] = useState(JSON.parse(sessionStorage.getItem('active-menu')) || 'login')
@@ -77,7 +81,7 @@ function App() {
         const plainFormData = Object.fromEntries(formData.entries());
     
         // Enviar los datos del formulario a través de una solicitud
-        let partidasEmpezadas;
+        let partidaActual;
         let email    = plainFormData.email;
         let password = plainFormData.password;
         axios.post('http://localhost:8080/api/login', {
@@ -88,10 +92,9 @@ function App() {
             if (response.data.accessToken) {
                 user.name        = response.data.username;
                 user.accessToken = response.data.accessToken;
-                partidasEmpezadas = response.data.partidas;
+                partidaActual = response.data.partidaActual;
                 sessionStorage.setItem('user', JSON.stringify(user));
-                if (!partidasEmpezadas || partidasEmpezadas.length === 0) {
-                    let socket = io('http://localhost:8080/')
+                if (partidaActual) {
                     socket.on('update', (game) => {
                         sessionStorage.setItem('game', JSON.stringify(game))
                         sessionStorage.setItem('my-turn', 
@@ -102,7 +105,7 @@ function App() {
                         console.log("LA PARTIDA/TABLERO: ", game)
                         handleMenuChange('game') // Redirigir a la página de juego
                     });
-                    socket.emit('joinGame', JSON.parse(sessionStorage.getItem('user')).accessToken,partidasEmpezadas[0]);
+                    socket.emit('joinGame', JSON.parse(sessionStorage.getItem('user')).accessToken,partidaActual);
                     setSocket(socket)
                     // Cambiar al conexto del Game lobby
                     handleMenuChange('game-lobby')
@@ -117,7 +120,7 @@ function App() {
             }
         })
         .catch((error) => {
-            console.log(error.response.data);
+            console.log(error);
             setLoginError("Correo o contraseña incorrectos.");
         })
     }

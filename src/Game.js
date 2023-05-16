@@ -2,7 +2,7 @@
 import React, { useCallback, useContext, useEffect, useState } from "react"
 import io from 'socket.io-client';
 import * as PIXI from 'pixi.js'
-import { SocketContext } from './App'
+import { SocketContext } from './SocketContext'
 
 import Background from './images/game-bg2.png'
 
@@ -297,7 +297,7 @@ function Game(props) {
 
     let desconectados = [];
     let { gameChanged } = props
-    let socket = useContext(SocketContext)
+    const socket = useContext(SocketContext);
    //const [gameChanged, setGameChanged] = useState(props[0])
    //const [socket, setSocket] = useState(useContext(SocketContext))
    //useEffect(() => {
@@ -324,11 +324,13 @@ function Game(props) {
         setGamePaused(true);
     })
     socket.on('reconnected', (username) => {
+        console.log("Reconectado ", username)
          desconectados = desconectados.filter(username => username != username);
          if (desconectados.length === 0) {
             setGamePaused(false);
          }
     });
+
 
     // Build state: select node to build the correspondant building on
     const [buildMode,  setBuildMode]              = useState(true)
@@ -1412,6 +1414,7 @@ function Game(props) {
         let players = game.players 
         let me      = players[sessionStorage.getItem('my-turn')]
         TokenStart  = game.board.biomes.findIndex(biome => biome.token === 2)
+        socket.emit('joinGame', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code)
 
         // Clear background:
         for (let i = g.children.length - 1; i >= 0; i--) {
