@@ -50,7 +50,9 @@ function App() {
         setActiveMenu(menu);
     }
 
-    const [errorMessage, setErrorMessage] = useState('')
+    const [registerError, setRegisterError] = useState('')
+    const [loginError, setLoginError] = useState('')
+    const [joinGameError, setJoinGameError] = useState('')
     // ========================================================================
     // LOGIN STATE
     // ========================================================================
@@ -58,7 +60,7 @@ function App() {
 
         // Evita que el formulario se envíe de manera predeterminada
         event.preventDefault(); 
-
+        setLoginError('');
         // Aquí se pueden agregar otras validaciones de entrada antes de enviar el formulario
         // Si algo no es válido, se puede detener la ejecución de esta función o mostrar un mensaje de error
         const user = {
@@ -115,7 +117,7 @@ function App() {
         })
         .catch((error) => {
             console.log(error.response.data);
-            setErrorMessage(error.toString());
+            setLoginError("Correo o contraseña incorrectos.");
         })
     }
 
@@ -146,7 +148,7 @@ function App() {
         let password         = plainFormData.password;
         let confirm_password = plainFormData.confirm_password;
         if (password !== confirm_password) {
-            setErrorMessage("Passwords must coincide.")
+            setRegisterError("Las contraseñas deben coincidir.")
             return
         }
 
@@ -169,8 +171,11 @@ function App() {
             }
         })
         .catch((error) => {
-            console.log(error.response.data);
-            setErrorMessage(error.toString());
+            if (error.response.data.code === 11000) {
+                setRegisterError("Este correo ya está registrado.");
+            } else if (error.response.data.errors.email.name === 'ValidatorError') {
+                setRegisterError("El correo electronico no es valido.");
+            }
         })
     }
 
@@ -294,10 +299,6 @@ function App() {
             <div>
             {activeMenu !== 'game' ?
                 <div className='common-header'>
-                    {errorMessage && (
-                        <p style={{color: 'red'}}> {errorMessage} </p>
-                    )}
-
                     <div className='common-container | flex-column-center-center'>
                         <img src={logo} className='common-logo' alt='catan-logo'></img>
                         {activeMenu === 'login' && (
@@ -309,6 +310,9 @@ function App() {
                                         <button className='common-button | common-button-activated' type='submit'>Log In</button>
                                         <a href='recover' id='forgor-password'>Did you forget your password?</a>
                                     </form>
+                                {loginError && (
+                                    <p style={{color: 'red',fontSize: '16px'}}> {loginError} </p>
+                                )}
                                 </div>
                                 <div id='Home-down-form'>
                                     <button className='common-button | common-button-activated' onClick={() => handleMenuChange('register')}>Register</button>
@@ -327,6 +331,9 @@ function App() {
                                         <input className='common-input' type="password" placeholder="Repeat password" name='confirm_password' id='confirm_password' required />
                                         <button className='common-button | common-button-activated' type='submit'>Register</button>
                                     </form>
+                                    {registerError && (
+                                        <p style={{color: 'red', fontSize: '16px'}}> {registerError} </p>
+                                    )}
                                 </div>
                                 <div id='Home-down-form'>
                                     <button className='common-button | common-button-activated' onClick={() => handleMenuChange('login')}>Log in</button>
