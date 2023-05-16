@@ -4,6 +4,7 @@ import io from 'socket.io-client';
 import Game from "./Game.js"
 import logo from './Catan-logo-4.png'
 import React, { createContext, useState } from 'react'
+import Routes from './services/routes';
 
 export const SocketContext = createContext();
 
@@ -121,6 +122,33 @@ function App() {
         })
     }
 
+
+    const handleChangeRecovery = (event) => {
+        const input = event.target.value;
+            setRecoveryEmail(input);
+    };
+
+    const [recoveryEmail, setRecoveryEmail] = useState('');
+
+    function handleSubmit_Recover (event) {
+        event.preventDefault();
+        const form = document.getElementById('reset-pass');
+        const formData = new FormData(form);
+        // Crea un diccionario con los campos del formulario.
+        const plainFormData = Object.fromEntries(formData.entries());
+
+        let email = plainFormData.email;
+        console.log(email)
+
+        axios.post('http://localhost:8080/api/recover', {
+            email
+        }).then(() => {
+            handleMenuChange('login');
+        })
+        .catch((error) => {
+            console.log(error);
+        })
+    }
     // ========================================================================
     // REGISTER STATE
     // ========================================================================
@@ -234,6 +262,7 @@ function App() {
         }
     };
 
+
     async function handleSubmit_JoinGame(event) {
         // Evita que el formulario se envíe de manera predeterminada
         event.preventDefault();
@@ -308,7 +337,7 @@ function App() {
                                         <input className='common-input' type="text" placeholder="Email" name='email' id='email' required />
                                         <input className='common-input' type="password" placeholder="Password" name='password' id='password' required />
                                         <button className='common-button | common-button-activated' type='submit'>Log In</button>
-                                        <a href='recover' id='forgor-password'>Did you forget your password?</a>
+                                        <a onClick={() => handleMenuChange('reset-password')} id='forgor-password'>Did you forget your password?</a>
                                     </form>
                                 {loginError && (
                                     <p style={{color: 'red',fontSize: '16px'}}> {loginError} </p>
@@ -418,6 +447,18 @@ function App() {
                                 <button className='common-button | common-button-activated' onClick={() => { 
                                     handleMenuChange('main-menu');
                                     socket.emit('unjoin', JSON.parse(sessionStorage.getItem('game-token')));
+                                }}>Return</button>
+                            </div>
+                        )}
+
+                        {activeMenu === 'reset-password' && (
+                            <div className='common-content-container | flex-column-center-center'>
+                                <form id='reset-pass' className='flex-column-center-center' onSubmit={handleSubmit_Recover} >
+                                    <input name='email' id='email' className='common-input' type="text" placeholder="Introduzca su correo " value={recoveryEmail} onChange={handleChangeRecovery} required />
+                                    <button className='common-button | common-button-activated' type='submit'>Enviar</button>
+                                </form>
+                                <button className='common-button | common-button-activated' onClick={() => { 
+                                    handleMenuChange('login');
                                 }}>Return</button>
                             </div>
                         )}
