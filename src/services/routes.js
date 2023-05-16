@@ -1,8 +1,7 @@
 const Routes = {
     create: '/game/create',
     join: '/game/join',
-    start: '/game/start',
-    update: '/user/update',
+    start: '/game/start'
 }
 
 module.exports = Routes
