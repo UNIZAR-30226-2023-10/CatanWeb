@@ -45,7 +45,7 @@ function App() {
     const handleMenuChange = (menu) => {
         if (JSON.parse(sessionStorage.getItem('game-token'))){
             // let socket   = io('http://localhost:8080/')
-            socket.emit('unjoin', JSON.parse(sessionStorage.getItem('user')).accessToken,JSON.parse(sessionStorage.getItem('game-token')))
+            //socket.emit('unjoin', JSON.parse(sessionStorage.getItem('user')).accessToken,JSON.parse(sessionStorage.getItem('game-token')))
         }
         sessionStorage.setItem('active-menu', JSON.stringify(menu))
         setActiveMenu(menu);
