@@ -343,6 +343,18 @@ const RoadsInfo = [
 ]
 
 
+function parseBool(string) {
+    return (string === 'true') ? true : false
+}
+
+function parseBoolArr(arr) {
+    let bool_arr = []
+    for (let i of arr.split(',')) {
+        bool_arr.push((i === 'true') ? true : false)
+    }
+    return bool_arr
+}
+
 // ============================================================================
 // GAME
 // ============================================================================
@@ -371,22 +383,21 @@ function Game(props) {
     //})
 
     // Build state: select node to build the correspondant building on
-    const [buildMode,  setBuildMode]              = useState(true)
+    const [buildMode,  setBuildMode]              = useState(parseBool(sessionStorage.getItem('build-mode')))
     // Knight state: select biome to put the robber on
-    const [knightMode, setKnightMode]             = useState(false)
+    const [knightMode, setKnightMode]             = useState(parseBool(sessionStorage.getItem('knight-mode')))
     // Building roads state: 
-    const [buildRoads, setBuildRoads]             = useState(false)
+    const [buildRoads, setBuildRoads]             = useState(parseBool(sessionStorage.getItem('build-roads')))
     // Monopoly state:
-    const [monopolyMode, setMonopolyMode]         = useState(false)
+    const [monopolyMode, setMonopolyMode]         = useState(parseBool(sessionStorage.getItem('monopoly-mode')))
     // Year of plenty state:
-    const [yearOfPlentyMode, setYearOfPlentyMode] = useState(false)
+    const [yearOfPlentyMode, setYearOfPlentyMode] = useState(parseBool(sessionStorage.getItem('year-of-plenty-mode')))
 
+    const [throwDices, setThrowDices]             = useState(parseBool(sessionStorage.getItem('throw-dices')))
+    const [selectedPoint, setSelectedPoint]       = useState(null);
+    const [hasToBuild, setHasToBuild]             = useState(parseBoolArr(sessionStorage.getItem('has-to-build')))
 
-    const [throwDices, setThrowDices] = useState(false)
-    const [selectedPoint, setSelectedPoint] = useState(null);
-    const [hasToBuild, setHasToBuild] = useState([true, false])
-
-    //console.log(selectedPoint)
+    console.log(hasToBuild)
 
     function create_node_init(g, players, free_nodes_set, id, x, y) {
         let p_i = -1
@@ -741,9 +752,12 @@ function Game(props) {
                         }
                         if (hasToBuild[0]) {
                             setHasToBuild([false, true])
+                            sessionStorage.setItem('has-to-build', [false, true])
                         } else if (hasToBuild[1]) {
                             setHasToBuild([false, false])
+                            sessionStorage.setItem('has-to-build', [false, false])
                             setBuildMode(false)
+                            sessionStorage.setItem('build-mode', false)
                         }
                         setSelectedPoint(null)
                     })
@@ -757,8 +771,10 @@ function Game(props) {
                 BUTTON.on('pointerdown', () => {
                     socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id : MoveType.next_turn })
                     setHasToBuild([true, false])
+                    sessionStorage.setItem('has-to-build', [true, false])
                     if (game.current_turn === 0 && game.phase === 2) {
                         setBuildMode(false)
+                        sessionStorage.setItem('build-mode', false)
                     }
                 })
                 g.addChild(BUTTON)
@@ -779,9 +795,13 @@ function Game(props) {
                     BUTTON.on('pointerdown', () => {
                         console.log ('Usando construccion de carreteras')
                         setBuildRoads(true)
+                        sessionStorage.setItem('build-roads', true)
                         setKnightMode(false)
+                        sessionStorage.setItem('knight-mode', false)
                         setMonopolyMode(false)
+                        sessionStorage.setItem('monopoly-mode', false)
                         setYearOfPlentyMode(false)
+                        sessionStorage.setItem('year-of-plenty-mode', false)
                         setSelectedPoint(null)
                     })
                 }
@@ -799,9 +819,13 @@ function Game(props) {
                     BUTTON.on('pointerdown', () => {
                         console.log ('Usando caballero')
                         setKnightMode(true)
+                        sessionStorage.setItem('knight-mode', true)
                         setBuildRoads(false)
+                        sessionStorage.setItem('build-roads', false)
                         setMonopolyMode(false)
+                        sessionStorage.setItem('monopoly-mode', false)
                         setYearOfPlentyMode(false)
+                        sessionStorage.setItem('year-of-plenty-mode', false)
                         setSelectedPoint(null)
                     })
                 }
@@ -819,9 +843,13 @@ function Game(props) {
                     BUTTON.on('pointerdown', () => {
                         console.log('Usando monopolio')
                         setMonopolyMode(true)
+                        sessionStorage.setItem('monopoly-mode', true)
                         setBuildRoads(false)
+                        sessionStorage.setItem('build-roads', false)
                         setKnightMode(false)
+                        sessionStorage.setItem('knight-mode', false)
                         setYearOfPlentyMode(false)
+                        sessionStorage.setItem('year-of-plenty-mode', false)
                         setSelectedPoint(null)
                     })
                 }
@@ -839,9 +867,13 @@ function Game(props) {
                     BUTTON.on('pointerdown', () => {
                         console.log ('Usando año de prosperidad')
                         setYearOfPlentyMode(true)
+                        sessionStorage.setItem('year-of-plenty-mode', true)
                         setBuildRoads(false)
+                        sessionStorage.setItem('build-roads', false)
                         setKnightMode(false)
+                        sessionStorage.setItem('knight-mode', false)
                         setMonopolyMode(false)
+                        sessionStorage.setItem('monopoly-mode', false)
                         setSelectedPoint(null)
                     })
                 }
@@ -879,6 +911,7 @@ function Game(props) {
             BUTTON.buttonMode = true;
             BUTTON.on('pointerdown', () => {
                 setBuildMode(false)
+                sessionStorage.setItem('build-mode', false)
                 setSelectedPoint(null)
             })
             g.addChild(BUTTON)
@@ -908,6 +941,7 @@ function Game(props) {
                         socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, {id : MoveType.build_city, coords: selectedPoint.id})
                     }
                     setBuildMode(false)
+                    sessionStorage.setItem('build-mode', false)
                     setSelectedPoint(null)
                 })
                 g.addChild(BUTTON);
@@ -924,6 +958,7 @@ function Game(props) {
             BUTTON.interactive = true
             BUTTON.on('pointerdown', () => {
                 setKnightMode(false)
+                sessionStorage.setItem('knight-mode', false)
                 setSelectedPoint(null)
             })
             g.addChild(BUTTON)
@@ -992,6 +1027,7 @@ function Game(props) {
                     console.log("CONSTRUYO EN ", selectedPoint)
                     socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id: MoveType.use_knight, robber_biome: selectedPoint.id})
                     setKnightMode(false)
+                    sessionStorage.setItem('knight-mode', false)
                     setSelectedPoint(null)
                 })
                 g.addChild(BUTTON);
@@ -1024,6 +1060,7 @@ function Game(props) {
             BUTTON.interactive = true
             BUTTON.on('pointerdown', () => {
                 setMonopolyMode(false)
+                sessionStorage.setItem('monopoly-mode', false)
                 setSelectedPoint(null)
             })
             g.addChild(BUTTON)
@@ -1128,6 +1165,7 @@ function Game(props) {
                     console.log("ELIGO ", selectedPoint)
                     socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id: MoveType.use_monopoly, resource: selectedPoint })
                     setMonopolyMode(false)
+                    sessionStorage.setItem('monopoly-mode', false)
                     setSelectedPoint(null)
                 })
                 g.addChild(BUTTON);
@@ -1161,6 +1199,7 @@ function Game(props) {
                 BUTTON.interactive = true
                 BUTTON.on('pointerdown', () => {
                     setBuildRoads(false)
+                    sessionStorage.setItem('build-roads', false)
                     setSelectedPoint(null)
                 })
             }
@@ -1186,6 +1225,7 @@ function Game(props) {
                     socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id: MoveType.use_roads_build_4_free, coords: selectedPoint.id})                
                     if (me.roads_build_4_free === 1) {
                         setBuildRoads(false)
+                        sessionStorage.setItem('build-roads', false)
                     }
                     setSelectedPoint(null)
                 })
@@ -1201,6 +1241,7 @@ function Game(props) {
             BUTTON.interactive = true
             BUTTON.on('pointerdown', () => {
                 setYearOfPlentyMode(false)
+                sessionStorage.setItem('year-of-plenty-mode', false)
                 setSelectedPoint(null)
             })
             g.addChild(BUTTON)
@@ -1330,6 +1371,7 @@ function Game(props) {
                         console.log("ELIGO ", selectedPoint)
                         socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id: MoveType.use_year_of_plenty, resource: selectedPoint})
                         setYearOfPlentyMode(false)
+                        sessionStorage.setItem('year-of-plenty-mode', false)
                         setSelectedPoint(null)
                     })
                     g.addChild(BUTTON);
@@ -1380,6 +1422,7 @@ function Game(props) {
             BUTTON.buttonMode = true;
             BUTTON.on('pointerdown', () => {
                 setBuildMode(true)
+                sessionStorage.setItem('build-mode', true)
                 setSelectedPoint(null)
             })
         } else {
@@ -1408,6 +1451,7 @@ function Game(props) {
             BUTTON.on('pointerdown', () => {
                 socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id : MoveType.next_turn })
                 setThrowDices(false)
+                sessionStorage.setItem('throw-dices', false)
             })
         } else {
             BUTTON = DrawSprite(ButtonNextTurnD, 1065, 490, 0.1)
@@ -1423,6 +1467,7 @@ function Game(props) {
             BUTTON.buttonMode  = true
             BUTTON.on('pointerdown', () => {
                 setThrowDices(true)
+                sessionStorage.setItem('throw-dices', true)
                 socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id : MoveType.roll_dices })
             })
         } else {

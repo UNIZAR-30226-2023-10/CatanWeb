@@ -184,6 +184,16 @@ function App() {
             sessionStorage.setItem('my-turn', 0)
             // Cambiar al conexto del Game lobby
             handleMenuChange('game-lobby')
+
+            
+            // Persistencia de datos para el juego
+            sessionStorage.setItem('build-mode', false)
+            sessionStorage.setItem('knight-mode', false)
+            sessionStorage.setItem('build-roads', false)
+            sessionStorage.setItem('monopoly-mode', false)
+            sessionStorage.setItem('year-of-plenty-mode', false)
+            sessionStorage.setItem('throw-dices', false)
+            sessionStorage.setItem('has-to-build', [true, false])
         }
     }
 
@@ -242,7 +252,13 @@ function App() {
             setActiveMenu('game-lobby')
 
             // Persistencia de datos para el juego
-            
+            sessionStorage.setItem('build-mode', false)
+            sessionStorage.setItem('knight-mode', false)
+            sessionStorage.setItem('build-roads', false)
+            sessionStorage.setItem('monopoly-mode', false)
+            sessionStorage.setItem('year-of-plenty-mode', false)
+            sessionStorage.setItem('throw-dices', false)
+            sessionStorage.setItem('has-to-build', [true, false])
         }
     }
 
