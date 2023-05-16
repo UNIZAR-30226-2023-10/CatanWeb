@@ -83,7 +83,9 @@ import Harbor    from './images/harbor.png'
 import Pasture  from './images/pasture.png'
 import CardBackground from './images/card_background.png'
 
-import TheRobber from './images/the_robber.png'
+import TheRobber  from './images/the_robber.png'
+import KnightIcon from './images/knight.png'
+import RoadsIcon from './images/roads_icon.png'
 
 import Frame_1 from './images/frame-1.png'
 import Frame_2 from './images/frame-2.png'
@@ -160,6 +162,9 @@ import ButtonNextTurnD from './images/button_next-turn_d.png'
 import ButtonQuitResource from './images/button_quit_resource.png'
 import ButtonTrade from './images/button_trade.png'
 import ButtonTradeD from './images/button_trade_d.png'
+import ButtonTradeCancel from './images/button_trade_cancel.png'
+import TradeIcon from './images/trade_icon.png'
+
 
 const MoveType = require( './services/movesTypes.js')
 
@@ -221,6 +226,7 @@ const ResourcesSprite = {
 const Resources = [ Wheat, Lumber, Brick, Stone, Wool ]
 const Dices = [ Dice0, Dice1, Dice2, Dice3, Dice4, Dice5, Dice6 ]
 const PointsNames = ['Capilla', 'Biblioteca', 'Mercado', 'Palacio', 'Universidad']
+const biomesResources   = ['Trigo', 'Madera', 'Ladrillo', 'Piedra', 'Lana', 'None']
 const Points = [Chapel, Library, Market, Palace, University]
 const PointsD = [ChapelD, LibraryD, MarketD, PalaceD, UniversityD]
 
@@ -977,10 +983,11 @@ function Game({gameChanged, gameExit}) {
     function game_phase_post(g, game, players, me) {
 
         let BUTTON = null
+        let used_develop_cards = game.players[game.current_turn].used_develop_cards
 
         // Drawing develop cards box
-        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && me.develop_cards['Carreteras'] > 0 && throwDices) {
-            if (!buildRoads) {
+        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && me.develop_cards['Carreteras'] > 0 && throwDices && used_develop_cards === 0) {
+            if (!buildRoads ) {
                 BUTTON = DrawSprite(RoadBuilding, 105, 260, 0.35)
                 if (!buildMode) {
                     BUTTON.interactive = true
@@ -1003,7 +1010,7 @@ function Game({gameChanged, gameExit}) {
             g.addChild(DrawSprite(RoadBuildingD, 105, 260, 0.35))
         }
 
-        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && me.develop_cards['Caballeros'] > 0) {
+        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && me.develop_cards['Caballeros'] > 0 && used_develop_cards === 0) {
             if (!knightMode) {
                 BUTTON = DrawSprite(Knight, 120, 170, 0.35)
                 if (!buildMode && me.roads_build_4_free === 0) {
@@ -1027,7 +1034,7 @@ function Game({gameChanged, gameExit}) {
             g.addChild(DrawSprite(KnightD, 120, 170, 0.35))
         }
 
-        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && me.develop_cards['Monopolios'] > 0 && throwDices) {
+        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && me.develop_cards['Monopolios'] > 0 && throwDices && used_develop_cards === 0) {
             if (!monopolyMode) {
                 BUTTON = DrawSprite(Monopoly, 190, 100, 0.35)
                 if (!buildMode && me.roads_build_4_free === 0) {
@@ -1051,7 +1058,7 @@ function Game({gameChanged, gameExit}) {
             g.addChild(DrawSprite(MonopolyD, 190, 100, 0.35))
         }
 
-        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && me.develop_cards['Descubrimientos'] > 0 && throwDices) {
+        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && me.develop_cards['Descubrimientos'] > 0 && throwDices && used_develop_cards === 0) {
             if (!yearOfPlentyMode) {
                 BUTTON = DrawSprite(YearOfPlenty, 265, 120, 0.35)
                 if (!buildMode && me.roads_build_4_free === 0) {
@@ -1240,6 +1247,16 @@ function Game({gameChanged, gameExit}) {
                 DrawNodes_Default(g, players, NodesId[i], ...NodesPos[i])
             }
 
+            BUTTON = DrawSprite(ButtonTradeCancel, 300, 510, 0.1)
+            BUTTON.interactive = true;
+            BUTTON.buttonMode = true;
+            BUTTON.on('pointerdown', () => {
+                setChangeMode(false)
+                sessionStorage.setItem('change-mode', false)
+                setSelectedPoint(null)
+            })
+            g.addChild(BUTTON)
+
 
             g.addChild(Draw(UIColor, 'RoundedRect', appWidth/2 - 360, appHeight/2 - 260, 720, 300, 10))
             BUTTON = DrawSprite(Wheat, 335, 215, 0.4)
@@ -1340,16 +1357,16 @@ function Game({gameChanged, gameExit}) {
             if (selectedPoint) {
 
                 g.addChild(Draw(UIColor, 'RoundedRect', 240, appHeight/2 - 10, 720, 230, 10))
-
+                let r_i = biomesResources.findIndex(curr_resource => curr_resource === selectedPoint[0])
                 
-                for (let i = 0; i < 4; i++) {
+                for (let i = 0; i < me.trade_costs[r_i]; i++) {
                     g.addChild(DrawSprite(ResourcesSprite[selectedPoint[0]], appWidth/5 + 150 + 20*i, appHeight/2 + 100, 0.42))
                 }
                 if (selectedPoint.length > 1){
 
                     g.addChild(DrawSprite(ResourcesSprite[selectedPoint[1]], 730, appHeight/2 + 100 , 0.42))
                 }
-
+                g.addChild(DrawSprite(TradeIcon, 590, appHeight/2 + 100 , 0.22))
                 // Quitar recurso:
                 BUTTON = DrawSprite(ButtonQuitResource, appWidth/2 +273, appHeight/2 + 65, 0.1)
                 BUTTON.interactive = true
@@ -1771,14 +1788,14 @@ function Game({gameChanged, gameExit}) {
         BUTTON = null
         // Change button
         if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name  && throwDices && (me.can_change[0] || me.can_change[1] || me.can_change[2] || me.can_change[3] || me.can_change[4])) {
-            BUTTON = DrawSprite(ButtonBuild, 420, 610, 0.1)
+            BUTTON = DrawSprite(ButtonTrade, 300, 510, 0.1)
             BUTTON.interactive = true;
             BUTTON.buttonMode = true;
             BUTTON.on('pointerdown', () => {
                 setChangeMode(true)
             })
         } else {
-            BUTTON = DrawSprite(ButtonBuildD, 420, 610, 0.1)
+            BUTTON = DrawSprite(ButtonTradeD, 300, 510, 0.1)
         }
         g.addChild(BUTTON)
 
@@ -1876,21 +1893,32 @@ function Game({gameChanged, gameExit}) {
             g.addChild(Draw(0xe8a85a, 'Circle', 890, 400, 15))
             g.addChild(DrawText(me.buildings['Roads'], 'EBGaramond', 22, 'black', 'center', {x:890,y:400}, 0.5))
 
-            if (game.phase < 3) {
-                game_phase_init(g, game, players, me)
-            } else if (game.phase === 3) {
-                game_phase_post(g, game, players, me)
-            }
-
             // Drawing the player list:
             let boxes = 0
+            let puntos
+            let misPuntos
             for (let p = 0; p < players.length; p++) {
+                
                 if (p !== parseInt(sessionStorage.getItem('my-turn'))) {
+                    puntos = players[p].puntos
+                    
                     g.addChild(DrawSpritePro(Frame_3, 32, 500 - 45*(boxes+1), 210, 35))
                     g.addChild(Draw((p === game.current_turn) ? PlayersColors[p] : PlayersColorsD[p],  'RoundedRect', 38, 505 - 45*(boxes+1), 197, 25, 2))
                     g.addChild(DrawText(game.players[p].name, 'EBGaramond', 15, (p === game.current_turn) ? 'white' : 'gray', 'left', {x:47, y:(514 - 47*(boxes+1))}, 0))
-                    g.addChild(DrawText('PTS', 'EBGaramond', 15, 'white', 'left', {x:195, y:(514 - 47*(boxes+1))}, 0))
+                    g.addChild(DrawText('PTS: '+puntos, 'EBGaramond', 15, 'white', 'left', {x:185, y:(514 - 47*(boxes+1))}, 0))
+                    if(game.board.player_max_knights == game.players[p].name){
+                        g.addChild(DrawSprite(KnightIcon, 170, 520 - 47*(boxes+1), 0.04))
+                    }
+                    if(game.board.player_max_roads == game.players[p].name){
+
+                        g.addChild(DrawSprite(RoadsIcon, 145, 520 - 47*(boxes+1), 0.06))
+                    }
                     boxes++
+                    console.log('game.board.player_max_knights: ',game.board.player_max_knights )
+                    console.log('name',JSON.parse(sessionStorage.getItem('user')).name)
+                    
+                }else{
+                    misPuntos = players[p].puntos
                 }
             }
 
@@ -1900,17 +1928,31 @@ function Game({gameChanged, gameExit}) {
             if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name) {
                 g.addChild(Draw(PlayersColors[sessionStorage.getItem('my-turn')], 'RoundedRect', 38, appHeight-165, 197, 25, 2))
                 g.addChild(DrawText(me.name, 'EBGaramond', 22, 'white', 'left', {x: 44, y:appHeight-165}, 0))
+                
             } else {
                 g.addChild(Draw(PlayersColorsD[sessionStorage.getItem('my-turn')], 'RoundedRect', 38, appHeight-165, 197, 25, 5))
                 g.addChild(DrawText(me.name, 'EBGaramond', 22, 'gray', 'left', {x: 44, y:appHeight-165}, 0))
+                
             }
-            g.addChild(DrawText('PTS', 'EBGaramond', 15, 'white', 'left', {x: 195, y:appHeight-160}, 0))
+            console.log('game.board.player_max_knights: ',game.board.player_max_knights )
+            console.log('name',JSON.parse(sessionStorage.getItem('user')).name)
+            if(game.board.player_max_knights == JSON.parse(sessionStorage.getItem('user')).name){
+                console.log('Tengo los caballeros')
+                g.addChild(DrawSprite(KnightIcon, 170, appHeight-152, 0.04))
+            }
+            if(game.board.player_max_roads == JSON.parse(sessionStorage.getItem('user')).name){
+
+                g.addChild(DrawSprite(RoadsIcon, 145, appHeight-152, 0.06))
+            }
+            g.addChild(DrawText( 'PTS: '+misPuntos, 'EBGaramond', 15, 'white', 'left', {x: 185, y:appHeight-160}, 0))
             for (let i = 0; i < 5; i++) {
                 g.addChild(DrawSpritePro(Frame_6, 27+(71*i), 562, 66, 94))
                 g.addChild(DrawSpritePro(Resources[i], 31+(71*i), 566, 58, 85))
                 g.addChild(Draw(0xe8a85a, 'Circle', 60+(71*i), 650, 15))
                 g.addChild(DrawText(Object.values(me.resources)[i], 'EBGaramond', 14, 'black', 'center', {x:60+(71*i), y:650}, 0.5))
             }
+
+            
 
             // Draw special points
             for (let i = 0; i < 5; i++) {
@@ -1922,6 +1964,12 @@ function Game({gameChanged, gameExit}) {
                 }
             }
 
+            if (game.phase < 3) {
+                game_phase_init(g, game, players, me)
+            } else if (game.phase === 3) {
+                game_phase_post(g, game, players, me)
+            }
+
             //for (let road_info of RoadsInfo) {
             //    g.addChild(DrawSprite(RoadsDirections[road_info[0]], road_info[2], road_info[3], 0.45))
             //}
@@ -1929,12 +1977,13 @@ function Game({gameChanged, gameExit}) {
             //for (let node_pos of NodesPos) {
             //    g.addChild(DrawSprite(VillageSprite, ...node_pos, 0.35))
             //}
+            
 
         } else {
             game_phase_final(g, game, me)
         }
 
-    }, [buildMode, buildRoads, knightMode, monopolyMode, yearOfPlentyMode, hasToBuild, selectedPoint, gameChanged, changeMode ])
+    }, [buildMode, buildRoads, knightMode, monopolyMode, yearOfPlentyMode, hasToBuild, selectedPoint, gameChanged, changeMode])
     
     const handleClick = () => {
         let game    = JSON.parse(sessionStorage.getItem('game'))
