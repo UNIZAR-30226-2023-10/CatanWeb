@@ -15,6 +15,32 @@ import Dice4 from './images/Dice04.png'
 import Dice5 from './images/Dice05.png'
 import Dice6 from './images/Dice06.png'
 
+import VillageSprite from './images/pieces/Village.png'
+import RedVillageSprite from './images/pieces/RedVillage.png'
+import GreenVillageSprite from './images/pieces/GreenVillage.png'
+import BlueVillageSprite from './images/pieces/BlueVillage.png'
+import YellowVillageSprite from './images/pieces/YellowVillage.png'
+
+import VerRoad from './images/pieces/VerRoad.png'
+import RightDiagRoad from './images/pieces/RightDiagRoad.png'
+import LeftDiagRoad from './images/pieces/LeftDiagRoad.png'
+
+import RedVerRoad from './images/pieces/RedVerRoad.png'
+import RedRightDiagRoad from './images/pieces/RedRightDiagRoad.png'
+import RedLeftDiagRoad from './images/pieces/RedLeftDiagRoad.png'
+
+import GreenVerRoad from './images/pieces/GreenVerRoad.png'
+import GreenRightDiagRoad from './images/pieces/GreenRightDiagRoad.png'
+import GreenLeftDiagRoad from './images/pieces/GreenLeftDiagRoad.png'
+
+import BlueVerRoad from './images/pieces/BlueVerRoad.png'
+import BlueRightDiagRoad from './images/pieces/BlueRightDiagRoad.png'
+import BlueLeftDiagRoad from './images/pieces/BlueLeftDiagRoad.png'
+
+import YellowVerRoad from './images/pieces/YellowVerRoad.png'
+import YellowRightDiagRoad from './images/pieces/YellowRightDiagRoad.png'
+import YellowLeftDiagRoad from './images/pieces/YellowLeftDiagRoad.png'
+
 import RedVillage from './images/pieces/red_village.png'
 import GreenVillage from './images/pieces/green_village.png'
 import BlueVillage from './images/pieces/blue_village.png'
@@ -112,8 +138,19 @@ import ButtonQuitResource from './images/button_quit_resource.png'
 const MoveType = require( './services/movesTypes.js')
 
 const ColorVillages = [RedVillage, GreenVillage, BlueVillage, YellowVillage]
+const ColorVillagesSprites = [ RedVillageSprite, GreenVillageSprite, BlueVillageSprite, YellowVillageSprite ]
+
 const ColorCities   = [RedCity, GreenCity, BlueCity, YellowCity]
+
 const ColorRoads    = [RedRoad, GreenRoad, BlueRoad, YellowRoad]
+const RoadsDirections = [VerRoad, RightDiagRoad, LeftDiagRoad]
+const ColorRoadsDirections = [
+    [RedVerRoad, RedRightDiagRoad, RedLeftDiagRoad],
+    [GreenVerRoad, GreenRightDiagRoad, GreenLeftDiagRoad],
+    [BlueVerRoad, BlueRightDiagRoad, BlueLeftDiagRoad],
+    [YellowVerRoad, YellowRightDiagRoad, YellowLeftDiagRoad]
+]
+
 
 const Biomes = {
     'Desierto': Desert,
@@ -257,6 +294,131 @@ const BiomesPos = [
     [appWidth/2 + cell_hor_offset, appHeight/2 + 2*cell_ver_offset - 30]
 ]
 
+const NodesId  = [
+    '0,3',
+    '0,5',
+    '0,7',
+    '1,2',
+    '1,4',
+    '1,6',
+    '1,8',
+    '2,2',
+    '2,4',
+    '2,6',
+    '2,8',
+    '3,1',
+    '3,3',
+    '3,5',
+    '3,7',
+    '3,9',
+    '4,1',
+    '4,3',
+    '4,5',
+    '4,7',
+    '4,9',
+    '5,0',
+    '5,2',
+    '5,4',
+    '5,6',
+    '5,8',
+    '5,10',
+    '6,0',
+    '6,2',
+    '6,4',
+    '6,6',
+    '6,8',
+    '6,10',
+    '7,1',
+    '7,3',
+    '7,5',
+    '7,7',
+    '7,9',
+    '8,1',
+    '8,3',
+    '8,5',
+    '8,7',
+    '8,9',
+    '9,2',
+    '9,4',
+    '9,6',
+    '9,8',
+    '10,2',
+    '10,4',
+    '10,6',
+    '10,8',
+    '11,3',
+    '11,5',
+    '11,7'
+]
+const NodesPos = [
+    [appWidth/2-115, 40],
+    [appWidth/2, 40],
+    [appWidth/2+115, 40],
+
+    [appWidth/2-172, 60],
+    [appWidth/2-58, 60],
+    [appWidth/2+58, 60],
+    [appWidth/2+172, 60],
+
+    [appWidth/2-173, 140],
+    [appWidth/2-58, 140],
+    [appWidth/2+58, 140],
+    [appWidth/2+173, 140],
+
+    [appWidth/2-230, 160],
+    [appWidth/2-115, 160],
+    [appWidth/2, 160],
+    [appWidth/2+115, 160],
+    [appWidth/2+230, 160],
+
+    [appWidth/2-230, 240],
+    [appWidth/2-115, 240],
+    [appWidth/2, 240],
+    [appWidth/2+115, 240],
+    [appWidth/2+230, 240],
+
+    [appWidth/2-289, 260],
+    [appWidth/2-173, 260],
+    [appWidth/2-58, 260],
+    [appWidth/2+58, 260],
+    [appWidth/2+173, 260],
+    [appWidth/2+289, 260],
+
+    [appWidth/2-289, 340],
+    [appWidth/2-173, 340],
+    [appWidth/2-58, 340],
+    [appWidth/2+58, 340],
+    [appWidth/2+173, 340],
+    [appWidth/2+289, 340],
+
+    [appWidth/2-230, 360],
+    [appWidth/2-115, 360],
+    [appWidth/2, 360],
+    [appWidth/2+115, 360],
+    [appWidth/2+230, 360],
+
+    [appWidth/2-230, 440],
+    [appWidth/2-115, 440],
+    [appWidth/2, 440],
+    [appWidth/2+115, 440],
+    [appWidth/2+230, 440],
+
+    [appWidth/2-173, 460],
+    [appWidth/2-58, 460],
+    [appWidth/2+58, 460],
+    [appWidth/2+173, 460],
+
+    [appWidth/2-172, 540],
+    [appWidth/2-58, 540],
+    [appWidth/2+58, 540],
+    [appWidth/2+172, 540],
+
+    [appWidth/2-115, 560],
+    [appWidth/2, 560],
+    [appWidth/2+115, 560],
+
+]
+
 const RoadsInfo = [
     ['0,3:1,2', 447, 46],
     ['0,3:1,4', 507, 46],
@@ -340,6 +502,91 @@ const RoadsInfo = [
     ['10,6:11,5', 616, 550],
     ['10,6:11,7', 672, 550],
     ['10,8:11,7', 728, 550],
+]
+
+const RoadsInfo_2 = [
+    [2,'0,3:1,2', appWidth/2 - 150, 60],
+    [1,'0,3:1,4', appWidth/2 - 80, 60],
+    [2,'0,5:1,4', appWidth/2 - 35, 60],
+    [1,'0,5:1,6', appWidth/2 + 35, 60],
+    [2,'0,7:1,6', appWidth/2 + 80, 60],
+    [1,'0,7:1,8', appWidth/2 + 150, 60],
+
+    [0,'1,2:2,2', appWidth/2 - 173, 105],
+    [0,'1,4:2,4', appWidth/2 - 58, 105],
+    [0,'1,6:2,6', appWidth/2 + 58, 105],
+    [0,'1,8:2,8', appWidth/2 + 173, 105],
+
+    [2,'2,2:3,1', appWidth/2 - 200, 153],
+    [1,'2,2:3,3', appWidth/2 - 150, 153],
+    [2,'2,4:3,3', appWidth/2 - 80, 153],
+    [1,'2,4:3,5', appWidth/2 - 35, 153],
+    [2,'2,6:3,5', appWidth/2 + 35, 153],
+    [1,'2,6:3,7', appWidth/2 + 80, 153],
+    [2,'2,8:3,7', appWidth/2 + 150, 153],
+    [1,'2,8:3,9', appWidth/2 + 200, 153],
+
+    [0,'3,1:4,1', appWidth/2 - 230, 200],
+    [0,'3,3:4,3', appWidth/2 - 115, 200],
+    [0,'3,5:4,5', appWidth/2, 200],
+    [0,'3,7:4,7', appWidth/2 + 115, 200],
+    [0,'3,9:4,9', appWidth/2 + 230, 200],
+
+    [2,'4,1:5,0', appWidth/2 - 262, 258],
+    [1,'4,1:5,2', appWidth/2 - 200, 258],
+    [2,'4,3:5,2', appWidth/2 - 150, 258],
+    [1,'4,3:5,4', appWidth/2 - 80,  258],
+    [2,'4,5:5,4', appWidth/2 - 35,  258],
+    [1,'4,5:5,6', appWidth/2 + 35,  258],
+    [2,'4,7:5,6', appWidth/2 + 80,  258],
+    [1,'4,7:5,8', appWidth/2 + 150, 258],
+    [2,'4,9:5,8', appWidth/2 + 200, 258],
+    [1,'4,9:5,10', appWidth/2 + 262, 258],
+
+    [0,'5,0:6,0', appWidth/2 - 289, 300],
+    [0,'5,2:6,2', appWidth/2 - 173, 300],
+    [0,'5,4:6,4', appWidth/2 - 58, 300],
+    [0,'5,6:6,6', appWidth/2 + 58, 300],
+    [0,'5,8:6,8', appWidth/2 + 173, 300],
+    [0,'5,10:6,10', appWidth/2 + 289, 300],
+
+    [1,'6,0:7,1', appWidth/2 - 265, 353],
+    [2,'6,2:7,1', appWidth/2 - 198, 353],
+    [1,'6,2:7,3', appWidth/2 - 150, 353],
+    [2,'6,4:7,3', appWidth/2 - 80,  353],
+    [1,'6,4:7,5', appWidth/2 - 35,  353],
+    [2,'6,6:7,5', appWidth/2 + 35,  353],
+    [1,'6,6:7,7', appWidth/2 + 80,  353],
+    [2,'6,8:7,7', appWidth/2 + 150, 353],
+    [1,'6,8:7,9', appWidth/2 + 198, 353],
+    [2,'6,10:7,9', appWidth/2 + 265, 353],
+
+    [0,'7,1:8,1', appWidth/2 - 230, 400],
+    [0,'7,3:8,3', appWidth/2 - 115, 400],
+    [0,'7,5:8,5', appWidth/2, 400],
+    [0,'7,7:8,7', appWidth/2 + 115, 400],
+    [0,'7,9:8,9', appWidth/2 + 230, 400],
+
+    [1,'8,1:9,2', appWidth/2 - 200, 457],
+    [2,'8,3:9,2', appWidth/2 - 150, 457],
+    [1,'8,3:9,4', appWidth/2 - 80, 457],
+    [2,'8,5:9,4', appWidth/2 - 35, 457],
+    [1,'8,5:9,6', appWidth/2 + 35, 457],
+    [2,'8,7:9,6', appWidth/2 + 80, 457],
+    [1,'8,7:9,8', appWidth/2 + 150, 457],
+    [2,'8,9:9,8', appWidth/2 + 200, 457],
+
+    [0,'9,2:10,2', appWidth/2 - 173, 500],
+    [0,'9,4:10,4', appWidth/2 - 58, 500],
+    [0,'9,6:10,6', appWidth/2 + 58, 500],
+    [0,'9,8:10,8', appWidth/2 + 173, 500],
+
+    [1,'10,2:11,3', appWidth/2 - 150, 553],
+    [2,'10,4:11,3', appWidth/2 - 80, 553],
+    [1,'10,4:11,5', appWidth/2 - 35, 553],
+    [2,'10,6:11,5', appWidth/2 + 35, 553],
+    [1,'10,6:11,7', appWidth/2 + 80, 553],
+    [2,'10,8:11,7', appWidth/2 + 150, 553]
 ]
 
 
@@ -471,7 +718,8 @@ function Game(props) {
             }
         }
         if (p_i !== -1) {
-            g.addChild(Draw(PlayersColors[p_i], 'Circle', x, y, 15))
+            //g.addChild(Draw(PlayersColors[p_i], 'Circle', x, y, 15))
+            g.addChild(DrawSprite(ColorVillagesSprites[p_i], x, y, 0.35))
             return
         }
 
@@ -484,11 +732,12 @@ function Game(props) {
             }
         }
         if (p_i !== -1) {
+            //g.addChild(DrawSprite(ColorVillagesSprites[p_i], x, y, 0.35))
             g.addChild(Draw(PlayersColors[p_i], 'Rect', x - 15, y - 15, 30, 30))
         }
     }
 
-    function DrawRoads_Default(g, players, id, x, y) {
+    function DrawRoads_Default(g, players, orientation, id, x, y) {
         let p_i = -1
         // If any player has the road
         for (let p = 0; p < players.length; p++) {
@@ -498,7 +747,7 @@ function Game(props) {
             }
         }
         if (p_i !== -1) {
-            g.addChild(Draw(PlayersColors[p_i], 'RoundedRect', x, y, 17, 17, 5))
+            g.addChild(DrawSprite(ColorRoadsDirections[p_i][orientation], x, y, 0.45))
         }
     }
 
@@ -1044,16 +1293,14 @@ function Game(props) {
                 DrawBiomes_Default(g, game.board.biomes, BiomesOrder[i], ...BiomesPos[i])
             }
 
-            // Drawing the nodes
-            for (let i = 0; i < 12; i++) {
-                for (let j = borders[i][0]; j <= borders[i][1]; j+=2) {
-                    DrawNodes_Default(g, players, `${i},${j}`, 320 + (j*(cell_hor_offset-4)/2), 76 + (24 * (i%2)) + (Math.floor(i/2) * cell_ver_offset - 30))
-                }
+            // Drawing the road nodes:
+            for (let road_info of RoadsInfo_2) {
+                DrawRoads_Default(g, players, ...road_info)
             }
 
-            // Drawing the road nodes:
-            for (let road_info of RoadsInfo) {
-                DrawRoads_Default(g, players, ...road_info)
+            // Drawing the nodes
+            for (let i = 0; i < NodesId.length; i++) {
+                DrawNodes_Default(g, players, NodesId[i], ...NodesPos[i])
             }
 
             BUTTON = DrawSprite(Monopoly, 230, 100, 0.45)
@@ -1251,16 +1498,14 @@ function Game(props) {
                 DrawBiomes_Default(g, game.board.biomes, BiomesOrder[i], ...BiomesPos[i])
             }
 
-            // Drawing the nodes
-            for (let i = 0; i < 12; i++) {
-                for (let j = borders[i][0]; j <= borders[i][1]; j+=2) {
-                    DrawNodes_Default(g, players, `${i},${j}`, 320 + (j*(cell_hor_offset-4)/2), 76 + (24 * (i%2)) + (Math.floor(i/2) * cell_ver_offset - 30))
-                }
+            // Drawing the road nodes:
+            for (let road_info of RoadsInfo_2) {
+                DrawRoads_Default(g, players, ...road_info)
             }
 
-            // Drawing the road nodes:
-            for (let road_info of RoadsInfo) {
-                DrawRoads_Default(g, players, ...road_info)
+            // Drawing the nodes
+            for (let i = 0; i < NodesId.length; i++) {
+                DrawNodes_Default(g, players, NodesId[i], ...NodesPos[i])
             }
 
             g.addChild(Draw(UIColor, 'RoundedRect', appWidth/2 - 360, appHeight/2 - 260, 720, 300, 10))
@@ -1395,16 +1640,14 @@ function Game(props) {
             DrawBiomes_Default(g, game.board.biomes, BiomesOrder[i], ...BiomesPos[i])
         }
 
-        // Drawing the building nodes
-        for (let i = 0; i < 12; i++) {
-            for (let j = borders[i][0]; j <= borders[i][1]; j+=2) {
-                DrawNodes_Default(g, players, `${i},${j}`, 320 + (j*(cell_hor_offset-4)/2), 76 + (24 * (i%2)) + (Math.floor(i/2) * cell_ver_offset - 30))
-            }
-        }
-
         // Drawing the road nodes
-        for (let road_info of RoadsInfo) {
+        for (let road_info of RoadsInfo_2) {
             DrawRoads_Default(g, players, ...road_info)
+        }
+        
+        // Drawing the building nodes
+        for (let i = 0; i < NodesId.length; i++) {
+            DrawNodes_Default(g, players, NodesId[i], ...NodesPos[i])
         }
 
         // Drawing the robber
@@ -1556,6 +1799,15 @@ function Game(props) {
                 g.addChild(DrawSpritePro(PointsD[4-i], appWidth-25-(71*(i+1)), 565, 60, 86))
             }
         }
+
+        //for (let road_info of RoadsInfo_2) {
+        //    g.addChild(DrawSprite(RoadsDirections[road_info[0]], road_info[2], road_info[3], 0.45))
+        //}
+
+        //for (let node_pos of NodesPos) {
+        //    g.addChild(DrawSprite(VillageSprite, ...node_pos, 0.35))
+        //}
+
 
     }, [buildMode, buildRoads, knightMode, monopolyMode, yearOfPlentyMode, gameChanged, hasToBuild, selectedPoint ])
 
