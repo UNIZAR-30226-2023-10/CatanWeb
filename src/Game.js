@@ -5,6 +5,8 @@ import * as PIXI from 'pixi.js'
 import { SocketContext } from './App'
 
 import Background from './images/game-bg2.png'
+import Victory from './images/victory.png'
+import Defeat from './images/defeat.png'
 
 // Board
 import Dice0 from './images/Dice00.png'
@@ -16,14 +18,28 @@ import Dice5 from './images/Dice05.png'
 import Dice6 from './images/Dice06.png'
 
 import VillageSprite from './images/pieces/Village.png'
+import VillageSSprite from './images/pieces/VillageSelected.png'
 import RedVillageSprite from './images/pieces/RedVillage.png'
+import RedVillageUSprite from './images/pieces/RedVillageUpgradable.png'
 import GreenVillageSprite from './images/pieces/GreenVillage.png'
+import GreenVillageUSprite from './images/pieces/GreenVillageUpgradable.png'
 import BlueVillageSprite from './images/pieces/BlueVillage.png'
+import BlueVillageUSprite from './images/pieces/BlueVillageUpgradable.png'
 import YellowVillageSprite from './images/pieces/YellowVillage.png'
+import YellowVillageUSprite from './images/pieces/YellowVillageUpgradable.png'
+
+import CitySprite from './images/pieces/City.png'
+import RedCitySprite from './images/pieces/RedCity.png'
+import GreenCitySprite from './images/pieces/GreenCity.png'
+import BlueCitySprite from './images/pieces/BlueCity.png'
+import YellowCitySprite from './images/pieces/YellowCity.png'
 
 import VerRoad from './images/pieces/VerRoad.png'
+import VerRoadS from './images/pieces/VerRoadSelected.png'
 import RightDiagRoad from './images/pieces/RightDiagRoad.png'
+import RightDiagRoadS from './images/pieces/RightDiagRoadSelected.png'
 import LeftDiagRoad from './images/pieces/LeftDiagRoad.png'
+import LeftDiagRoadS from './images/pieces/LeftDiagRoadSelected.png'
 
 import RedVerRoad from './images/pieces/RedVerRoad.png'
 import RedRightDiagRoad from './images/pieces/RedRightDiagRoad.png'
@@ -57,6 +73,7 @@ import BlueRoad from './images/pieces/blue_road.png'
 import YellowRoad from './images/pieces/yellow_road.png'
 
 import { Stage, Graphics } from '@pixi/react'
+import Ocean from './images/Ocean.png'
 import Desert   from './images/desert.png'
 import Farmland from './images/field.png'
 import Forest   from './images/forest.png'
@@ -67,6 +84,13 @@ import Pasture  from './images/pasture.png'
 import CardBackground from './images/card_background.png'
 
 import TheRobber from './images/the_robber.png'
+
+import Frame_1 from './images/frame-1.png'
+import Frame_2 from './images/frame-2.png'
+import Frame_3 from './images/frame-3.png'
+import Frame_4 from './images/frame-4.png'
+import Frame_5 from './images/frame-5.png'
+import Frame_6 from './images/frame-6.png'
 
 // Tokens
 import A from './images/tokens/A5.png'
@@ -134,16 +158,21 @@ import ButtonDicesD from './images/button_dices_d.png'
 import ButtonNextTurn from './images/button_next-turn.png'
 import ButtonNextTurnD from './images/button_next-turn_d.png'
 import ButtonQuitResource from './images/button_quit_resource.png'
+import ButtonTrade from './images/button_trade.png'
+import ButtonTradeD from './images/button_trade_d.png'
 
 const MoveType = require( './services/movesTypes.js')
 
 const ColorVillages = [RedVillage, GreenVillage, BlueVillage, YellowVillage]
 const ColorVillagesSprites = [ RedVillageSprite, GreenVillageSprite, BlueVillageSprite, YellowVillageSprite ]
+const ColorVillagesUSprites = [ RedVillageUSprite, GreenVillageUSprite, BlueVillageUSprite, YellowVillageUSprite]
 
 const ColorCities   = [RedCity, GreenCity, BlueCity, YellowCity]
+const ColorCitiesSprites   = [ RedCitySprite, GreenCitySprite, BlueCitySprite, YellowCitySprite]
 
 const ColorRoads    = [RedRoad, GreenRoad, BlueRoad, YellowRoad]
-const RoadsDirections = [VerRoad, RightDiagRoad, LeftDiagRoad]
+const RoadsDirections  = [VerRoad, RightDiagRoad, LeftDiagRoad]
+const RoadsDirectionsS = [VerRoadS, RightDiagRoadS, LeftDiagRoadS] 
 const ColorRoadsDirections = [
     [RedVerRoad, RedRightDiagRoad, RedLeftDiagRoad],
     [GreenVerRoad, GreenRightDiagRoad, GreenLeftDiagRoad],
@@ -199,7 +228,7 @@ const borders = [[3,7],[2,8],[2,8],[1,9],[1,9],[0,10],[0,10],[1,9],[1,9],[2,8],[
 
 const UIColor = 0x420001
 const PlayersColors  = [0xd60000, 0x06b300, 0x005bb5, 0xd4b700]
-const PlayersColorsD = [0x6e2323, 0x2f662d, 0x2e4a66, 0x706939]
+const PlayersColorsD = [0x330b0b, 0x1a3019, 0x1c2936, 0x332e03]
 
 // TODO:
 // Puntuacion
@@ -225,6 +254,18 @@ function ncoor_toString(coords) {
     return coords.x.toString() + "," + coords.y.toString()
 }
 */
+
+function parseBool(string) {
+    return (string === 'true') ? true : false
+}
+
+function parseBoolArr(arr) {
+    let bool_arr = []
+    for (let i of arr.split(',')) {
+        bool_arr.push((i === 'true') ? true : false)
+    }
+    return bool_arr
+}
 
 function Draw(color, type, ...params) {
     let new_graphic = new PIXI.Graphics()
@@ -420,91 +461,6 @@ const NodesPos = [
 ]
 
 const RoadsInfo = [
-    ['0,3:1,2', 447, 46],
-    ['0,3:1,4', 507, 46],
-    ['0,5:1,4', 563, 46],
-    ['0,5:1,6', 619, 46],
-    ['0,7:1,6', 672, 46],
-    ['0,7:1,8', 735, 46],
-
-    ['1,2:2,2', 422, 101],
-    ['1,4:2,4', 534, 101],
-    ['1,6:2,6', 648, 101],
-    ['1,8:2,8', 762, 101],
-
-    ['2,2:3,1', 391, 151],
-    ['2,2:3,3', 448, 151],
-    ['2,4:3,3', 504, 151],
-    ['2,4:3,5', 561, 151],
-    ['2,6:3,5', 617, 151],
-    ['2,6:3,7', 675, 151],
-    ['2,8:3,7', 730, 151],
-    ['2,8:3,9', 786, 151],
-
-    ['3,1:4,1', 365, 201],
-    ['3,3:4,3', 479, 201],
-    ['3,5:4,5', 591, 201],
-    ['3,7:4,7', 703, 201],
-    ['3,9:4,9', 815, 201],
-
-    ['4,1:5,0', 335, 251],
-    ['4,1:5,2', 391, 251],
-    ['4,3:5,2', 448, 251],
-    ['4,3:5,4', 504, 251],
-    ['4,5:5,4', 561, 251],
-    ['4,5:5,6', 617, 251],
-    ['4,7:5,6', 675, 251],
-    ['4,7:5,8', 735, 251],
-    ['4,9:5,8', 790, 251],
-    ['4,9:5,10', 845, 251],
-
-    ['5,0:6,0', 307, 301],
-    ['5,2:6,2', 421, 301],
-    ['5,4:6,4', 535, 301],
-    ['5,6:6,6', 649, 301],
-    ['5,8:6,8', 763, 301],
-    ['5,10:6,10', 877, 301],
-
-    ['6,0:7,1', 335, 351],
-    ['6,2:7,1', 391, 351],
-    ['6,2:7,3', 448, 351],
-    ['6,4:7,3', 504, 351],
-    ['6,4:7,5', 561, 351],
-    ['6,6:7,5', 617, 351],
-    ['6,6:7,7', 675, 351],
-    ['6,8:7,7', 735, 351],
-    ['6,8:7,9', 790, 351],
-    ['6,10:7,9', 845, 351],
-
-    ['7,1:8,1', 365, 400],
-    ['7,3:8,3', 479, 400],
-    ['7,5:8,5', 591, 400],
-    ['7,7:8,7', 703, 400],
-    ['7,9:8,9', 815, 400],
-
-    ['8,1:9,2', 391, 450],
-    ['8,3:9,2', 448, 450],
-    ['8,3:9,4', 504, 450],
-    ['8,5:9,4', 561, 450],
-    ['8,5:9,6', 617, 450],
-    ['8,7:9,6', 675, 450],
-    ['8,7:9,8', 730, 450],
-    ['8,9:9,8', 786, 450],
-
-    ['9,2:10,2', 422, 500],
-    ['9,4:10,4', 534, 500],
-    ['9,6:10,6', 648, 500],
-    ['9,8:10,8', 762, 500],
-
-    ['10,2:11,3', 450, 550],
-    ['10,4:11,3', 505, 550],
-    ['10,4:11,5', 560, 550],
-    ['10,6:11,5', 616, 550],
-    ['10,6:11,7', 672, 550],
-    ['10,8:11,7', 728, 550],
-]
-
-const RoadsInfo_2 = [
     [2,'0,3:1,2', appWidth/2 - 150, 60],
     [1,'0,3:1,4', appWidth/2 - 80, 60],
     [2,'0,5:1,4', appWidth/2 - 35, 60],
@@ -589,25 +545,11 @@ const RoadsInfo_2 = [
     [2,'10,8:11,7', appWidth/2 + 150, 553]
 ]
 
-
-function parseBool(string) {
-    return (string === 'true') ? true : false
-}
-
-function parseBoolArr(arr) {
-    let bool_arr = []
-    for (let i of arr.split(',')) {
-        bool_arr.push((i === 'true') ? true : false)
-    }
-    return bool_arr
-}
-
 // ============================================================================
 // GAME
 // ============================================================================
-function Game(props) {
+function Game({gameChanged, gameExit}) {
 
-    let { gameChanged } = props
     let socket = useContext(SocketContext)
    //const [gameChanged, setGameChanged] = useState(props[0])
    //const [socket, setSocket] = useState(useContext(SocketContext))
@@ -639,14 +581,17 @@ function Game(props) {
     const [monopolyMode, setMonopolyMode]         = useState(parseBool(sessionStorage.getItem('monopoly-mode')))
     // Year of plenty state:
     const [yearOfPlentyMode, setYearOfPlentyMode] = useState(parseBool(sessionStorage.getItem('year-of-plenty-mode')))
+    const [isClicked, setIsClicked] = useState(false);
 
+    const [changeMode, setChangeMode]             = useState(false)
     const [throwDices, setThrowDices]             = useState(parseBool(sessionStorage.getItem('throw-dices')))
     const [selectedPoint, setSelectedPoint]       = useState(null);
     const [hasToBuild, setHasToBuild]             = useState(parseBoolArr(sessionStorage.getItem('has-to-build')))
 
-    console.log(hasToBuild)
-
-    function create_node_init(g, players, free_nodes_set, id, x, y) {
+    // ========================================================================
+    // INITIAL PHASE
+    // ========================================================================
+    function DrawNodes_Init(g, players, free_nodes_set, id, x, y) {
         let p_i = -1
         for (let p = 0; p < players.length; p++) {
             if ((new Set(players[p].villages)).has(id)) {
@@ -657,7 +602,9 @@ function Game(props) {
         if (p_i === -1) {
             if (free_nodes_set.size > 0) {
                 if (hasToBuild[0] && free_nodes_set.has(id) && JSON.parse(sessionStorage.getItem('game')).current_turn === parseInt(sessionStorage.getItem('my-turn'))) {
-                    let node = Draw(selectedPoint && selectedPoint.id === id ? 0xffff00 : 0xffffff, 'Circle', x, y, 15)
+                    //let node = Draw(selectedPoint && selectedPoint.id === id ? 0xffff00 : 0xffffff, 'Circle', x, y, 15)
+                    let node = DrawSprite(selectedPoint && selectedPoint.id === id ? VillageSSprite : VillageSprite, x, y, 0.35)
+                    
                     node.interactive = true 
                     node.on("pointerdown", () => {
                         setSelectedPoint({id:id, type:'Node'})
@@ -667,11 +614,12 @@ function Game(props) {
             }
 
         } else {
-            g.addChild(Draw(PlayersColors[p_i], 'Circle', x, y, 15))
+            g.addChild(DrawSprite(ColorVillagesSprites[p_i], x, y, 0.35))
+            //g.addChild(Draw(PlayersColors[p_i], 'Circle', x, y, 15))
         }
     }
 
-    function create_road_init(g, players, free_roads_set, id, x, y) {
+    function DrawRoads_Init(g, players, free_roads_set, orientation, id, x, y) {
         let p_i = -1
         for (let p = 0; p < players.length; p++) {
             if ((new Set(players[p].roads)).has(id)) {
@@ -681,10 +629,7 @@ function Game(props) {
         if (p_i === -1) {
             if (free_roads_set.size > 0) {
                 if (hasToBuild[1] && free_roads_set.has(id) && JSON.parse(sessionStorage.getItem('game')).current_turn === parseInt(sessionStorage.getItem('my-turn'))) {
-                    let road = new PIXI.Graphics()
-                    road.beginFill(selectedPoint && selectedPoint.id === id ? 0x0b04cf : 0x6f5c9c)
-                    road.drawRoundedRect(x, y, 17, 17, 5)
-                    road.endFill()
+                    let road = DrawSprite((selectedPoint && selectedPoint.id === id) ? RoadsDirectionsS[orientation] : RoadsDirections[orientation], x, y, 0.45)
                     road.interactive = true
                     road.on("pointertap", () => {setSelectedPoint({id:id, type:'Road'})})
                     g.addChild(road)
@@ -692,7 +637,7 @@ function Game(props) {
             }
 
         } else {
-            g.addChild(Draw(PlayersColors[p_i], 'RoundedRect', x, y, 17, 17, 5))
+            g.addChild(DrawSprite(ColorRoadsDirections[p_i][orientation], x, y, 0.45))
         }
     }
 
@@ -718,7 +663,6 @@ function Game(props) {
             }
         }
         if (p_i !== -1) {
-            //g.addChild(Draw(PlayersColors[p_i], 'Circle', x, y, 15))
             g.addChild(DrawSprite(ColorVillagesSprites[p_i], x, y, 0.35))
             return
         }
@@ -732,8 +676,7 @@ function Game(props) {
             }
         }
         if (p_i !== -1) {
-            //g.addChild(DrawSprite(ColorVillagesSprites[p_i], x, y, 0.35))
-            g.addChild(Draw(PlayersColors[p_i], 'Rect', x - 15, y - 15, 30, 30))
+            g.addChild(DrawSprite(ColorCitiesSprites[p_i], x, y, 0.35))
         }
     }
 
@@ -775,14 +718,14 @@ function Game(props) {
         }
         if (p_i !== -1) {
             if (p_i === parseInt(sessionStorage.getItem('my-turn')) && me.can_build[1]) {
-                let node = Draw(selectedPoint && selectedPoint.id === id ? 0xffff00 : PlayersColors[p_i], 'Circle', x, y, 15)
+                let node = DrawSprite((selectedPoint && selectedPoint.id === id) ? VillageSSprite : ColorVillagesUSprites[p_i], x, y, 0.35) 
                 node.interactive = true
                 node.on('pointerdown', () => {
                     setSelectedPoint({id:id, type:'Village'})
                 })
                 g.addChild(node)
             } else {
-                g.addChild(Draw(PlayersColors[p_i], 'Circle', x, y, 15))
+                g.addChild(DrawSprite(ColorVillagesSprites[p_i], x, y, 0.35))
             }
             return
         }
@@ -796,13 +739,13 @@ function Game(props) {
             }
         }
         if (p_i !== -1) {
-            g.addChild(Draw(PlayersColors[p_i], 'Rect', x - 15, y - 15, 30, 30))
+            g.addChild(DrawSprite(ColorCitiesSprites[p_i], x, y, 0.35))
             return
         }
 
         // If any player have not the node, then is a free node
         if (free_nodes_set.has(id) && me.can_build[0]) {
-            let node = Draw(selectedPoint && selectedPoint.id === id ? 0xffff00 : 0xffffff, 'Circle', x, y, 15)
+            let node = DrawSprite((selectedPoint && selectedPoint === id) ? VillageSSprite : VillageSprite, x, y, 0.35) 
             node.interactive = true 
             node.on("pointerdown", () => {
                 setSelectedPoint({id:id, type:'Node'})
@@ -811,7 +754,7 @@ function Game(props) {
         }
     }
 
-    function DrawRoads_Build(g, me, players, free_roads_set, id, x, y) {
+    function DrawRoads_Build(g, me, players, free_roads_set, orientation, id, x, y) {
 
         let p_i = -1
         // If any player has the road
@@ -822,12 +765,13 @@ function Game(props) {
             }
         }
         if (p_i !== -1) {
-            g.addChild(Draw(PlayersColors[p_i], 'RoundedRect', x, y, 17, 17, 5))
+            g.addChild(DrawSprite(ColorRoadsDirections[p_i][orientation], x, y, 0.45))
+            return
         }
 
         if (free_roads_set.size > 0 && me.can_build[2]) {
             if ((buildMode || buildRoads)  && !knightMode && free_roads_set.has(id)) {
-                let road = Draw(selectedPoint && selectedPoint.id === id ? 0x0b04cf : 0x6f5c9c, 'RoundedRect', x, y, 17, 17, 5)
+                let road = DrawSprite((selectedPoint && selectedPoint.id === id) ? RoadsDirectionsS[orientation] : RoadsDirections[orientation], x, y, 0.45)
                 road.interactive = true
                 road.on("pointertap", () => {setSelectedPoint({id:id, type:'Road'})})
                 g.addChild(road)
@@ -871,7 +815,7 @@ function Game(props) {
             }
         }
         if (p_i !== -1) {
-            g.addChild(Draw(PlayersColors[p_i], 'Circle', x, y, 15))
+            g.addChild(DrawSprite(ColorVillagesSprites[p_i], x, y, 0.35))
             return
         }
 
@@ -884,7 +828,7 @@ function Game(props) {
             }
         }
         if (p_i !== -1) {
-            g.addChild(Draw(PlayersColors[p_i], 'Rect', x - 15, y - 15, 30, 30))
+            g.addChild(DrawSprite(ColorCitiesSprites[p_i], x, y, 0.35))
         }
     }
 
@@ -902,7 +846,7 @@ function Game(props) {
             }
         }
         if (p_i !== -1) {
-            g.addChild(Draw(PlayersColors[p_i], 'Circle', x, y, 15))
+            g.addChild(DrawSprite(ColorVillagesSprites[p_i], x, y, 0.35))
             return
         }
 
@@ -915,11 +859,11 @@ function Game(props) {
             }
         }
         if (p_i !== -1) {
-            g.addChild(Draw(PlayersColors[p_i], 'Rect', x - 15, y - 15, 30, 30))
+            g.addChild(DrawSprite(ColorCitiesSprites[p_i], x, y, 0.35))
         }
     }
 
-    function DrawRoads_RoadBuilding(g, players, free_roads_set, id, x, y) {
+    function DrawRoads_RoadBuilding(g, players, free_roads_set, orientation, id, x, y) {
 
         let p_i = -1
         // If any player has the road
@@ -930,12 +874,13 @@ function Game(props) {
             }
         }
         if (p_i !== -1) {
-            g.addChild(Draw(PlayersColors[p_i], 'RoundedRect', x, y, 17, 17, 5))
+            g.addChild(DrawSprite(ColorRoadsDirections[p_i][orientation], x, y, 0.45))
+            return
         }
 
         if (free_roads_set.size > 0) {
             if ((buildMode || buildRoads)  && !knightMode && free_roads_set.has(id)) {
-                let road = Draw(selectedPoint && selectedPoint.id === id ? 0x0b04cf : 0x6f5c9c, 'RoundedRect', x, y, 17, 17, 5)
+                let road = DrawSprite(selectedPoint && selectedPoint.id === id ? RoadsDirectionsS[orientation] : RoadsDirections[orientation], x, y, 0.45)
                 road.interactive = true
                 road.on("pointertap", () => {setSelectedPoint({id:id, type:'Road'})})
                 g.addChild(road)
@@ -945,7 +890,7 @@ function Game(props) {
     }
 
     // ========================================================================
-    // GANE PHASES
+    // GAME PHASES
     // ========================================================================
     function game_phase_init(g, game, players, me) {
 
@@ -961,20 +906,18 @@ function Game(props) {
             DrawBiomes_Default(g, game.board.biomes, BiomesOrder[i], ...BiomesPos[i])
         }
 
-        // Drawing the building nodes:
-        let free_nodes_set = (me.free_nodes.length > 0) ? new Set(me.free_nodes) : new Set()
-        for (let i = 0; i < 12; i++) {
-            for (let j = borders[i][0]; j <= borders[i][1]; j+=2) {
-                create_node_init(g, players, free_nodes_set, `${i},${j}`, 320 + (j*(cell_hor_offset-4)/2), 76 + (24 * (i%2)) + (Math.floor(i/2) * cell_ver_offset - 30))
-            }
-        }
-
         // Drawing the road nodes:
         let free_roads_set = new Set(me.first_roads)
         for (let road_info of RoadsInfo) {
-            create_road_init(g, players, free_roads_set, ...road_info)
+            DrawRoads_Init(g, players, free_roads_set, ...road_info)
         }
-        
+
+        // Drawing the building nodes:
+        let free_nodes_set = new Set(me.free_nodes)
+        for (let i = 0; i < NodesPos.length; i++) {
+            DrawNodes_Init(g, players, free_nodes_set, NodesId[i], ...NodesPos[i])
+        }
+
         if (game.current_turn === parseInt(sessionStorage.getItem('my-turn'))) {
             // Only if player has selected a place to build
             if (hasToBuild[0] || hasToBuild[1]) {
@@ -1038,7 +981,7 @@ function Game(props) {
         // Drawing develop cards box
         if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && me.develop_cards['Carreteras'] > 0 && throwDices) {
             if (!buildRoads) {
-                BUTTON = DrawSprite(RoadBuilding, 120, 240, 0.35)
+                BUTTON = DrawSprite(RoadBuilding, 105, 260, 0.35)
                 if (!buildMode) {
                     BUTTON.interactive = true
                     BUTTON.on('pointerdown', () => {
@@ -1057,12 +1000,12 @@ function Game(props) {
                 g.addChild(BUTTON)
             }
         } else {
-            g.addChild(DrawSprite(RoadBuildingD, 120, 240, 0.35))
+            g.addChild(DrawSprite(RoadBuildingD, 105, 260, 0.35))
         }
 
         if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && me.develop_cards['Caballeros'] > 0) {
             if (!knightMode) {
-                BUTTON = DrawSprite(Knight, 150, 150, 0.35)
+                BUTTON = DrawSprite(Knight, 120, 170, 0.35)
                 if (!buildMode && me.roads_build_4_free === 0) {
                     BUTTON.interactive = true
                     BUTTON.on('pointerdown', () => {
@@ -1081,12 +1024,12 @@ function Game(props) {
                 g.addChild(BUTTON)
             }
         } else {
-            g.addChild(DrawSprite(KnightD, 150, 150, 0.35))
+            g.addChild(DrawSprite(KnightD, 120, 170, 0.35))
         }
 
         if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && me.develop_cards['Monopolios'] > 0 && throwDices) {
             if (!monopolyMode) {
-                BUTTON = DrawSprite(Monopoly, 230, 100, 0.35)
+                BUTTON = DrawSprite(Monopoly, 190, 100, 0.35)
                 if (!buildMode && me.roads_build_4_free === 0) {
                     BUTTON.interactive = true
                     BUTTON.on('pointerdown', () => {
@@ -1105,12 +1048,12 @@ function Game(props) {
                 g.addChild(BUTTON)
             }
         } else {
-            g.addChild(DrawSprite(MonopolyD, 230, 100, 0.35))
+            g.addChild(DrawSprite(MonopolyD, 190, 100, 0.35))
         }
 
         if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && me.develop_cards['Descubrimientos'] > 0 && throwDices) {
             if (!yearOfPlentyMode) {
-                BUTTON = DrawSprite(YearOfPlenty, 290, 130, 0.35)
+                BUTTON = DrawSprite(YearOfPlenty, 265, 120, 0.35)
                 if (!buildMode && me.roads_build_4_free === 0) {
                     BUTTON.interactive = true
                     BUTTON.on('pointerdown', () => {
@@ -1129,7 +1072,7 @@ function Game(props) {
                 g.addChild(BUTTON)
             }
         } else {
-            g.addChild(DrawSprite(YearOfPlentyD, 290, 130, 0.35))
+            g.addChild(DrawSprite(YearOfPlentyD, 265, 120, 0.35))
         }
 
         // Use build mode:
@@ -1140,18 +1083,16 @@ function Game(props) {
                 DrawBiomes_Build(g, game.board.biomes, BiomesOrder[i], ...BiomesPos[i])
             }
 
-            // Drawing the nodes
-            let free_nodes_set = (me.free_nodes.length > 0) ? new Set(me.free_nodes) : new Set()
-            for (let i = 0; i < 12; i++) {
-                for (let j = borders[i][0]; j <= borders[i][1]; j+=2) {
-                    DrawNodes_Build(g, me, players, free_nodes_set, `${i},${j}`, 320 + (j*(cell_hor_offset-4)/2), 76 + (24 * (i%2)) + (Math.floor(i/2) * cell_ver_offset - 30))
-                }
-            }
-
             // Drawing the road nodes:
             let free_roads_set = (me.free_roads.length > 0) ? new Set(me.free_roads) : new Set()
             for (let road_info of RoadsInfo) {
                 DrawRoads_Build(g, me, players, free_roads_set, ...road_info)
+            }
+
+            // Drawing the nodes
+            let free_nodes_set = (me.free_nodes.length > 0) ? new Set(me.free_nodes) : new Set()
+            for (let i = 0; i < NodesId.length; i++) {
+                DrawNodes_Build(g, me, players, free_nodes_set, NodesId[i], ...NodesPos[i])
             }
         
             // Build button cancel
@@ -1203,7 +1144,7 @@ function Game(props) {
         // Use knight mode:
         if (me.force_knight || knightMode) {
 
-            BUTTON =  DrawSprite(Knight, 150, 150, 0.45)
+            BUTTON = DrawSprite(Knight, 150, 150, 0.45)
             BUTTON.interactive = true
             BUTTON.on('pointerdown', () => {
                 setKnightMode(false)
@@ -1219,10 +1160,8 @@ function Game(props) {
                 }
 
                 // Drawing the nodes
-                for (let i = 0; i < 12; i++) {
-                    for (let j = borders[i][0]; j <= borders[i][1]; j+=2) {
-                        DrawNodes_Knight(g, players, `${i},${j}`, 320 + (j*(cell_hor_offset-4)/2), 76 + (24 * (i%2)) + (Math.floor(i/2) * cell_ver_offset - 30))
-                    }
+                for (let i = 0; i < NodesId.length; i++) {
+                    DrawNodes_Knight(g, players, NodesId[i], ...NodesPos[i])
                 }
 
                 // Drawing the robber
@@ -1244,10 +1183,8 @@ function Game(props) {
                 }
 
                 // Drawing the nodes
-                for (let i = 0; i < 12; i++) {
-                    for (let j = borders[i][0]; j <= borders[i][1]; j+=2) {
-                        DrawNodes_Knight(g, players, `${i},${j}`, 320 + (j*(cell_hor_offset-4)/2), 76 + (24 * (i%2)) + (Math.floor(i/2) * cell_ver_offset - 30))
-                    }
+                for (let i = 0; i < NodesId.length; i++) {
+                    DrawNodes_Knight(g, players, NodesId[i], ...NodesPos[i])
                 }
 
                 // Drawing the robber
@@ -1284,6 +1221,166 @@ function Game(props) {
 
             return
         }
+        // Use cahnge resource mode:
+        console.log(me.can_change)
+        if (changeMode) {
+
+            // Drawing the biomes
+            for (let i = 0; i < 19; i++) {
+                DrawBiomes_Default(g, game.board.biomes, BiomesOrder[i], ...BiomesPos[i])
+            }
+
+            // Drawing the road nodes:
+            for (let road_info of RoadsInfo) {
+                DrawRoads_Default(g, players, ...road_info)
+            }
+
+            // Drawing the nodes
+            for (let i = 0; i < NodesId.length; i++) {
+                DrawNodes_Default(g, players, NodesId[i], ...NodesPos[i])
+            }
+
+
+            g.addChild(Draw(UIColor, 'RoundedRect', appWidth/2 - 360, appHeight/2 - 260, 720, 300, 10))
+            BUTTON = DrawSprite(Wheat, 335, 215, 0.4)
+            BUTTON.interactive = true
+            BUTTON.on('pointerdown', () => {
+                if (!selectedPoint) {
+                    setSelectedPoint(['Trigo'])
+                } else if (selectedPoint.length < 2) {
+                    setSelectedPoint(prevState => {
+                        let nextState = [...prevState]
+                        nextState.push('Trigo')
+                        return nextState
+                    })
+                }
+            })
+            if(!me.can_change[0] && !selectedPoint){
+                g.addChild(DrawSprite(WheatD, 335, 215, 0.4))
+            }else{
+                g.addChild(BUTTON)
+            }
+            
+            BUTTON = DrawSprite(Lumber, 468, 215, 0.4)
+            BUTTON.interactive = true
+            BUTTON.on('pointerdown', () => {
+                if (!selectedPoint) {
+                    setSelectedPoint(['Madera'])
+                } else if (selectedPoint.length < 2) {
+                    setSelectedPoint(prevState => {
+                        let nextState = [...prevState]
+                        nextState.push('Madera')
+                        return nextState
+                    })
+                }
+            })
+            if(!me.can_change[1] && !selectedPoint){
+                g.addChild(DrawSprite(LumberD, 468, 215, 0.4))
+            }else{
+                g.addChild(BUTTON)
+            }
+
+            BUTTON = DrawSprite(Brick, 602, 215, 0.4)
+            BUTTON.interactive = true
+            BUTTON.on('pointerdown', () => {
+                if (!selectedPoint) {
+                    setSelectedPoint(['Ladrillo'])
+                } else if (selectedPoint.length < 2) {
+                    setSelectedPoint(prevState => {
+                        let nextState = [...prevState]
+                        nextState.push('Ladrillo')
+                        return nextState
+                    })
+                }
+            })
+            if(!me.can_change[2] && !selectedPoint){
+                g.addChild(DrawSprite(BrickD, 602, 215, 0.4))
+            }else{
+                g.addChild(BUTTON)
+            }
+
+            BUTTON = DrawSprite(Stone, 735, 215, 0.4)
+            BUTTON.interactive = true
+            BUTTON.on('pointerdown', () => {
+                if (!selectedPoint) {
+                    setSelectedPoint(['Piedra'])
+                } else if (selectedPoint.length < 2) {
+                    setSelectedPoint(prevState => {
+                        let nextState = [...prevState]
+                        nextState.push('Piedra')
+                        return nextState
+                    })
+                }
+            })
+            if(!me.can_change[3] && !selectedPoint){
+                g.addChild(DrawSprite(StoneD, 735, 215, 0.4))
+            }else{
+                g.addChild(BUTTON)
+            }
+
+            BUTTON = DrawSprite(Wool, 867, 215, 0.4)
+            BUTTON.interactive = true
+            BUTTON.on('pointerdown', () => {
+                if (!selectedPoint) {
+                    setSelectedPoint(['Lana'])
+                } else if (selectedPoint.length < 2) {
+                    setSelectedPoint(prevState => {
+                        let nextState = [...prevState]
+                        nextState.push('Lana')
+                        return nextState
+                    })
+                }
+            })
+            if(!me.can_change[4] && !selectedPoint){
+                g.addChild(DrawSprite(WoolD, 867, 215, 0.4))
+            }else{
+                g.addChild(BUTTON)
+            }
+
+            if (selectedPoint) {
+
+                g.addChild(Draw(UIColor, 'RoundedRect', 240, appHeight/2 - 10, 720, 230, 10))
+
+                
+                for (let i = 0; i < 4; i++) {
+                    g.addChild(DrawSprite(ResourcesSprite[selectedPoint[0]], appWidth/5 + 150 + 20*i, appHeight/2 + 100, 0.42))
+                }
+                if (selectedPoint.length > 1){
+
+                    g.addChild(DrawSprite(ResourcesSprite[selectedPoint[1]], 730, appHeight/2 + 100 , 0.42))
+                }
+
+                // Quitar recurso:
+                BUTTON = DrawSprite(ButtonQuitResource, appWidth/2 +273, appHeight/2 + 65, 0.1)
+                BUTTON.interactive = true
+                BUTTON.on('pointerdown', () => {
+                    if (selectedPoint.length === 1) {
+                        setSelectedPoint(null)
+                    } else if (selectedPoint.length === 2) {
+                        setSelectedPoint(prevState => {
+                            let nextState = [...prevState]
+                            nextState.pop()
+                            return nextState
+                        })
+                    }
+                })
+                g.addChild(BUTTON);
+
+                if (selectedPoint.length === 2) {
+                    // Confirm building selection
+                    BUTTON = DrawSprite(ButtonConfirm, appWidth/2 + 273, appHeight/2 + 165, 0.1)
+                    BUTTON.interactive = true
+                    BUTTON.on('pointerdown', () => {
+                        console.log("ELIGO ", selectedPoint)
+                        socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id: MoveType.change_resource, resource: selectedPoint})
+                        setChangeMode(false)
+                        setSelectedPoint(null)
+                    })
+                    g.addChild(BUTTON);
+                }
+            }
+            return
+        }
 
         // Use monopoly mode:
         if (monopolyMode) {
@@ -1294,7 +1391,7 @@ function Game(props) {
             }
 
             // Drawing the road nodes:
-            for (let road_info of RoadsInfo_2) {
+            for (let road_info of RoadsInfo) {
                 DrawRoads_Default(g, players, ...road_info)
             }
 
@@ -1312,8 +1409,7 @@ function Game(props) {
             })
             g.addChild(BUTTON)
 
-            g.addChild(Draw(UIColor, 'RoundedRect', appWidth/2 - 360, appHeight/2 - 260, 720, 300, 5))
-
+            g.addChild(DrawSpritePro(Frame_4, appWidth/2 - 360, appHeight/2 - 260, 720, 280))
             // Wheat option
             if (selectedPoint && selectedPoint === 'Trigo') {
                 BUTTON = DrawSprite(Wheat, 335, 215, 0.4)
@@ -1396,7 +1492,7 @@ function Game(props) {
 
             if (selectedPoint) {
                 // Cancel building selection
-                BUTTON = DrawSprite(ButtonCancel, appWidth/2 - 60, appHeight/2 + 35, 0.1)
+                BUTTON = DrawSprite(ButtonCancel, appWidth/2 - 60, appHeight/2 + 15, 0.1)
                 BUTTON.interactive = true;
                 BUTTON.buttonMode = true;
                 BUTTON.on('pointerdown', () => {
@@ -1405,7 +1501,7 @@ function Game(props) {
                 g.addChild(BUTTON);
 
                 // Confirm building selection
-                BUTTON = DrawSprite(ButtonConfirm, appWidth/2 + 60, appHeight/2 + 35, 0.1)
+                BUTTON = DrawSprite(ButtonConfirm, appWidth/2 + 60, appHeight/2 + 15, 0.1)
                 BUTTON.interactive = true;
                 BUTTON.buttonMode = true;
                 BUTTON.on('pointerdown', () => {
@@ -1428,17 +1524,15 @@ function Game(props) {
                 DrawBiomes_Default(g, game.board.biomes, BiomesOrder[i], ...BiomesPos[i])
             }
 
-            // Drawing the nodes
-            for (let i = 0; i < 12; i++) {
-                for (let j = borders[i][0]; j <= borders[i][1]; j+=2) {
-                    DrawNodes_RoadBuilding(g, players, `${i},${j}`, 320 + (j*(cell_hor_offset-4)/2), 76 + (24 * (i%2)) + (Math.floor(i/2) * cell_ver_offset - 30))
-                }
-            }
-
             // Drawing the road nodes:
             let free_roads_set = (me.free_roads.length > 0) ? new Set(me.free_roads) : new Set()
             for (let road_info of RoadsInfo) {
                 DrawRoads_RoadBuilding(g, players, free_roads_set, ...road_info)
+            } 
+
+            // Drawing the nodes
+            for (let i = 0; i < NodesId.length; i++) {
+                DrawNodes_RoadBuilding(g, players, NodesId[i], ...NodesPos[i])
             }
 
             BUTTON = DrawSprite(RoadBuilding, 120, 240, 0.45)
@@ -1499,7 +1593,7 @@ function Game(props) {
             }
 
             // Drawing the road nodes:
-            for (let road_info of RoadsInfo_2) {
+            for (let road_info of RoadsInfo) {
                 DrawRoads_Default(g, players, ...road_info)
             }
 
@@ -1508,7 +1602,7 @@ function Game(props) {
                 DrawNodes_Default(g, players, NodesId[i], ...NodesPos[i])
             }
 
-            g.addChild(Draw(UIColor, 'RoundedRect', appWidth/2 - 360, appHeight/2 - 260, 720, 300, 10))
+            g.addChild(DrawSpritePro(Frame_4, appWidth/2 - 360, appHeight/2 - 260, 720, 280))
             BUTTON = DrawSprite(Wheat, 335, 215, 0.4)
             BUTTON.interactive = true
             BUTTON.on('pointerdown', () => {
@@ -1586,7 +1680,7 @@ function Game(props) {
 
             if (selectedPoint) {
 
-                g.addChild(Draw(UIColor, 'RoundedRect', appWidth/2, appHeight/2 - 10, 400, 250, 10))
+                g.addChild(DrawSpritePro(Frame_5, appWidth/2, appHeight/2-12, 400, 250))
 
                 for (let i = 0; i < selectedPoint.length; i++) {
                     g.addChild(DrawSprite(ResourcesSprite[selectedPoint[i]], appWidth/2 + 110 + 70*i, appHeight/2 + 105 + 15*i, 0.42))
@@ -1626,14 +1720,14 @@ function Game(props) {
         }
 
         // Drawing cards quantity indicators
-        g.addChild(Draw(0xe8a85a, 'Circle', 35, 165, 15))
-        g.addChild(DrawText(me.develop_cards['Carreteras'], 'EBGaramond', 20, 'black', 'center', {x:35, y:165}, 0.5))
-        g.addChild(Draw(0xe8a85a, 'Circle', 95, 55, 15))
-        g.addChild(DrawText(me.develop_cards['Caballeros'], 'EBGaramond', 20, 'black', 'center', {x:95, y:55}, 0.5))
-        g.addChild(Draw(0xe8a85a, 'Circle', 297, 22, 15))
-        g.addChild(DrawText(me.develop_cards['Monopolios'], 'EBGaramond', 20, 'black', 'center', {x:297, y:22}, 0.5))
-        g.addChild(Draw(0xe8a85a, 'Circle', 375, 90, 15))
-        g.addChild(DrawText(me.develop_cards['Descubrimientos'], 'EBGaramond', 20, 'black', 'center', {x:375, y:90}, 0.5))
+        g.addChild(Draw(0xe8a85a, 'Circle', 26, 190, 15))
+        g.addChild(DrawText(me.develop_cards['Carreteras'], 'EBGaramond', 20, 'black', 'center', {x:26, y:190}, 0.5))
+        g.addChild(Draw(0xe8a85a, 'Circle', 70, 80, 15))
+        g.addChild(DrawText(me.develop_cards['Caballeros'], 'EBGaramond', 20, 'black', 'center', {x:70, y:80}, 0.5))
+        g.addChild(Draw(0xe8a85a, 'Circle', 110, 22, 15))
+        g.addChild(DrawText(me.develop_cards['Monopolios'], 'EBGaramond', 20, 'black', 'center', {x:110, y:22}, 0.5))
+        g.addChild(Draw(0xe8a85a, 'Circle', 280, 20, 15))
+        g.addChild(DrawText(me.develop_cards['Descubrimientos'], 'EBGaramond', 20, 'black', 'center', {x:280, y:20}, 0.5))
 
         // Drawing the biomes
         for (let i = 0; i < 19; i++) {
@@ -1641,7 +1735,7 @@ function Game(props) {
         }
 
         // Drawing the road nodes
-        for (let road_info of RoadsInfo_2) {
+        for (let road_info of RoadsInfo) {
             DrawRoads_Default(g, players, ...road_info)
         }
         
@@ -1670,6 +1764,21 @@ function Game(props) {
             })
         } else {
             BUTTON = DrawSprite(ButtonBuildD, 920, 475, 0.1)
+        }
+        g.addChild(BUTTON)
+
+        // Drawing the buttons
+        BUTTON = null
+        // Change button
+        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name  && throwDices && (me.can_change[0] || me.can_change[1] || me.can_change[2] || me.can_change[3] || me.can_change[4])) {
+            BUTTON = DrawSprite(ButtonBuild, 420, 610, 0.1)
+            BUTTON.interactive = true;
+            BUTTON.buttonMode = true;
+            BUTTON.on('pointerdown', () => {
+                setChangeMode(true)
+            })
+        } else {
+            BUTTON = DrawSprite(ButtonBuildD, 420, 610, 0.1)
         }
         g.addChild(BUTTON)
 
@@ -1717,6 +1826,17 @@ function Game(props) {
             BUTTON = DrawSprite(ButtonDicesD, 1015, 115, 0.1)
         }
         g.addChild(BUTTON);
+
+        // Trade button
+        //g.addChild(DrawSprite(ButtonTradeD, appWidth-80, 70, 0.1))
+    }
+
+    function game_phase_final(g, game, me) {
+        if(game.winner === me.name){
+            g.addChild(DrawSpritePro(Victory, 0, 0, appWidth, appHeight))
+        }else{
+            g.addChild(DrawSpritePro(Defeat, 0, 0, appWidth, appHeight))
+        }
     }
 
     const draw_game = useCallback((g) => {
@@ -1731,90 +1851,102 @@ function Game(props) {
             g.removeChild(g.children[i])
         }
         g.addChild(Draw(0x000000, 'Rect', 0, 0, appWidth, appHeight))
-        g.addChild(DrawSpritePro(Background, 0, 0, appWidth, appHeight))
 
-        // Drawing the develop cards deck
-        for (let i = 0; i < game.develop_cards.length; i++) {
-            g.addChild(DrawSprite(CardBackground, appWidth-140, appHeight/2-10 - 2*i, 0.2))
-        }
-        g.addChild(Draw(0xe8a85a, 'Circle', appWidth-40, 430, 15))
-        g.addChild(DrawText(game.develop_cards.length, 'EBGaramond', 22, 'black', 'center', {x:appWidth-40, y:430}, 0.5))
-
-
-        g.addChild(DrawSprite(ColorVillages[parseInt(sessionStorage.getItem('my-turn'))], 965, 500, 0.3))
-        g.addChild(Draw(0xe8a85a, 'Circle', 1000, 525, 15))
-        g.addChild(DrawText(me.buildings['Villages'], 'EBGaramond', 22, 'black', 'center', {x:1000,y:525}, 0.5))
-        
-        g.addChild(DrawSprite(ColorCities[parseInt(sessionStorage.getItem('my-turn'))], 890, 500, 0.3))
-        g.addChild(Draw(0xe8a85a, 'Circle', 840, 530, 15))
-        g.addChild(DrawText(me.buildings['Cities'], 'EBGaramond', 22, 'black', 'center', {x:840,y:530}, 0.5))
-        
-        g.addChild(DrawSprite(ColorRoads[parseInt(sessionStorage.getItem('my-turn'))], 920 , 445, 0.3))
-        g.addChild(Draw(0xe8a85a, 'Circle', 890, 400, 15))
-        g.addChild(DrawText(me.buildings['Roads'], 'EBGaramond', 22, 'black', 'center', {x:890,y:400}, 0.5))
-        
-
-        // Drawing the board and the UI
-        if (game.phase < 3) {
-            game_phase_init(g, game, players, me)
-        } else if (game.phase === 3) {
-            game_phase_post(g, game, players, me)
-        } else {
-            console.log("Ha ganado tal player")
-        }
-
-        // Drawing the player list:
-        let boxes = 0
-        for (let p = 0; p < players.length; p++) {
-            if (p !== parseInt(sessionStorage.getItem('my-turn'))) {
-                g.addChild(Draw((p === game.current_turn) ? PlayersColors[p] : PlayersColorsD[p],  'RoundedRect', 32, 500 - 45*(boxes+1), 200, 35, 5))
-                g.addChild(DrawText(game.players[p].name, 'EBGaramond', 15, 'white', 'left', {x:47, y:(514 - 47*(boxes+1))}, 0))
-                g.addChild(DrawText('PTS', 'EBGaramond', 15, 'white', 'left', {x:195, y:(514 - 47*(boxes+1))}, 0))
-                boxes++
+        if (game.phase !== 4) {
+            // Drawing the board and the UI
+            g.addChild(DrawSpritePro(Background, 0, 0, appWidth, appHeight))
+            g.addChild(DrawSprite(Ocean, appWidth/2, appHeight/2-30, 0.43))
+            // Drawing the develop cards deck
+            for (let i = 0; i < game.develop_cards.length; i++) {
+                g.addChild(DrawSprite(CardBackground, appWidth-140, appHeight/2-10 - 2*i, 0.2))
             }
-        }
 
-        // Drawing the player box
-        g.addChild(Draw(UIColor, 'Rect', 0, appHeight-60, appWidth, 60))
-        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name) {
-            g.addChild(Draw(PlayersColors[sessionStorage.getItem('my-turn')], 'RoundedRect', 32, appHeight-170, 300, 35, 5))
-        } else {
-            g.addChild(Draw(PlayersColorsD[sessionStorage.getItem('my-turn')], 'RoundedRect', 32, appHeight-170, 300, 35, 5))
-        }
-        g.addChild(DrawText(me.name, 'EBGaramond', 22, 'white', 'left', {x: 44, y:appHeight-165}, 0))
-        g.addChild(DrawText('PTS', 'EBGaramond', 22, 'white', 'left', {x: 280, y:appHeight-165}, 0))
-        for (let i = 0; i < 5; i++) {
-            g.addChild(Draw(UIColor, 'RoundedRect',  27+(71*i), 562, 66, 94, 6))
-            g.addChild(DrawSpritePro(Resources[i], 30+(71*i), 565, 60, 86))
-            g.addChild(Draw(0xe8a85a, 'Circle', 60+(71*i), 650, 15))
-            g.addChild(DrawText(Object.values(me.resources)[i], 'EBGaramond', 14, 'black', 'center', {x:60+(71*i), y:650}, 0.5))
-        }
+            g.addChild(Draw(0xe8a85a, 'Circle', appWidth-40, 430, 15))
+            g.addChild(DrawText(game.develop_cards.length, 'EBGaramond', 22, 'black', 'center', {x:appWidth-40, y:430}, 0.5))
 
-        // Draw special points
-        for (let i = 0; i < 5; i++) {
-            g.addChild(Draw(UIColor, 'RoundedRect',  appWidth-28-(71*(i+1)), 562, 66, 94, 6))
-            if (me.develop_cards[PointsNames[4-i]] > 0) {
-                g.addChild(DrawSpritePro(Points[4-i], appWidth-25-(70*(i+1)), 565, 60, 86))
+            g.addChild(DrawSprite(ColorVillages[parseInt(sessionStorage.getItem('my-turn'))], 965, 500, 0.3))
+            g.addChild(Draw(0xe8a85a, 'Circle', 1000, 525, 15))
+            g.addChild(DrawText(me.buildings['Villages'], 'EBGaramond', 22, 'black', 'center', {x:1000,y:525}, 0.5))
+            
+            g.addChild(DrawSprite(ColorCities[parseInt(sessionStorage.getItem('my-turn'))], 890, 500, 0.3))
+            g.addChild(Draw(0xe8a85a, 'Circle', 840, 530, 15))
+            g.addChild(DrawText(me.buildings['Cities'], 'EBGaramond', 22, 'black', 'center', {x:840,y:530}, 0.5))
+            
+            g.addChild(DrawSprite(ColorRoads[parseInt(sessionStorage.getItem('my-turn'))], 920 , 445, 0.3))
+            g.addChild(Draw(0xe8a85a, 'Circle', 890, 400, 15))
+            g.addChild(DrawText(me.buildings['Roads'], 'EBGaramond', 22, 'black', 'center', {x:890,y:400}, 0.5))
+
+            if (game.phase < 3) {
+                game_phase_init(g, game, players, me)
+            } else if (game.phase === 3) {
+                game_phase_post(g, game, players, me)
+            }
+
+            // Drawing the player list:
+            let boxes = 0
+            for (let p = 0; p < players.length; p++) {
+                if (p !== parseInt(sessionStorage.getItem('my-turn'))) {
+                    g.addChild(DrawSpritePro(Frame_3, 32, 500 - 45*(boxes+1), 210, 35))
+                    g.addChild(Draw((p === game.current_turn) ? PlayersColors[p] : PlayersColorsD[p],  'RoundedRect', 38, 505 - 45*(boxes+1), 197, 25, 2))
+                    g.addChild(DrawText(game.players[p].name, 'EBGaramond', 15, (p === game.current_turn) ? 'white' : 'gray', 'left', {x:47, y:(514 - 47*(boxes+1))}, 0))
+                    g.addChild(DrawText('PTS', 'EBGaramond', 15, 'white', 'left', {x:195, y:(514 - 47*(boxes+1))}, 0))
+                    boxes++
+                }
+            }
+
+            // Drawing the player box
+            g.addChild(DrawSpritePro(Frame_2, 0, appHeight-60, appWidth, 60))
+            g.addChild(DrawSpritePro(Frame_3, 32, appHeight-170, 210, 35))
+            if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name) {
+                g.addChild(Draw(PlayersColors[sessionStorage.getItem('my-turn')], 'RoundedRect', 38, appHeight-165, 197, 25, 2))
+                g.addChild(DrawText(me.name, 'EBGaramond', 22, 'white', 'left', {x: 44, y:appHeight-165}, 0))
             } else {
-                g.addChild(DrawSpritePro(PointsD[4-i], appWidth-25-(71*(i+1)), 565, 60, 86))
+                g.addChild(Draw(PlayersColorsD[sessionStorage.getItem('my-turn')], 'RoundedRect', 38, appHeight-165, 197, 25, 5))
+                g.addChild(DrawText(me.name, 'EBGaramond', 22, 'gray', 'left', {x: 44, y:appHeight-165}, 0))
             }
+            g.addChild(DrawText('PTS', 'EBGaramond', 15, 'white', 'left', {x: 195, y:appHeight-160}, 0))
+            for (let i = 0; i < 5; i++) {
+                g.addChild(DrawSpritePro(Frame_6, 27+(71*i), 562, 66, 94))
+                g.addChild(DrawSpritePro(Resources[i], 31+(71*i), 566, 58, 85))
+                g.addChild(Draw(0xe8a85a, 'Circle', 60+(71*i), 650, 15))
+                g.addChild(DrawText(Object.values(me.resources)[i], 'EBGaramond', 14, 'black', 'center', {x:60+(71*i), y:650}, 0.5))
+            }
+
+            // Draw special points
+            for (let i = 0; i < 5; i++) {
+                g.addChild(DrawSpritePro(Frame_6, appWidth-28-(71*(i+1)), 562, 66, 94))
+                if (me.develop_cards[PointsNames[4-i]] > 0) {
+                    g.addChild(DrawSpritePro(Points[4-i], appWidth-24-(71*(i+1)), 566, 58, 85))
+                } else {
+                    g.addChild(DrawSpritePro(PointsD[4-i], appWidth-24-(71*(i+1)), 566, 58, 85))
+                }
+            }
+
+            //for (let road_info of RoadsInfo) {
+            //    g.addChild(DrawSprite(RoadsDirections[road_info[0]], road_info[2], road_info[3], 0.45))
+            //}
+
+            //for (let node_pos of NodesPos) {
+            //    g.addChild(DrawSprite(VillageSprite, ...node_pos, 0.35))
+            //}
+
+        } else {
+            game_phase_final(g, game, me)
         }
 
-        //for (let road_info of RoadsInfo_2) {
-        //    g.addChild(DrawSprite(RoadsDirections[road_info[0]], road_info[2], road_info[3], 0.45))
-        //}
-
-        //for (let node_pos of NodesPos) {
-        //    g.addChild(DrawSprite(VillageSprite, ...node_pos, 0.35))
-        //}
-
-
-    }, [buildMode, buildRoads, knightMode, monopolyMode, yearOfPlentyMode, gameChanged, hasToBuild, selectedPoint ])
+    }, [buildMode, buildRoads, knightMode, monopolyMode, yearOfPlentyMode, hasToBuild, selectedPoint, gameChanged, changeMode ])
+    
+    const handleClick = () => {
+        let game    = JSON.parse(sessionStorage.getItem('game'))
+        if(game.phase ===4){
+            gameExit('main-menu'); // Llamar a la función pasada como prop para actualizar activeMenu
+        }
+    };
 
     return (
-        <div id="game-header">
+        <div id="game-header" onClick={handleClick}>
             <Stage width={appWidth} height={appHeight}>
-                <Graphics draw={draw_game} />
+                <Graphics draw={draw_game}/>
             </Stage>
         </div>
     );

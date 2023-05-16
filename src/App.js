@@ -260,7 +260,13 @@ function App() {
             sessionStorage.setItem('throw-dices', false)
             sessionStorage.setItem('has-to-build', [true, false])
         }
+        
     }
+
+    const gameExit = (newMenu) => {
+        console.log('Cambio de modo')
+        setActiveMenu(newMenu); // Función para actualizar activeMenu
+    };
 
     // ========================================================================
     // GAME
@@ -389,7 +395,7 @@ function App() {
                     </div>
                 </div>
                 :
-                <Game gameChanged={gameChanged} />
+                <Game gameChanged ={gameChanged} gameExit={gameExit} />
             }
             </div>
         </SocketContext.Provider>
