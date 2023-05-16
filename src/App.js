@@ -3,7 +3,9 @@ import axios from 'axios'
 import io from 'socket.io-client';
 import Game from "./Game.js"
 import logo from './Catan-logo-4.png'
-import React, { createContext, useState } from 'react'
+import React, { createContext, useEffect, useState } from 'react'
+
+import CatanSong0 from './music/Catan_0.mp3'
 
 export const SocketContext = createContext();
 
@@ -271,9 +273,36 @@ function App() {
     // ========================================================================
     // GAME
     // ========================================================================
+
+    const useAudio = url => {
+        const [audio] = useState(new Audio(url));
+        const [playing, setPlaying] = useState(false);
+      
+        const toggle = () => setPlaying(!playing);
+      
+        useEffect(() => {
+            playing ? audio.play() : audio.pause();
+          },
+          [playing]
+        );
+      
+        useEffect(() => {
+          audio.addEventListener('ended', () => setPlaying(false));
+          return () => {
+            audio.removeEventListener('ended', () => setPlaying(false));
+          };
+        }, []);
+      
+        return [playing, toggle];
+    };
+
+    const [playing, toggle] = useAudio(CatanSong0);
+
+      
     return (
         <SocketContext.Provider value={socket}>
             <div>
+            <button onClick={toggle}>{playing ? "Pause" : "Play"}</button>
             {activeMenu !== 'game' ?
                 <div className='common-header'>
                     {errorMessage && (
