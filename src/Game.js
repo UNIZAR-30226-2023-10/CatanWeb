@@ -2,7 +2,7 @@
 import React, { useCallback, useContext, useEffect, useState } from "react"
 import io from 'socket.io-client';
 import * as PIXI from 'pixi.js'
-import { SocketContext } from './App'
+import { SocketContext } from './SocketContext'
 
 import Background from './images/game-bg2.png'
 import Victory from './images/victory.png'
@@ -556,7 +556,11 @@ const RoadsInfo = [
 // ============================================================================
 function Game({gameChanged, gameExit}) {
 
-    let socket = useContext(SocketContext)
+
+    let desconectados = [];
+    let { gameChanged } = props
+    const socket = useContext(SocketContext);
+
    //const [gameChanged, setGameChanged] = useState(props[0])
    //const [socket, setSocket] = useState(useContext(SocketContext))
    //useEffect(() => {
@@ -576,6 +580,22 @@ function Game({gameChanged, gameExit}) {
     //socket.on('notify', (data) => {
     //    console.log(data)
     //})
+
+
+    socket.on('wait_reconnect', (username) => {
+        console.log("ESPERANDO RECONEXION");
+        desconectados.push(username);
+        setGamePaused(true);
+    })
+    socket.on('reconnected', (username) => {
+        console.log("Reconectado ", username)
+         desconectados = desconectados.filter(username => username != username);
+         if (desconectados.length === 0) {
+            setGamePaused(false);
+         }
+    });
+
+
 
     // Build state: select node to build the correspondant building on
     const [buildMode,  setBuildMode]              = useState(parseBool(sessionStorage.getItem('build-mode')))
@@ -1579,11 +1599,13 @@ function Game({gameChanged, gameExit}) {
                 BUTTON.interactive = true;
                 BUTTON.buttonMode = true;
                 BUTTON.on('pointerdown', () => {
+
                     console.log("CONSTRUYO EN ", selectedPoint) 
                     socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id: MoveType.use_roads_build_4_free, coords: selectedPoint.id})                
                     if (me.roads_build_4_free === 1) {
                         setBuildRoads(false)
                         sessionStorage.setItem('build-roads', false)
+
                     }
                     setSelectedPoint(null)
                 })
@@ -1770,8 +1792,10 @@ function Game({gameChanged, gameExit}) {
         // Drawing the buttons
         BUTTON = null
         // Build button
+
         if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && (me.can_build[0] || me.can_build[1] || me.can_build[2]) && throwDices) {
             BUTTON = DrawSprite(ButtonBuild, 920, 475, 0.1)
+
             BUTTON.interactive = true;
             BUTTON.buttonMode = true;
             BUTTON.on('pointerdown', () => {
@@ -1780,6 +1804,7 @@ function Game({gameChanged, gameExit}) {
                 setSelectedPoint(null)
             })
         } else {
+
             BUTTON = DrawSprite(ButtonBuildD, 920, 475, 0.1)
         }
         g.addChild(BUTTON)
@@ -1796,6 +1821,7 @@ function Game({gameChanged, gameExit}) {
             })
         } else {
             BUTTON = DrawSprite(ButtonTradeD, 300, 510, 0.1)
+
         }
         g.addChild(BUTTON)
 
@@ -1844,9 +1870,11 @@ function Game({gameChanged, gameExit}) {
         }
         g.addChild(BUTTON);
 
+
         // Trade button
         //g.addChild(DrawSprite(ButtonTradeD, appWidth-80, 70, 0.1))
     }
+
 
     function game_phase_final(g, game, me) {
         if(game.winner === me.name){
@@ -1862,6 +1890,8 @@ function Game({gameChanged, gameExit}) {
         let game    = JSON.parse(sessionStorage.getItem('game'))
         let players = game.players 
         let me      = players[sessionStorage.getItem('my-turn')]
+        socket.emit('joinGame', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code)
+
 
         // Clear background:
         for (let i = g.children.length - 1; i >= 0; i--) {
