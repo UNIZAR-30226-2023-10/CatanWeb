@@ -392,7 +392,7 @@ function App() {
         setActiveMenu(newMenu); // Función para actualizar activeMenu
     };
 
-    // ========================================================================<CustomCursor cursorImage={Cursor} mousePosition={mousePosition} />
+    // ========================================================================
     // GAME
     // ========================================================================
     //<CustomCursor cursorImage={Cursor} mousePosition={mousePosition} />
