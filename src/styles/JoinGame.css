@@ -34,20 +34,6 @@
 }
 
 
-
-::placeholder { 
-    color:  rgb(89, 33, 11);
-    opacity: 1; 
-    font-weight: bold;
-    font-size: large;
-}
-
-a:link {
-    color:  rgb(89, 33, 11) !important;
-    background-color: transparent;
-    text-decoration: none;
-}
-
 .JoinGame-cover {
     background-color: rgba(255,197,129,0.5);
     width: 30em;

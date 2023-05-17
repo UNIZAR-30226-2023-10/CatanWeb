@@ -34,20 +34,6 @@
     opacity: 0.6;
 }
 
-
-
-::placeholder { 
-    color:  rgb(89, 33, 11);
-    opacity: 1; 
-    font-weight: bold;
-}
-
-a:link {
-    color:  rgb(89, 33, 11) !important;
-    background-color: transparent;
-    text-decoration: none;
-}
-
 .Register-cover {
     background-color: rgba(255,197,129,0.5);
     width: 30em;
@@ -61,6 +47,7 @@ a:link {
     color: rgb(89, 33, 11)
 }
 
+/*
 input {
     border-style: solid;
     border-width: 2px;
@@ -73,6 +60,7 @@ input {
     padding: 2em;
     color: rgb(89, 33, 11)
 }
+*/
 
 .Register-btn { 
     width: 40%;

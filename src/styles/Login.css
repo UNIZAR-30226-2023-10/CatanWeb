@@ -8,7 +8,7 @@
 
 .Login-header {
     display: flex;
-    justify-content: center;
+    justify-content: flex-end;
     align-items: flex-end;
 }
 
@@ -18,82 +18,23 @@
     display: flex;
     justify-content: flex-end;
     align-items: center;
-    transform: translateY(-35%);
     flex-direction: column;
 }
 
 .Login-form {
     width: 400px;
     height: 500px;
-    background-color: rgba(255,197,129,1);
+    background-color: rgba(0, 0, 0, 0.623);
     border-radius: 30px;
     display: flex;
     justify-content: center;
     align-items: center;
     flex-direction: column;
-    opacity: 0.6;
 }
 
-
-
-::placeholder { 
-    color:  rgb(89, 33, 11);
-    opacity: 1; 
-    font-weight: bold;
-}
-
-a:link {
-    color:  rgb(89, 33, 11) !important;
-    background-color: transparent;
+.Login-button {
+    margin: 20px;
+    width: 100px;
+    height: 50px;
     text-decoration: none;
 }
-
-.cover {
-    background-color: rgba(255,197,129,0.5);
-    width: 30em;
-    height: 21em;
-    position: relative;
-    border-radius: 0.5em;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-around;
-    color: rgb(89, 33, 11)
-}
-
-.input-login {
-    border-style: solid;
-    border-width: 2px;
-    border-color: rgb(121, 46, 16);
-    background-color: rgb(255,197,129);
-    height: 3em;
-    width: 80%;
-    border-radius: 0.25em;
-    text-align: center;
-    padding: 0em;
-    color: rgb(89, 33, 11);
-    font-weight: bold;
-    font-size: large;
-}
-
-.login-btn { 
-    width: 40%;
-    height: 3em;
-    background-color: rgba(255,168,53,1) !important;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: 0.5s;
-    border-radius: 0.25em;
-    cursor: pointer;
-    font-weight: bold;
-    border: 2px solid rgb(121, 46, 16);
-    text-decoration: none;
-}
-
-.linkado {
-    color: rgb(89, 33, 11);
-    font-weight: bold;
-}
-
-.login-btn:hover {transform: scale(1.03);}
