@@ -1068,7 +1068,7 @@ function Game({gameChanged, gameExit}) {
 
         // Drawing develop cards box
         // Build road 
-        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && me.develop_cards['Carreteras'] > 0 && throwDices && used_develop_cards === 0) {
+        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && (me.develop_cards['Carreteras'] - me.drawn_cards['Carreteras']) >  0 && throwDices && used_develop_cards === 0) {
             if (!buildRoads) {
                 BUTTON = DrawSprite(RoadBuilding, 105, 260, 0.35)
                 if (!buildMode && !me.force_knight) {
@@ -1094,7 +1094,7 @@ function Game({gameChanged, gameExit}) {
             g.addChild(DrawSprite(RoadBuildingD, 105, 260, 0.35))
         }
 
-        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && me.develop_cards['Caballeros'] > 0 && used_develop_cards === 0) {
+        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && (me.develop_cards['Caballeros']- me.drawn_cards['Caballeros']) > 0 && used_develop_cards === 0) {
             if (!knightMode && !me.force_knight) {
                 BUTTON = DrawSprite(Knight, 120, 170, 0.35)
                 if (!buildMode && me.roads_build_4_free === 0) {
@@ -1120,7 +1120,7 @@ function Game({gameChanged, gameExit}) {
             g.addChild(DrawSprite(KnightD, 120, 170, 0.35))
         }
 
-        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && me.develop_cards['Monopolios'] > 0 && throwDices && used_develop_cards === 0) {
+        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && (me.develop_cards['Monopolios']- me.drawn_cards['Monopolios'])  > 0 && throwDices && used_develop_cards === 0) {
             if (!monopolyMode) {
                 BUTTON = DrawSprite(Monopoly, 190, 100, 0.35)
                 if (!buildMode && me.roads_build_4_free === 0 && !me.force_knight) {
@@ -1146,7 +1146,7 @@ function Game({gameChanged, gameExit}) {
             g.addChild(DrawSprite(MonopolyD, 190, 100, 0.35))
         }
 
-        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && (me.develop_cards['Descubrimientos'] /*- me.drawn_cards['Descubrimientos']*/) > 0 && throwDices && used_develop_cards === 0) {
+        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && (me.develop_cards['Descubrimientos'] - me.drawn_cards['Descubrimientos']) > 0 && throwDices && used_develop_cards === 0) {
             if (!yearOfPlentyMode) {
                 BUTTON = DrawSprite(YearOfPlenty, 265, 120, 0.35)
                 if (!buildMode && me.roads_build_4_free === 0 && !me.force_knight) {

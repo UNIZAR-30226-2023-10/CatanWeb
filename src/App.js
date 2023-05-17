@@ -392,13 +392,14 @@ function App() {
         setActiveMenu(newMenu); // Función para actualizar activeMenu
     };
 
-    // ========================================================================
+    // ========================================================================<CustomCursor cursorImage={Cursor} mousePosition={mousePosition} />
     // GAME
     // ========================================================================
+    //<CustomCursor cursorImage={Cursor} mousePosition={mousePosition} />
     return (
         <SocketContext.Provider value={socket}>
             <div>
-            <CustomCursor cursorImage={Cursor} mousePosition={mousePosition} />
+            
             <img src={(isMuted) ? SoundOffIcon : SoundOnIcon} className='music-button' alt='change-music-status' onClick={() => setIsMuted(prevStatus => { return !prevStatus})}></img>
             {activeMenu !== 'game' ?
                 <div className='common-header'>
