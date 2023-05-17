@@ -5,8 +5,46 @@ import Game from "./Game.js"
 import logo from './Catan-logo-4.png'
 import React, { createContext, useEffect, useState } from 'react'
 
-import CatanSong0 from './sound/Catan_0.mp3'
+import Cursor from './images/Cursor.png'
 
+import SoundOnIcon from './images/icons/sound_on.png'
+import SoundOffIcon from './images/icons/sound_off.png'
+import CatanSong0  from './sound/Catan_0.mp3'
+import CatanSong1  from './sound/Catan_1.mp3'
+import CatanSong2  from './sound/Catan_2.mp3'
+import CatanSong3  from './sound/Catan_3.mp3'
+import CatanSong4  from './sound/Catan_4.mp3'
+import CatanSong5  from './sound/Catan_5.mp3'
+import CatanSong6  from './sound/Catan_6.mp3'
+import CatanSong7  from './sound/Catan_7.mp3'
+import CatanSong8  from './sound/Catan_8.mp3'
+import CatanSong9  from './sound/Catan_9.mp3'
+import CatanSong10 from './sound/Catan_10.mp3'
+import CatanSong11 from './sound/Catan_11.mp3'
+import CatanSong12 from './sound/Catan_11.mp3'
+import CatanSong13 from './sound/Catan_11.mp3'
+import CatanSong14 from './sound/Catan_11.mp3'
+import CatanSong15 from './sound/Catan_11.mp3'
+import ButtonSound from './sound/Click_0.mp3'
+
+const Songs = [
+    CatanSong0,
+    CatanSong1,
+    CatanSong2,
+    CatanSong3,
+    CatanSong4,
+    CatanSong5,
+    CatanSong6,
+    CatanSong7,
+    CatanSong8,
+    CatanSong9,
+    CatanSong10,
+    CatanSong11,
+    CatanSong12,
+    CatanSong13,
+    CatanSong14,
+    CatanSong15
+]
 export const SocketContext = createContext();
 
 //import storage from './storage.js'
@@ -18,6 +56,50 @@ const {GameService} = require('./services/game.service')
 //import cbg3 from '../Catan-bg3.jpg'
 //import cbg4 from '../Catan-bg4.jpg'
 //var backgrounds = [cbg0, cbg1, cbg2, cbg3, cbg4]
+
+function random(min, max) {
+    return Math.floor(Math.random() * max) + min;
+}
+
+const CustomCursor = ({ cursorImage, mousePosition }) => {
+
+    const cursorStyles = {
+        position: 'absolute',
+        top: mousePosition.y-5,
+        left: mousePosition.x-5,
+        width: '40px',
+        height: '40px',
+        backgroundImage: `url(${cursorImage})`,
+        backgroundSize: 'cover',
+        pointerEvents: 'none',
+        zIndex: 99999
+    };
+
+    document.body.style.cursor = 'none';
+
+    const maxCursorX = window.innerWidth - 43
+    if (cursorStyles.left > maxCursorX) {
+      cursorStyles.left = maxCursorX;
+    } else if (mousePosition.x < 0) {
+      cursorStyles.left = 0;
+    }
+
+    const maxCursorY = window.innerHeight - 43
+    if (cursorStyles.top > maxCursorY) {
+        cursorStyles.top = maxCursorY
+    } else if (mousePosition.Y < 0) {
+        cursorStyles.top = 0
+    }
+
+    // Hide default cursor on links and input elements
+    const hideCursorElements = document.querySelectorAll('a, input, textarea, button');
+    hideCursorElements.forEach(element => {
+        element.style.cursor = 'none';
+    });
+
+
+    return <div style={cursorStyles} />;
+};
 
 /**
  * Cosas que faltan por hacer:
@@ -35,11 +117,49 @@ function App() {
     //    }, 5000);
     //})
 
+    const [click] = useState(new Audio(ButtonSound))
+    const handleClick = () => {
+        click.currentTime = 0
+        click.play()
+    }
+    
+    const [audio, setAudio] = useState(new Audio(Songs[random(0, Songs.length)]))
+    const [isMuted, setIsMuted] = useState(true)
+    useEffect(() => {
+        if (!isMuted) {
+            audio.play()
+            audio.addEventListener("ended", handleAudioEnding);
+            return () => {
+                audio.removeEventListener("ended", handleAudioEnding);
+            };
+        } else {
+            audio.pause()
+        }
+    }, [audio, isMuted]);
+
     const [activeMenu, setActiveMenu] = useState(JSON.parse(sessionStorage.getItem('active-menu')) || 'login')
     const handleMenuChange = (menu) => {
         sessionStorage.setItem('active-menu', JSON.stringify(menu))
         setActiveMenu(menu);
     }
+
+    const handleAudioEnding = () => {
+        setAudio(new Audio(Songs[random(0, Songs.length)]))
+    }
+
+    const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
+    const onMouseMove = (e) => {
+      setMousePosition({ x: e.clientX, y: e.clientY });
+    };
+  
+    useEffect(() => {
+      window.addEventListener('mousemove', onMouseMove);
+  
+      return () => {
+        window.removeEventListener('mousemove', onMouseMove);
+      };
+    }, []);
 
     const [errorMessage, setErrorMessage] = useState('')
     // ========================================================================
@@ -182,12 +302,12 @@ function App() {
             });
             socket.emit('joinGame', JSON.parse(sessionStorage.getItem('user')).accessToken, data.codigo_partida)
             setSocket(socket)
-            // Guardar mi orden de turno
-            sessionStorage.setItem('my-turn', 0)
             // Cambiar al conexto del Game lobby
             handleMenuChange('game-lobby')
 
-            
+            sessionStorage.setItem('my-turn', 0)
+
+
             // Persistencia de datos para el juego
             sessionStorage.setItem('build-mode', false)
             sessionStorage.setItem('knight-mode', false)
@@ -196,6 +316,7 @@ function App() {
             sessionStorage.setItem('year-of-plenty-mode', false)
             sessionStorage.setItem('throw-dices', false)
             sessionStorage.setItem('has-to-build', [true, false])
+            sessionStorage.setItem('change-mode', false)
         }
     }
 
@@ -247,11 +368,10 @@ function App() {
 
             // Configuración de los nuevos jugadores:
             setLobby(data.jugadores)
-            // Guardar mi orden de turno:
-            sessionStorage.setItem('my-turn', 
-                data.jugadores.findIndex(curr_player => curr_player === JSON.parse(sessionStorage.getItem('user')).name))
             // Cambiar al conexto del Game lobby:
             setActiveMenu('game-lobby')
+            
+            sessionStorage.setItem('my-turn', data.jugadores.findIndex(curr_player => curr_player === JSON.parse(sessionStorage.getItem('user')).name))
 
             // Persistencia de datos para el juego
             sessionStorage.setItem('build-mode', false)
@@ -261,8 +381,8 @@ function App() {
             sessionStorage.setItem('year-of-plenty-mode', false)
             sessionStorage.setItem('throw-dices', false)
             sessionStorage.setItem('has-to-build', [true, false])
-        }
-        
+            sessionStorage.setItem('change-mode', false)
+        } 
     }
 
     const gameExit = (newMenu) => {
@@ -273,41 +393,18 @@ function App() {
     // ========================================================================
     // GAME
     // ========================================================================
-
-    const useAudio = url => {
-        const [audio] = useState(new Audio(url));
-        const [playing, setPlaying] = useState(false);
-      
-        const toggle = () => setPlaying(!playing);
-      
-        useEffect(() => {
-            playing ? audio.play() : audio.pause();
-          },
-          [playing]
-        );
-      
-        useEffect(() => {
-          audio.addEventListener('ended', () => setPlaying(false));
-          return () => {
-            audio.removeEventListener('ended', () => setPlaying(false));
-          };
-        }, []);
-      
-        return [playing, toggle];
-    };
-
-    const [playing, toggle] = useAudio(CatanSong0);
-
-      
     return (
         <SocketContext.Provider value={socket}>
             <div>
-            <button onClick={toggle}>{playing ? "Pause" : "Play"}</button>
+            <CustomCursor cursorImage={Cursor} mousePosition={mousePosition} />
+            <img src={(isMuted) ? SoundOffIcon : SoundOnIcon} className='music-button' alt='change-music-status' onClick={() => setIsMuted(prevStatus => { return !prevStatus})}></img>
             {activeMenu !== 'game' ?
                 <div className='common-header'>
-                    {errorMessage && (
-                        <p style={{color: 'red'}}> {errorMessage} </p>
-                    )}
+                    <div className='error-container'>
+                        {errorMessage && (
+                            <p style={{color: 'red', textAlign: 'center'}}> {errorMessage} </p>
+                        )}
+                    </div>
 
                     <div className='common-container | flex-column-center-center'>
                         <img src={logo} className='common-logo' alt='catan-logo'></img>
@@ -317,13 +414,13 @@ function App() {
                                     <form id='login' className='flex-column-center-center' onSubmit={handleSubmit_Login}>
                                         <input className='common-input' type="text" placeholder="Email" name='email' id='email' required />
                                         <input className='common-input' type="password" placeholder="Password" name='password' id='password' required />
-                                        <button className='common-button | common-button-activated' type='submit'>Log In</button>
+                                        <button className='common-button | common-button-activated' type='submit' onClick={handleClick}>Log In</button>
                                         <a href='recover' id='forgor-password'>Did you forget your password?</a>
                                     </form>
                                 </div>
                                 <div id='Home-down-form'>
-                                    <button className='common-button | common-button-activated' onClick={() => handleMenuChange('register')}>Register</button>
-                                    <button className='common-button | common-button-activated' onClick={() => handleMenuChange('main-menu')}>Play without register</button>
+                                    <button className='common-button | common-button-activated' onClick={() => {handleClick(); handleMenuChange('register')}}>Register</button>
+                                    <button className='common-button | common-button-activated' onClick={() => {handleClick(); handleMenuChange('main-menu')}}>Play without register</button>
                                 </div>
                             </div>
                         )}
@@ -336,22 +433,22 @@ function App() {
                                         <input className='common-input' type="text" placeholder="Username" name='username' id='username' required />
                                         <input className='common-input' type="password" placeholder="Password" name='password' id='password' required />
                                         <input className='common-input' type="password" placeholder="Repeat password" name='confirm_password' id='confirm_password' required />
-                                        <button className='common-button | common-button-activated' type='submit'>Register</button>
+                                        <button className='common-button | common-button-activated' type='submit' onClick={handleClick}>Register</button>
                                     </form>
                                 </div>
                                 <div id='Home-down-form'>
-                                    <button className='common-button | common-button-activated' onClick={() => handleMenuChange('login')}>Log in</button>
-                                    <button className='common-button | common-button-activated' onClick={() => handleMenuChange('main-menu')}>Play without register</button>
+                                    <button className='common-button | common-button-activated' onClick={() => {handleClick(); handleMenuChange('login')} }>Log in</button>
+                                    <button className='common-button | common-button-activated' onClick={() => {handleClick(); handleMenuChange('main-menu')}}>Play without register</button>
                                 </div>
                             </div>
                         )}
 
                         {activeMenu === 'main-menu' && (
                             <div className='common-content-container | flex-column-center-center'>
-                                <button className='common-button | common-button-activated' onClick={handleSubmit_NewGame}>New game</button>
-                                <button className='common-button | common-button-activated' onClick={() => handleMenuChange('join-game')}>Join game</button>
+                                <button className='common-button | common-button-activated' onClick={(event) => { handleClick(); handleSubmit_NewGame(event) }}>New game</button>
+                                <button className='common-button | common-button-activated' onClick={() => { handleClick(); handleMenuChange('join-game') }}>Join game</button>
                                 <button className='common-button | common-button-deactivated'>Find a game</button>
-                                <button className='common-button | common-button-activated' onClick={() => handleMenuChange('login')}>Return</button>
+                                <button className='common-button | common-button-activated' onClick={() => { handleClick(); handleMenuChange('login') } }>Return</button>
                             </div>
                         )}
 
@@ -406,9 +503,9 @@ function App() {
                                     )}
                                 </div>
                                 {lobby[0] === JSON.parse(sessionStorage.getItem('user')).name && (
-                                    <button className={lobby.length < 4 ? 'common-button | common-button-deactivated' : 'common-button | common-button-activated'} onClick={() => {GameService.start(JSON.parse(sessionStorage.getItem('game-token')) ); console.log("Empiezo startGame");}}>Play</button>
+                                    <button className={lobby.length < 4 ? 'common-button | common-button-deactivated' : 'common-button | common-button-activated'} onClick={() => { handleClick(); GameService.start(JSON.parse(sessionStorage.getItem('game-token')) );}}>Play</button>
                                 )}
-                                <button className='common-button | common-button-activated' onClick={() => { handleMenuChange('main-menu')} }>Return</button>
+                                <button className='common-button | common-button-activated' onClick={() => { handleClick(); handleMenuChange('main-menu')} }>Return</button>
                             </div>
                         )}
 
@@ -416,9 +513,9 @@ function App() {
                             <div className='common-content-container | flex-column-center-center'>
                                 <form id='join-game' className='flex-column-center-center' onSubmit={handleSubmit_JoinGame}>
                                     <input name='gamecode' id='gamecode' className='common-input' type="text" placeholder="Game code" value={gamecodeInput} maxLength={6} onChange={handleChange} required />
-                                    <button className='common-button | common-button-activated' type='submit'>Join</button>
+                                    <button className='common-button | common-button-activated' type='submit' onClick={handleClick}>Join</button>
                                 </form>
-                                <button className='common-button | common-button-activated' onClick={() => handleMenuChange('main-menu')}>Return</button>
+                                <button className='common-button | common-button-activated' onClick={() => { handleClick();handleMenuChange('main-menu')}}>Return</button>
                             </div>
                         )}
                     </div>
