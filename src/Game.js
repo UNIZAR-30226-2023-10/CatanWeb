@@ -164,11 +164,21 @@ import ButtonTradeCancel from './images/button_trade_cancel.png'
 import TradeIcon from './images/trade_icon.png'
 
 // Sounds
-import Click from './sound/Click_1.mp3'
-import BuildSound from './sound/Build.mp3'
-import BuySound from './sound/Buy.mp3'
-import CardSound from './sound/Card.mp3'
-import DiceSound from './sound/Dices.mp3'
+import BrickSound from './audio/effects/Brick.mp3'
+import BuildSound from './audio/effects/Build.mp3'
+import BuySound from './audio/effects/Buy.mp3'
+import CardSound from './audio/effects/Card.mp3'
+import Click from './audio/effects/Click_1.mp3'
+import DiceSound from './audio/effects/Dices.mp3'
+import HarborSound from './audio/effects/Harbor.mp3'
+import KnightSound from './audio/effects/Knight.mp3'
+import LumberSound from './audio/effects/Lumber.mp3'
+import StoneSound from './audio/effects/Stone.mp3'
+import TradeSound from './audio/effects/Trade.mp3'
+import TradeCancelSound from './audio/effects/TradeCancel.mp3'
+import WheatSound from './audio/effects/Wheat.mp3'
+import WoolSound from './audio/effects/Wool.mp3'
+
 
 const MoveType = require( './services/movesTypes.js')
 
@@ -580,29 +590,42 @@ function Game({gameChanged, gameExit}) {
     //    console.log(data)
     //})
 
+    // Game states:
     // Build state: select node to build the correspondant building on
     const [buildMode,  setBuildMode]              = useState(parseBool(sessionStorage.getItem('build-mode')))
+    // Initial condition for the first two phases
+    const [hasToBuild, setHasToBuild]             = useState(parseBoolArr(sessionStorage.getItem('has-to-build')))
+    // Change (Trading) state: select card to trade and the one that you want to receive
+    const [changeMode, setChangeMode]             = useState(parseBool(sessionStorage.getItem('change-mode')))
     // Knight state: select biome to put the robber on
     const [knightMode, setKnightMode]             = useState(parseBool(sessionStorage.getItem('knight-mode')))
     // Building roads state: 
     const [buildRoads, setBuildRoads]             = useState(parseBool(sessionStorage.getItem('build-roads')))
     // Monopoly state:
     const [monopolyMode, setMonopolyMode]         = useState(parseBool(sessionStorage.getItem('monopoly-mode')))
+    // Selected point: current point selected for the current state
+    const [selectedPoint, setSelectedPoint]       = useState(null);
+    // Throw dices state: throw the dices
+    const [throwDices, setThrowDices]             = useState(parseBool(sessionStorage.getItem('throw-dices')))
     // Year of plenty state:
     const [yearOfPlentyMode, setYearOfPlentyMode] = useState(parseBool(sessionStorage.getItem('year-of-plenty-mode')))
-    const [isClicked, setIsClicked] = useState(false);
+    //const [isClicked, setIsClicked] = useState(false);
 
-    const [changeMode, setChangeMode]             = useState(parseBool(sessionStorage.getItem('change-mode')))
-    const [throwDices, setThrowDices]             = useState(parseBool(sessionStorage.getItem('throw-dices')))
-    const [selectedPoint, setSelectedPoint]       = useState(null);
-    const [hasToBuild, setHasToBuild]             = useState(parseBoolArr(sessionStorage.getItem('has-to-build')))
-
-
-    const [click]      = useState(new Audio(Click)) 
-    const [buildSound] = useState(new Audio(BuildSound))
-    const [buySound]   = useState(new Audio(BuySound))
-    const [cardSound]  = useState(new Audio(CardSound))
-    const [diceSound]  = useState(new Audio(DiceSound))
+    // Game sounds:
+    const [brickSound]        = useState(new Audio(BrickSound))
+    const [buildSound]        = useState(new Audio(BuildSound))
+    const [buySound]          = useState(new Audio(BuySound))
+    const [cardSound]         = useState(new Audio(CardSound))
+    const [click]             = useState(new Audio(Click)) 
+    const [diceSound]         = useState(new Audio(DiceSound))
+    const [harborSound]       = useState(new Audio(HarborSound))
+    const [knightSound]       = useState(new Audio(KnightSound))
+    const [lumberSound]       = useState(new Audio(LumberSound))
+    const [stoneSound]        = useState(new Audio(StoneSound))
+    const [tradeSound]        = useState(new Audio(TradeSound))
+    const [tradeCancelSound]  = useState(new Audio(TradeCancelSound))
+    const [wheatSound]        = useState(new Audio(WheatSound))
+    const [woolSound]         = useState(new Audio(WoolSound))
     // ========================================================================
     // INITIAL PHASE
     // ========================================================================
@@ -920,7 +943,6 @@ function Game({gameChanged, gameExit}) {
             DrawBiomes_Default(g, game.board.biomes, BiomesOrder[i], ...BiomesPos[i])
         }
         // Dice button
-        console.log('me',me)
         g.addChild(DrawSprite(Dices[me.first_rolls[0]], appWidth-300, 80, 1))
         g.addChild(DrawSprite(Dices[me.first_rolls[1]], appWidth-230, 80, 1))
         
@@ -929,6 +951,7 @@ function Game({gameChanged, gameExit}) {
             BUTTON.interactive = true
             BUTTON.buttonMode  = true
             BUTTON.on('pointerdown', () => {
+                diceSound.play()
                 setThrowDices(true)
                 sessionStorage.setItem('throw-dices', true)
                 socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id : MoveType.roll_dices })
@@ -943,6 +966,7 @@ function Game({gameChanged, gameExit}) {
             BUTTON.interactive = true;
             BUTTON.buttonMode = true;
             BUTTON.on('pointerdown', () => {
+                click.play()
                 socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id : MoveType.next_turn })
                 setThrowDices(false)
                 sessionStorage.setItem('throw-dices', false)
@@ -988,6 +1012,7 @@ function Game({gameChanged, gameExit}) {
                     BUTTON.interactive = true;
                     BUTTON.buttonMode = true;
                     BUTTON.on('pointerdown', () => {
+                        click.play()
                         setSelectedPoint(null)
                     })
                     g.addChild(BUTTON);
@@ -997,7 +1022,7 @@ function Game({gameChanged, gameExit}) {
                     BUTTON.interactive = true;
                     BUTTON.buttonMode = true;
                     BUTTON.on('pointerdown', () => {
-                        console.log("CONSTRUYO EN ", selectedPoint)
+                        buildSound.play()
                         if (selectedPoint.type === 'Node') {
                             socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id : MoveType.build_village, coords: selectedPoint.id })
                         } else if (selectedPoint.type === 'Road') {
@@ -1018,7 +1043,7 @@ function Game({gameChanged, gameExit}) {
                 }
             } else {
                 // Next turn button
-                BUTTON = DrawSprite(ButtonNextTurn, 1100, 510, 0.1)
+                BUTTON = DrawSprite(ButtonNextTurn, 1063, 510, 0.1)
                 BUTTON.interactive = true;
                 BUTTON.buttonMode  = true;
                 BUTTON.on('pointerdown', () => {
@@ -1042,13 +1067,13 @@ function Game({gameChanged, gameExit}) {
         let used_develop_cards = game.players[game.current_turn].used_develop_cards
 
         // Drawing develop cards box
+        // Build road 
         if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && me.develop_cards['Carreteras'] > 0 && throwDices && used_develop_cards === 0) {
             if (!buildRoads) {
                 BUTTON = DrawSprite(RoadBuilding, 105, 260, 0.35)
-                if (!buildMode ) {
+                if (!buildMode && !me.force_knight) {
                     BUTTON.interactive = true
                     BUTTON.on('pointerdown', () => {
-                        console.log ('Usando construccion de carreteras')
                         cardSound.play()
                         setBuildRoads(true)
                         sessionStorage.setItem('build-roads', true)
@@ -1070,12 +1095,11 @@ function Game({gameChanged, gameExit}) {
         }
 
         if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && me.develop_cards['Caballeros'] > 0 && used_develop_cards === 0) {
-            if (!knightMode) {
+            if (!knightMode && !me.force_knight) {
                 BUTTON = DrawSprite(Knight, 120, 170, 0.35)
                 if (!buildMode && me.roads_build_4_free === 0) {
                     BUTTON.interactive = true
                     BUTTON.on('pointerdown', () => {
-                        console.log ('Usando caballero')
                         cardSound.play()
                         setKnightMode(true)
                         sessionStorage.setItem('knight-mode', true)
@@ -1099,10 +1123,9 @@ function Game({gameChanged, gameExit}) {
         if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && me.develop_cards['Monopolios'] > 0 && throwDices && used_develop_cards === 0) {
             if (!monopolyMode) {
                 BUTTON = DrawSprite(Monopoly, 190, 100, 0.35)
-                if (!buildMode && me.roads_build_4_free === 0) {
+                if (!buildMode && me.roads_build_4_free === 0 && !me.force_knight) {
                     BUTTON.interactive = true
                     BUTTON.on('pointerdown', () => {
-                        console.log('Usando monopolio')
                         cardSound.play()
                         setMonopolyMode(true)
                         sessionStorage.setItem('monopoly-mode', true)
@@ -1123,13 +1146,12 @@ function Game({gameChanged, gameExit}) {
             g.addChild(DrawSprite(MonopolyD, 190, 100, 0.35))
         }
 
-        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && (me.develop_cards['Descubrimientos'] - me.drawn_cards['Descubrimientos']) > 0 && throwDices && used_develop_cards === 0) {
+        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && (me.develop_cards['Descubrimientos'] /*- me.drawn_cards['Descubrimientos']*/) > 0 && throwDices && used_develop_cards === 0) {
             if (!yearOfPlentyMode) {
                 BUTTON = DrawSprite(YearOfPlenty, 265, 120, 0.35)
-                if (!buildMode && me.roads_build_4_free === 0) {
+                if (!buildMode && me.roads_build_4_free === 0 && !me.force_knight) {
                     BUTTON.interactive = true
                     BUTTON.on('pointerdown', () => {
-                        console.log ('Usando año de prosperidad')
                         cardSound.play()
                         setYearOfPlentyMode(true)
                         sessionStorage.setItem('year-of-plenty-mode', true)
@@ -1198,7 +1220,6 @@ function Game({gameChanged, gameExit}) {
                 BUTTON.interactive = true;
                 BUTTON.buttonMode = true;
                 BUTTON.on('pointerdown', () => {
-                    console.log("CONSTRUYO EN ", selectedPoint)
                     buildSound.play()
                     if (selectedPoint.type === 'Node') {
                         socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id : MoveType.build_village, coords: selectedPoint.id })
@@ -1278,17 +1299,17 @@ function Game({gameChanged, gameExit}) {
                 BUTTON.interactive = true;
                 BUTTON.buttonMode = true;
                 BUTTON.on('pointerdown', () => {
+                    click.play()
                     setSelectedPoint(null)
                 })
                 g.addChild(BUTTON);
 
-                // Confirm building selection
+                // Confirm the robber biome selection
                 BUTTON = DrawSprite(ButtonConfirm, 1110, 510, 0.1)
                 BUTTON.interactive = true;
                 BUTTON.buttonMode = true;
                 BUTTON.on('pointerdown', () => {
-                    click.play()
-                    console.log("CONSTRUYO EN ", selectedPoint)
+                    knightSound.play()
                     socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id: MoveType.use_knight, robber_biome: selectedPoint.id})
                     setKnightMode(false)
                     sessionStorage.setItem('knight-mode', false)
@@ -1296,7 +1317,6 @@ function Game({gameChanged, gameExit}) {
                 })
                 g.addChild(BUTTON);
             }
-
             return
         }
 
@@ -1322,6 +1342,7 @@ function Game({gameChanged, gameExit}) {
             BUTTON.interactive = true;
             BUTTON.buttonMode = true;
             BUTTON.on('pointerdown', () => {
+                tradeCancelSound.play()
                 setChangeMode(false)
                 sessionStorage.setItem('change-mode', false)
                 setSelectedPoint(null)
@@ -1333,6 +1354,7 @@ function Game({gameChanged, gameExit}) {
             BUTTON = DrawSprite(Wheat, 335, 215, 0.4)
             BUTTON.interactive = true
             BUTTON.on('pointerdown', () => {
+                wheatSound.play()
                 if (!selectedPoint) {
                     setSelectedPoint(['Trigo'])
                 } else if (selectedPoint.length < 2) {
@@ -1343,15 +1365,16 @@ function Game({gameChanged, gameExit}) {
                     })
                 }
             })
-            if(!me.can_change[0] && !selectedPoint){
+            if (!me.can_change[0] && !selectedPoint){
                 g.addChild(DrawSprite(WheatD, 335, 215, 0.4))
-            }else{
+            } else{
                 g.addChild(BUTTON)
             }
             
             BUTTON = DrawSprite(Lumber, 468, 215, 0.4)
             BUTTON.interactive = true
             BUTTON.on('pointerdown', () => {
+                lumberSound.play()
                 if (!selectedPoint) {
                     setSelectedPoint(['Madera'])
                 } else if (selectedPoint.length < 2) {
@@ -1371,6 +1394,7 @@ function Game({gameChanged, gameExit}) {
             BUTTON = DrawSprite(Brick, 602, 215, 0.4)
             BUTTON.interactive = true
             BUTTON.on('pointerdown', () => {
+                brickSound.play()
                 if (!selectedPoint) {
                     setSelectedPoint(['Ladrillo'])
                 } else if (selectedPoint.length < 2) {
@@ -1381,15 +1405,16 @@ function Game({gameChanged, gameExit}) {
                     })
                 }
             })
-            if(!me.can_change[2] && !selectedPoint){
+            if (!me.can_change[2] && !selectedPoint){
                 g.addChild(DrawSprite(BrickD, 602, 215, 0.4))
-            }else{
+            } else {
                 g.addChild(BUTTON)
             }
 
             BUTTON = DrawSprite(Stone, 735, 215, 0.4)
             BUTTON.interactive = true
             BUTTON.on('pointerdown', () => {
+                stoneSound.play()
                 if (!selectedPoint) {
                     setSelectedPoint(['Piedra'])
                 } else if (selectedPoint.length < 2) {
@@ -1409,6 +1434,7 @@ function Game({gameChanged, gameExit}) {
             BUTTON = DrawSprite(Wool, 867, 215, 0.4)
             BUTTON.interactive = true
             BUTTON.on('pointerdown', () => {
+                woolSound.play()
                 if (!selectedPoint) {
                     setSelectedPoint(['Lana'])
                 } else if (selectedPoint.length < 2) {
@@ -1427,7 +1453,6 @@ function Game({gameChanged, gameExit}) {
 
             if (selectedPoint) {
 
-                g.addChild(Draw(UIColor, 'RoundedRect', 240, appHeight/2 - 10, 720, 230, 10))
                 g.addChild(DrawSpritePro(Frame_4, 240, appHeight/2 - 25, 720, 250))
                 let r_i = biomesResources.findIndex(curr_resource => curr_resource === selectedPoint[0])
                 
@@ -1435,7 +1460,6 @@ function Game({gameChanged, gameExit}) {
                     g.addChild(DrawSprite(ResourcesSprite[selectedPoint[0]], appWidth/5 + 150 + 20*i, appHeight/2 + 100, 0.42))
                 }
                 if (selectedPoint.length > 1){
-
                     g.addChild(DrawSprite(ResourcesSprite[selectedPoint[1]], 730, appHeight/2 + 100 , 0.42))
                 }
                 g.addChild(DrawSprite(TradeIcon, 590, appHeight/2 + 100 , 1.2))
@@ -1443,6 +1467,7 @@ function Game({gameChanged, gameExit}) {
                 BUTTON = DrawSprite(ButtonQuitResource, appWidth/2 +273, appHeight/2 + 55, 0.1)
                 BUTTON.interactive = true
                 BUTTON.on('pointerdown', () => {
+                    click.play()
                     if (selectedPoint.length === 1) {
                         setSelectedPoint(null)
                     } else if (selectedPoint.length === 2) {
@@ -1456,11 +1481,10 @@ function Game({gameChanged, gameExit}) {
                 g.addChild(BUTTON);
 
                 if (selectedPoint.length === 2) {
-                    // Confirm building selection
                     BUTTON = DrawSprite(ButtonConfirm, appWidth/2 + 273, appHeight/2 + 145, 0.1)
                     BUTTON.interactive = true
                     BUTTON.on('pointerdown', () => {
-                        console.log("ELIGO ", selectedPoint)
+                        harborSound.play()
                         socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id: MoveType.change_resource, resource: selectedPoint})
                         setChangeMode(false)
                         setSelectedPoint(null)
@@ -1508,6 +1532,7 @@ function Game({gameChanged, gameExit}) {
             BUTTON.interactive = true
             BUTTON.on('pointerdown', () => {
                 if (!selectedPoint || (selectedPoint && selectedPoint !== 'Trigo')) {
+                    wheatSound.play()
                     setSelectedPoint('Trigo')
                 } else {
                     setSelectedPoint(null)
@@ -1524,6 +1549,7 @@ function Game({gameChanged, gameExit}) {
             BUTTON.interactive = true
             BUTTON.on('pointerdown', () => {
                 if (!selectedPoint || (selectedPoint && selectedPoint !== 'Madera')) {
+                    lumberSound.play()
                     setSelectedPoint('Madera')
                 } else {
                     setSelectedPoint(null)
@@ -1540,6 +1566,7 @@ function Game({gameChanged, gameExit}) {
             BUTTON.interactive = true
             BUTTON.on('pointerdown', () => {
                 if (!selectedPoint || (selectedPoint && selectedPoint !== 'Ladrillo')) {
+                    brickSound.play()
                     setSelectedPoint('Ladrillo')
                 } else {
                     setSelectedPoint(null)
@@ -1556,6 +1583,7 @@ function Game({gameChanged, gameExit}) {
             BUTTON.interactive = true
             BUTTON.on('pointerdown', () => {
                 if (!selectedPoint || (selectedPoint && selectedPoint !== 'Piedra')) {
+                    stoneSound.play()
                     setSelectedPoint('Piedra')
                 } else {
                     setSelectedPoint(null)
@@ -1572,6 +1600,7 @@ function Game({gameChanged, gameExit}) {
             BUTTON.interactive = true
             BUTTON.on('pointerdown', () => {
                 if (!selectedPoint || (selectedPoint && selectedPoint !== 'Lana')) {
+                    woolSound.play()
                     setSelectedPoint('Lana')
                 } else {
                     setSelectedPoint(null)
@@ -1585,6 +1614,7 @@ function Game({gameChanged, gameExit}) {
                 BUTTON.interactive = true;
                 BUTTON.buttonMode = true;
                 BUTTON.on('pointerdown', () => {
+                    click.play()
                     setSelectedPoint(null)
                 })
                 g.addChild(BUTTON);
@@ -1594,7 +1624,7 @@ function Game({gameChanged, gameExit}) {
                 BUTTON.interactive = true;
                 BUTTON.buttonMode = true;
                 BUTTON.on('pointerdown', () => {
-                    console.log("ELIGO ", selectedPoint)
+
                     socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id: MoveType.use_monopoly, resource: selectedPoint })
                     setMonopolyMode(false)
                     sessionStorage.setItem('monopoly-mode', false)
@@ -1651,7 +1681,6 @@ function Game({gameChanged, gameExit}) {
                 BUTTON.interactive = true;
                 BUTTON.buttonMode = true;
                 BUTTON.on('pointerdown', () => {
-                    console.log("CONSTRUYO EN ", selectedPoint) 
                     socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id: MoveType.use_roads_build_4_free, coords: selectedPoint.id})                
                     if (me.roads_build_4_free === 1) {
                         setBuildRoads(false)
@@ -1695,6 +1724,7 @@ function Game({gameChanged, gameExit}) {
             BUTTON = DrawSprite(Wheat, 335, 215, 0.4)
             BUTTON.interactive = true
             BUTTON.on('pointerdown', () => {
+                wheatSound.play()
                 if (!selectedPoint) {
                     setSelectedPoint(['Trigo'])
                 } else if (selectedPoint.length < 2) {
@@ -1710,6 +1740,7 @@ function Game({gameChanged, gameExit}) {
             BUTTON = DrawSprite(Lumber, 468, 215, 0.4)
             BUTTON.interactive = true
             BUTTON.on('pointerdown', () => {
+                lumberSound.play()
                 if (!selectedPoint) {
                     setSelectedPoint(['Madera'])
                 } else if (selectedPoint.length < 2) {
@@ -1725,6 +1756,7 @@ function Game({gameChanged, gameExit}) {
             BUTTON = DrawSprite(Brick, 602, 215, 0.4)
             BUTTON.interactive = true
             BUTTON.on('pointerdown', () => {
+                brickSound.play()
                 if (!selectedPoint) {
                     setSelectedPoint(['Ladrillo'])
                 } else if (selectedPoint.length < 2) {
@@ -1740,6 +1772,7 @@ function Game({gameChanged, gameExit}) {
             BUTTON = DrawSprite(Stone, 735, 215, 0.4)
             BUTTON.interactive = true
             BUTTON.on('pointerdown', () => {
+                stoneSound.play()
                 if (!selectedPoint) {
                     setSelectedPoint(['Piedra'])
                 } else if (selectedPoint.length < 2) {
@@ -1755,6 +1788,7 @@ function Game({gameChanged, gameExit}) {
             BUTTON = DrawSprite(Wool, 867, 215, 0.4)
             BUTTON.interactive = true
             BUTTON.on('pointerdown', () => {
+                woolSound.play()
                 if (!selectedPoint) {
                     setSelectedPoint(['Lana'])
                 } else if (selectedPoint.length < 2) {
@@ -1779,6 +1813,7 @@ function Game({gameChanged, gameExit}) {
                 BUTTON = DrawSprite(ButtonQuitResource, appWidth/2 + 323, appHeight/2 + 65, 0.1)
                 BUTTON.interactive = true
                 BUTTON.on('pointerdown', () => {
+                    click.play()
                     if (selectedPoint.length === 1) {
                         setSelectedPoint(null)
                     } else if (selectedPoint.length === 2) {
@@ -1796,7 +1831,7 @@ function Game({gameChanged, gameExit}) {
                     BUTTON = DrawSprite(ButtonConfirm, appWidth/2 + 323, appHeight/2 + 165, 0.1)
                     BUTTON.interactive = true
                     BUTTON.on('pointerdown', () => {
-                        console.log("ELIGO ", selectedPoint)
+                        click.play()
                         socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id: MoveType.use_year_of_plenty, resource: selectedPoint})
                         setYearOfPlentyMode(false)
                         sessionStorage.setItem('year-of-plenty-mode', false)
@@ -1865,6 +1900,7 @@ function Game({gameChanged, gameExit}) {
             BUTTON.interactive = true;
             BUTTON.buttonMode = true;
             BUTTON.on('pointerdown', () => {
+                tradeSound.play()
                 setChangeMode(true)
                 sessionStorage.setItem('change-mode', true)
                 setSelectedPoint(null)
@@ -1990,9 +2026,6 @@ function Game({gameChanged, gameExit}) {
                         g.addChild(DrawSprite(RoadsIcon, 145, 520 - 47*(boxes+1), 0.06))
                     }
                     boxes++
-                    console.log('game.board.player_max_knights: ',game.board.player_max_knights )
-                    console.log('name',JSON.parse(sessionStorage.getItem('user')).name)
-                    
                 }else{
                     misPuntos = players[p].puntos
                 }
@@ -2010,25 +2043,19 @@ function Game({gameChanged, gameExit}) {
                 g.addChild(DrawText(me.name, 'EBGaramond', 22, 'gray', 'left', {x: 44, y:appHeight-165}, 0))
                 
             }
-            console.log('game.board.player_max_knights: ',game.board.player_max_knights )
-            console.log('name',JSON.parse(sessionStorage.getItem('user')).name)
-            if(game.board.player_max_knights == JSON.parse(sessionStorage.getItem('user')).name){
-                console.log('Tengo los caballeros')
+            if (game.board.player_max_knights == JSON.parse(sessionStorage.getItem('user')).name){
                 g.addChild(DrawSprite(KnightIcon, 170, appHeight-152, 0.04))
             }
-            if(game.board.player_max_roads == JSON.parse(sessionStorage.getItem('user')).name){
-
+            if (game.board.player_max_roads == JSON.parse(sessionStorage.getItem('user')).name){
                 g.addChild(DrawSprite(RoadsIcon, 145, appHeight-152, 0.06))
             }
-            g.addChild(DrawText( 'PTS: '+misPuntos, 'EBGaramond', 15, 'white', 'left', {x: 185, y:appHeight-160}, 0))
+            g.addChild(DrawText('PTS: '+misPuntos, 'EBGaramond', 15, 'white', 'left', {x: 185, y:appHeight-160}, 0))
             for (let i = 0; i < 5; i++) {
                 g.addChild(DrawSpritePro(Frame_6, 27+(71*i), 562, 66, 94))
                 g.addChild(DrawSpritePro(Resources[i], 31+(71*i), 566, 58, 85))
                 g.addChild(Draw(0xe8a85a, 'Circle', 60+(71*i), 650, 15))
                 g.addChild(DrawText(Object.values(me.resources)[i], 'EBGaramond', 14, 'black', 'center', {x:60+(71*i), y:650}, 0.5))
             }
-
-            
 
             // Draw special points
             for (let i = 0; i < 5; i++) {
@@ -2055,7 +2082,6 @@ function Game({gameChanged, gameExit}) {
             //for (let node_pos of NodesPos) {
             //    g.addChild(DrawSprite(VillageSprite, ...node_pos, 0.35))
             //}
-            
 
         } else {
             game_phase_final(g, game, me)

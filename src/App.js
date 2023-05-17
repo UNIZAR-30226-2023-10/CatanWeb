@@ -9,23 +9,23 @@ import Cursor from './images/Cursor.png'
 
 import SoundOnIcon from './images/icons/sound_on.png'
 import SoundOffIcon from './images/icons/sound_off.png'
-import CatanSong0  from './sound/Catan_0.mp3'
-import CatanSong1  from './sound/Catan_1.mp3'
-import CatanSong2  from './sound/Catan_2.mp3'
-import CatanSong3  from './sound/Catan_3.mp3'
-import CatanSong4  from './sound/Catan_4.mp3'
-import CatanSong5  from './sound/Catan_5.mp3'
-import CatanSong6  from './sound/Catan_6.mp3'
-import CatanSong7  from './sound/Catan_7.mp3'
-import CatanSong8  from './sound/Catan_8.mp3'
-import CatanSong9  from './sound/Catan_9.mp3'
-import CatanSong10 from './sound/Catan_10.mp3'
-import CatanSong11 from './sound/Catan_11.mp3'
-import CatanSong12 from './sound/Catan_11.mp3'
-import CatanSong13 from './sound/Catan_11.mp3'
-import CatanSong14 from './sound/Catan_11.mp3'
-import CatanSong15 from './sound/Catan_11.mp3'
-import ButtonSound from './sound/Click_0.mp3'
+import CatanSong0  from './audio/music/Catan_0.mp3'
+import CatanSong1  from './audio/music/Catan_1.mp3'
+import CatanSong2  from './audio/music/Catan_2.mp3'
+import CatanSong3  from './audio/music/Catan_3.mp3'
+import CatanSong4  from './audio/music/Catan_4.mp3'
+import CatanSong5  from './audio/music/Catan_5.mp3'
+import CatanSong6  from './audio/music/Catan_6.mp3'
+import CatanSong7  from './audio/music/Catan_7.mp3'
+import CatanSong8  from './audio/music/Catan_8.mp3'
+import CatanSong9  from './audio/music/Catan_9.mp3'
+import CatanSong10 from './audio/music/Catan_10.mp3'
+import CatanSong11 from './audio/music/Catan_11.mp3'
+import CatanSong12 from './audio/music/Catan_11.mp3'
+import CatanSong13 from './audio/music/Catan_11.mp3'
+import CatanSong14 from './audio/music/Catan_11.mp3'
+import CatanSong15 from './audio/music/Catan_11.mp3'
+import ButtonSound from './audio/effects/Click_0.mp3'
 
 const Songs = [
     CatanSong0,
@@ -272,7 +272,7 @@ function App() {
     const [gameChanged, setGameChanged] = useState(false)
 
     async function handleSubmit_NewGame(event) {
-        // Evita que el formublanklario se envíe de manera predeterminada
+        // Evita que el formulario se envíe de manera predeterminada
         event.preventDefault();
         let data = await GameService.create()
         if (data.status === 'success') {
@@ -281,6 +281,8 @@ function App() {
             setLobby( [JSON.parse(sessionStorage.getItem('user')).name])
             
             sessionStorage.setItem('game-token', JSON.stringify(data.codigo_partida))
+            navigator.clipboard.writeText(data.codigo_partida);
+            alert("Copied game code: " + data.codigo_partida);
 
             // Creacion y configuracion del nuevo socket:
             let socket = io('http://localhost:8080/')
