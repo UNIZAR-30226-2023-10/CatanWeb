@@ -1,6 +1,5 @@
 // React
-import React, { useCallback, useContext, useEffect, useState } from "react"
-import io from 'socket.io-client';
+import React, { useCallback, useContext, useState } from "react"
 import * as PIXI from 'pixi.js'
 import { SocketContext } from './App'
 
@@ -244,7 +243,7 @@ const biomesResources   = ['Trigo', 'Madera', 'Ladrillo', 'Piedra', 'Lana', 'Non
 const Points = [Chapel, Library, Market, Palace, University]
 const PointsD = [ChapelD, LibraryD, MarketD, PalaceD, UniversityD]
 
-const UIColor = 0x420001
+// const UIColor = 0x420001
 const PlayersColors  = [0xd60000, 0x06b300, 0x005bb5, 0xd4b700]
 const PlayersColorsD = [0x330b0b, 0x1a3019, 0x1c2936, 0x332e03]
 
@@ -2018,10 +2017,10 @@ function Game({gameChanged, gameExit}) {
                     g.addChild(Draw((p === game.current_turn) ? PlayersColors[p] : PlayersColorsD[p],  'RoundedRect', 38, 505 - 45*(boxes+1), 197, 25, 2))
                     g.addChild(DrawText(game.players[p].name, 'EBGaramond', 15, (p === game.current_turn) ? 'white' : 'gray', 'left', {x:47, y:(514 - 47*(boxes+1))}, 0))
                     g.addChild(DrawText('PTS: '+puntos, 'EBGaramond', 15, 'white', 'left', {x:185, y:(514 - 47*(boxes+1))}, 0))
-                    if(game.board.player_max_knights == game.players[p].name){
+                    if(game.board.player_max_knights === game.players[p].name){
                         g.addChild(DrawSprite(KnightIcon, 170, 520 - 47*(boxes+1), 0.04))
                     }
-                    if(game.board.player_max_roads == game.players[p].name){
+                    if(game.board.player_max_roads === game.players[p].name){
 
                         g.addChild(DrawSprite(RoadsIcon, 145, 520 - 47*(boxes+1), 0.06))
                     }
@@ -2043,10 +2042,10 @@ function Game({gameChanged, gameExit}) {
                 g.addChild(DrawText(me.name, 'EBGaramond', 22, 'gray', 'left', {x: 44, y:appHeight-165}, 0))
                 
             }
-            if (game.board.player_max_knights == JSON.parse(sessionStorage.getItem('user')).name){
+            if (game.board.player_max_knights === JSON.parse(sessionStorage.getItem('user')).name){
                 g.addChild(DrawSprite(KnightIcon, 170, appHeight-152, 0.04))
             }
-            if (game.board.player_max_roads == JSON.parse(sessionStorage.getItem('user')).name){
+            if (game.board.player_max_roads === JSON.parse(sessionStorage.getItem('user')).name){
                 g.addChild(DrawSprite(RoadsIcon, 145, appHeight-152, 0.06))
             }
             g.addChild(DrawText('PTS: '+misPuntos, 'EBGaramond', 15, 'white', 'left', {x: 185, y:appHeight-160}, 0))
