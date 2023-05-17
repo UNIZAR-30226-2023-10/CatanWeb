@@ -898,6 +898,56 @@ function Game({gameChanged, gameExit}) {
     // ========================================================================
     // GAME PHASES
     // ========================================================================
+    function game_phase_first_rolls(g, game, players, me) {
+
+        let BUTTON = null
+
+        g.addChild(DrawSprite(RoadBuildingD, 120, 240, 0.35))
+        g.addChild(DrawSprite(KnightD, 150, 150, 0.35))
+        g.addChild(DrawSprite(MonopolyD, 230, 100, 0.35))
+        g.addChild(DrawSprite(YearOfPlentyD, 290, 130, 0.35))
+
+        // Drawing the biomes:
+        for (let i = 0; i < 19; i++) {
+            DrawBiomes_Default(g, game.board.biomes, BiomesOrder[i], ...BiomesPos[i])
+        }
+        // Dice button
+        console.log('me',me)
+        g.addChild(DrawSprite(Dices[me.first_rolls[0]], appWidth-300, 80, 1))
+        g.addChild(DrawSprite(Dices[me.first_rolls[1]], appWidth-230, 80, 1))
+        
+        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && !throwDices) {
+            BUTTON = DrawSprite(ButtonDices, 1015, 115, 0.1)
+            BUTTON.interactive = true
+            BUTTON.buttonMode  = true
+            BUTTON.on('pointerdown', () => {
+                setThrowDices(true)
+                sessionStorage.setItem('throw-dices', true)
+                socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id : MoveType.roll_dices })
+            })
+        } else {
+            BUTTON = DrawSprite(ButtonDicesD, 1015, 115, 0.1)
+        }
+        g.addChild(BUTTON);
+        // Next turn button
+        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && throwDices) {
+            BUTTON = DrawSprite(ButtonNextTurn, 1065, 490, 0.1)
+            BUTTON.interactive = true;
+            BUTTON.buttonMode = true;
+            BUTTON.on('pointerdown', () => {
+                socket.emit('move', JSON.parse(sessionStorage.getItem('user')).accessToken, game.code, { id : MoveType.next_turn })
+                setThrowDices(false)
+                sessionStorage.setItem('throw-dices', false)
+            })
+        } else {
+            BUTTON = DrawSprite(ButtonNextTurnD, 1065, 490, 0.1)
+        }
+        g.addChild(BUTTON)
+
+        
+    }
+   
+
     function game_phase_init(g, game, players, me) {
 
         let BUTTON = null
@@ -986,7 +1036,7 @@ function Game({gameChanged, gameExit}) {
         let used_develop_cards = game.players[game.current_turn].used_develop_cards
 
         // Drawing develop cards box
-        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && me.develop_cards['Carreteras'] > 0 && throwDices && used_develop_cards === 0) {
+        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && (me.develop_cards['Carreteras'] - me.drawn_cards['Carreteras']) > 0 && throwDices && used_develop_cards === 0) {
             if (!buildRoads ) {
                 BUTTON = DrawSprite(RoadBuilding, 105, 260, 0.35)
                 if (!buildMode) {
@@ -1010,7 +1060,7 @@ function Game({gameChanged, gameExit}) {
             g.addChild(DrawSprite(RoadBuildingD, 105, 260, 0.35))
         }
 
-        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && me.develop_cards['Caballeros'] > 0 && used_develop_cards === 0) {
+        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && (me.develop_cards['Caballeros'] - me.drawn_cards['Caballeros']) > 0 && used_develop_cards === 0) {
             if (!knightMode) {
                 BUTTON = DrawSprite(Knight, 120, 170, 0.35)
                 if (!buildMode && me.roads_build_4_free === 0) {
@@ -1034,7 +1084,7 @@ function Game({gameChanged, gameExit}) {
             g.addChild(DrawSprite(KnightD, 120, 170, 0.35))
         }
 
-        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && me.develop_cards['Monopolios'] > 0 && throwDices && used_develop_cards === 0) {
+        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && (me.develop_cards['Monopolios'] - me.drawn_cards['Monopolios']) > 0 && throwDices && used_develop_cards === 0) {
             if (!monopolyMode) {
                 BUTTON = DrawSprite(Monopoly, 190, 100, 0.35)
                 if (!buildMode && me.roads_build_4_free === 0) {
@@ -1058,7 +1108,7 @@ function Game({gameChanged, gameExit}) {
             g.addChild(DrawSprite(MonopolyD, 190, 100, 0.35))
         }
 
-        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && me.develop_cards['Descubrimientos'] > 0 && throwDices && used_develop_cards === 0) {
+        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && (me.develop_cards['Descubrimientos'] - me.drawn_cards['Descubrimientos']) > 0 && throwDices && used_develop_cards === 0) {
             if (!yearOfPlentyMode) {
                 BUTTON = DrawSprite(YearOfPlenty, 265, 120, 0.35)
                 if (!buildMode && me.roads_build_4_free === 0) {
@@ -1963,8 +2013,9 @@ function Game({gameChanged, gameExit}) {
                     g.addChild(DrawSpritePro(PointsD[4-i], appWidth-24-(71*(i+1)), 566, 58, 85))
                 }
             }
-
-            if (game.phase < 3) {
+            if(game.phase === 0){
+                game_phase_first_rolls(g, game, players, me)
+            }else if (game.phase < 3) {
                 game_phase_init(g, game, players, me)
             } else if (game.phase === 3) {
                 game_phase_post(g, game, players, me)
