@@ -2,7 +2,7 @@
 import React, { useCallback, useContext, useEffect, useState } from "react"
 import io from 'socket.io-client';
 import * as PIXI from 'pixi.js'
-import { SocketContext } from './App'
+import { SocketContext } from './SocketContext'
 
 import Background from './images/game-bg2.png'
 import Victory from './images/victory.png'
@@ -559,7 +559,12 @@ const RoadsInfo = [
 // ============================================================================
 function Game({gameChanged, gameExit}) {
 
-    let socket = useContext(SocketContext)
+
+    let desconectados = [];
+    const socket = useContext(SocketContext)
+    let juego    = JSON.parse(sessionStorage.getItem('game'))
+    socket.emit('joinGame', JSON.parse(sessionStorage.getItem('user')).accessToken, juego.code)
+
    //const [gameChanged, setGameChanged] = useState(props[0])
    //const [socket, setSocket] = useState(useContext(SocketContext))
    //useEffect(() => {
@@ -580,6 +585,18 @@ function Game({gameChanged, gameExit}) {
     //    console.log(data)
     //})
 
+    socket.on('wait_reconnect', (username) => {
+        console.log("ESPERANDO RECONEXION");
+        desconectados.push(username);
+        setGamePaused(true);
+    })
+    socket.on('reconnected', (username) => {
+         desconectados = desconectados.filter(username => username != username);
+         if (desconectados.length === 0) {
+            setGamePaused(false);
+         }
+    });
+
     // Build state: select node to build the correspondant building on
     const [buildMode,  setBuildMode]              = useState(parseBool(sessionStorage.getItem('build-mode')))
     // Knight state: select biome to put the robber on
@@ -591,6 +608,8 @@ function Game({gameChanged, gameExit}) {
     // Year of plenty state:
     const [yearOfPlentyMode, setYearOfPlentyMode] = useState(parseBool(sessionStorage.getItem('year-of-plenty-mode')))
     const [isClicked, setIsClicked] = useState(false);
+
+    const [isGamePaused, setGamePaused] = useState(false);
 
     const [changeMode, setChangeMode]             = useState(parseBool(sessionStorage.getItem('change-mode')))
     const [throwDices, setThrowDices]             = useState(parseBool(sessionStorage.getItem('throw-dices')))
@@ -954,7 +973,6 @@ function Game({gameChanged, gameExit}) {
     }
 
     function game_phase_init(g, game, players, me) {
-
         let BUTTON = null
 
         g.addChild(DrawSprite(RoadBuildingD, 105, 260, 0.35))
@@ -1875,7 +1893,7 @@ function Game({gameChanged, gameExit}) {
         g.addChild(BUTTON)
 
         // Buy button
-        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && me.can_buy && throwDices) {
+        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && me.can_buy && throwDices && !isGamePaused) {
             BUTTON = DrawSprite(ButtonBuy, 1063, appHeight/2-10-2*(game.develop_cards.length), 0.1)
             BUTTON.interactive = true;
             BUTTON.buttonMode = true;
@@ -1889,7 +1907,7 @@ function Game({gameChanged, gameExit}) {
         g.addChild(BUTTON)
 
         // Next turn button
-        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && throwDices) {
+        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && throwDices && !isGamePaused) {
             BUTTON = DrawSprite(ButtonNextTurn, 1065, 490, 0.1)
             BUTTON.interactive = true;
             BUTTON.buttonMode = true;
@@ -1907,7 +1925,7 @@ function Game({gameChanged, gameExit}) {
         // Dice button
         g.addChild(DrawSprite(Dices[game.dices_res[0]], appWidth-300, 80, 1))
         g.addChild(DrawSprite(Dices[game.dices_res[1]], appWidth-230, 80, 1))
-        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && !throwDices) {
+        if (players[game.current_turn].name === JSON.parse(sessionStorage.getItem('user')).name && !throwDices && !isGamePaused) {
             BUTTON = DrawSprite(ButtonDices, 1015, 115, 0.1)
             BUTTON.interactive = true
             BUTTON.buttonMode  = true
@@ -1938,6 +1956,7 @@ function Game({gameChanged, gameExit}) {
         let game    = JSON.parse(sessionStorage.getItem('game'))
         let players = game.players 
         let me      = players[sessionStorage.getItem('my-turn')]
+        
 
         // Clear background:
         for (let i = g.children.length - 1; i >= 0; i--) {

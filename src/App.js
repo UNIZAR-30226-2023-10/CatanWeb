@@ -4,6 +4,8 @@ import io from 'socket.io-client';
 import Game from "./Game.js"
 import logo from './Catan-logo-4.png'
 import React, { createContext, useEffect, useState } from 'react'
+import Routes from './services/routes';
+import { SocketContext } from './SocketContext';
 
 import Cursor from './images/Cursor.png'
 
@@ -45,7 +47,6 @@ const Songs = [
     CatanSong14,
     CatanSong15
 ]
-export const SocketContext = createContext();
 
 //import storage from './storage.js'
 const {GameService} = require('./services/game.service')
@@ -101,6 +102,8 @@ const CustomCursor = ({ cursorImage, mousePosition }) => {
     return <div style={cursorStyles} />;
 };
 
+
+
 /**
  * Cosas que faltan por hacer:
  *  - Mejorar los mensajes de error. (PRIORIDAD MAXIMA).
@@ -109,6 +112,16 @@ const CustomCursor = ({ cursorImage, mousePosition }) => {
  *  - Hacer el diseño responsive (muy opcional).
  */
 function App() {
+
+    const [socket, setSocket] = useState(null);
+    useEffect(() => {
+        const newSocket = io.connect('http://localhost:8080');
+        setSocket(newSocket);
+        return () => newSocket.close();
+      }, []);
+
+    const [lobby, setLobby]   = useState([]);
+    const [gameChanged, setGameChanged] = useState(false)
 
     //const [backgroundImg, setBackgroundImg] = useState(`url(${backgrounds[Math.floor(Math.random() * 5)]})`)
     //useEffect(() => {
@@ -139,6 +152,10 @@ function App() {
 
     const [activeMenu, setActiveMenu] = useState(JSON.parse(sessionStorage.getItem('active-menu')) || 'login')
     const handleMenuChange = (menu) => {
+        if (JSON.parse(sessionStorage.getItem('game-token'))){
+            // let socket   = io('http://localhost:8080/')
+            // socket.emit('unjoin', JSON.parse(sessionStorage.getItem('user')).accessToken,JSON.parse(sessionStorage.getItem('game-token')))
+        }
         sessionStorage.setItem('active-menu', JSON.stringify(menu))
         setActiveMenu(menu);
     }
@@ -161,7 +178,9 @@ function App() {
       };
     }, []);
 
-    const [errorMessage, setErrorMessage] = useState('')
+    const [registerError, setRegisterError] = useState('')
+    const [loginError, setLoginError] = useState('')
+    const [joinGameError, setJoinGameError] = useState('')
     // ========================================================================
     // LOGIN STATE
     // ========================================================================
@@ -169,6 +188,7 @@ function App() {
 
         // Evita que el formulario se envíe de manera predeterminada
         event.preventDefault(); 
+        setLoginError('');
 
         // Aquí se pueden agregar otras validaciones de entrada antes de enviar el formulario
         // Si algo no es válido, se puede detener la ejecución de esta función o mostrar un mensaje de error
@@ -185,6 +205,7 @@ function App() {
         const plainFormData = Object.fromEntries(formData.entries());
     
         // Enviar los datos del formulario a través de una solicitud
+        let partidaActual;
         let email    = plainFormData.email;
         let password = plainFormData.password;
         axios.post('http://localhost:8080/api/login', {
@@ -195,6 +216,24 @@ function App() {
             if (response.data.accessToken) {
                 user.name        = response.data.username;
                 user.accessToken = response.data.accessToken;
+                partidaActual = response.data.partidaActual;
+                sessionStorage.setItem('user', JSON.stringify(user));
+                if (partidaActual) {
+                    socket.on('update', (game) => {
+                        sessionStorage.setItem('game', JSON.stringify(game))
+                        sessionStorage.setItem('my-turn', 
+                            game.players.findIndex(curr_player => curr_player === JSON.parse(sessionStorage.getItem('user')).name))
+                        setGameChanged(prevStatus => {
+                            return !prevStatus
+                        })
+                        console.log("LA PARTIDA/TABLERO: ", game)
+                        handleMenuChange('game') // Redirigir a la página de juego
+                    });
+                    socket.emit('joinGame', JSON.parse(sessionStorage.getItem('user')).accessToken,partidaActual);
+                    setSocket(socket)
+                    // Cambiar al conexto del Game lobby
+                    handleMenuChange('game-lobby')
+                }
                 sessionStorage.setItem('user', JSON.stringify(user))
                 console.log("NEW LOGIN: ", response.data, user)
                 handleMenuChange('main-menu')
@@ -203,8 +242,38 @@ function App() {
             }
         })
         .catch((error) => {
-            console.log(error.response.data);
-            setErrorMessage(error.toString());
+            console.log(error);
+            setLoginError("Correo o contraseña incorrectos.")
+        })
+    }
+
+    // ========================================================================
+    // PASSWORD RECOVERY
+    // ========================================================================
+    const handleChangeRecovery = (event) => {
+        const input = event.target.value;
+            setRecoveryEmail(input);
+    };
+
+    const [recoveryEmail, setRecoveryEmail] = useState('');
+
+    function handleSubmit_Recover (event) {
+        event.preventDefault();
+        const form = document.getElementById('reset-pass');
+        const formData = new FormData(form);
+        // Crea un diccionario con los campos del formulario.
+        const plainFormData = Object.fromEntries(formData.entries());
+
+        let email = plainFormData.email;
+        console.log(email)
+
+        axios.post('http://localhost:8080/api/recover', {
+            email
+        }).then(() => {
+            handleMenuChange('login');
+        })
+        .catch((error) => {
+            console.log(error);
         })
     }
 
@@ -235,7 +304,7 @@ function App() {
         let password         = plainFormData.password;
         let confirm_password = plainFormData.confirm_password;
         if (password !== confirm_password) {
-            setErrorMessage("Passwords must coincide.")
+            setRegisterError("Las contraseñas deben coincidir.")
             return
         }
 
@@ -258,8 +327,11 @@ function App() {
             }
         })
         .catch((error) => {
-            console.log(error.response.data);
-            setErrorMessage(error.toString());
+            if (error.response.data.code === 11000) {
+                setRegisterError("Este correo ya está registrado.");
+            } else if (error.response.data.errors.email.name === 'ValidatorError') {
+                setRegisterError("El correo electronico no es valido.");
+            }
         })
     }
 
@@ -267,9 +339,7 @@ function App() {
     // MAIN MENU STATE
     // ========================================================================
     // New game action:
-    const [socket, setSocket] = useState(null)
-    const [lobby, setLobby]   = useState([]);
-    const [gameChanged, setGameChanged] = useState(false)
+
 
     async function handleSubmit_NewGame(event) {
         // Evita que el formublanklario se envíe de manera predeterminada
@@ -283,12 +353,19 @@ function App() {
             sessionStorage.setItem('game-token', JSON.stringify(data.codigo_partida))
 
             // Creacion y configuracion del nuevo socket:
-            let socket = io('http://localhost:8080/')
+            // let socket = io('http://localhost:8080/')
             socket.on('error', (err) => { console.log('SOCKET ERROR: ', err)})
             socket.on('new_player', (socket_data) => {
                 setLobby(prevStatus => {
                     const nextStatus = [...prevStatus]
                     nextStatus.push(socket_data.username);
+                    return nextStatus
+                })
+            })
+            socket.on('delete_player', (username) => {
+
+                setLobby(prevStatus =>{
+                    let nextStatus = prevStatus.filter(user => user != username)
                     return nextStatus
                 })
             })
@@ -346,7 +423,7 @@ function App() {
         console.log("JOINING GAME DATA: ", data)
         if (data.status === 'success') {
             // Creacion y configuracion del nuevo socket:
-            let socket   = io('http://localhost:8080/')
+            // let socket   = io('http://localhost:8080/')
             socket.on('error', (err) => { console.log('SOCKET ERROR:', err) })
             socket.on('new_player', (socket_data) => {
                 setLobby(prevStatus => {
@@ -354,6 +431,17 @@ function App() {
                     nextStatus.push(socket_data.username);
                     return nextStatus
                 })
+            })
+            socket.on('delete_player', (username) => {
+
+                setLobby(prevStatus =>{
+                    let nextStatus = prevStatus.filter(user => user != username)
+                    return nextStatus
+                })
+            })
+
+            socket.on('cancel_game', ()=>{
+                handleMenuChange('main-menu')
             })
             socket.on('update', (game) => {
                 sessionStorage.setItem('game', JSON.stringify(game))
@@ -400,11 +488,7 @@ function App() {
             <img src={(isMuted) ? SoundOffIcon : SoundOnIcon} className='music-button' alt='change-music-status' onClick={() => setIsMuted(prevStatus => { return !prevStatus})}></img>
             {activeMenu !== 'game' ?
                 <div className='common-header'>
-                    <div className='error-container'>
-                        {errorMessage && (
-                            <p style={{color: 'red', textAlign: 'center'}}> {errorMessage} </p>
-                        )}
-                    </div>
+                   
 
                     <div className='common-container | flex-column-center-center'>
                         <img src={logo} className='common-logo' alt='catan-logo'></img>
@@ -415,8 +499,13 @@ function App() {
                                         <input className='common-input' type="text" placeholder="Email" name='email' id='email' required />
                                         <input className='common-input' type="password" placeholder="Password" name='password' id='password' required />
                                         <button className='common-button | common-button-activated' type='submit' onClick={handleClick}>Log In</button>
-                                        <a href='recover' id='forgor-password'>Did you forget your password?</a>
+                                        <a onClick={() => handleMenuChange('reset-password')} id='forgor-password'>Did you forget your password?</a>
                                     </form>
+                                    <div className='error-container'>
+                                        {loginError && (
+                                            <p style={{color: 'red',fontSize: '16px'}}> {loginError} </p>
+                                         )}
+                                    </div>
                                 </div>
                                 <div id='Home-down-form'>
                                     <button className='common-button | common-button-activated' onClick={() => {handleClick(); handleMenuChange('register')}}>Register</button>
@@ -435,6 +524,11 @@ function App() {
                                         <input className='common-input' type="password" placeholder="Repeat password" name='confirm_password' id='confirm_password' required />
                                         <button className='common-button | common-button-activated' type='submit' onClick={handleClick}>Register</button>
                                     </form>
+                                    <div className='error-container'>
+                                        {registerError && (
+                                            <p style={{color: 'red', fontSize: '16px'}}> {registerError} </p>
+                                        )}
+                                    </div>
                                 </div>
                                 <div id='Home-down-form'>
                                     <button className='common-button | common-button-activated' onClick={() => {handleClick(); handleMenuChange('login')} }>Log in</button>
@@ -515,7 +609,22 @@ function App() {
                                     <input name='gamecode' id='gamecode' className='common-input' type="text" placeholder="Game code" value={gamecodeInput} maxLength={6} onChange={handleChange} required />
                                     <button className='common-button | common-button-activated' type='submit' onClick={handleClick}>Join</button>
                                 </form>
-                                <button className='common-button | common-button-activated' onClick={() => { handleClick();handleMenuChange('main-menu')}}>Return</button>
+                                <button className='common-button | common-button-activated' onClick={() => { 
+                                    handleMenuChange('main-menu');
+                                    socket.emit('unjoin', JSON.parse(sessionStorage.getItem('game-token')));
+                                }}>Return</button>
+                            </div>
+                        )}
+
+                        {activeMenu === 'reset-password' && (
+                            <div className='common-content-container | flex-column-center-center'>
+                                <form id='reset-pass' className='flex-column-center-center' onSubmit={handleSubmit_Recover} >
+                                    <input name='email' id='email' className='common-input' type="text" placeholder="Introduzca su correo " value={recoveryEmail} onChange={handleChangeRecovery} required />
+                                    <button className='common-button | common-button-activated' type='submit'>Enviar</button>
+                                </form>
+                                <button className='common-button | common-button-activated' onClick={() => { 
+                                    handleMenuChange('login');
+                                }}>Return</button>
                             </div>
                         )}
                     </div>
