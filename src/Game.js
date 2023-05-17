@@ -574,7 +574,7 @@ function Game({gameChanged, gameExit}) {
    //const [socket, setSocket] = useState(useContext(SocketContext))
    //useEffect(() => {
    //    if (socket == null) {
-   //        let new_socket = io('http://localhost:8080/')
+   //        let new_socket = io('http://ec2-3-8-165-26.eu-west-2.compute.amazonaws.com:8080/')
    //        new_socket.on('error',  (err)  => { console.log('SOCKET ERROR:', err) })
    //        new_socket.on('update', (game) => {
    //            sessionStorage.setItem('game', JSON.stringify(game))

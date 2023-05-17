@@ -187,7 +187,7 @@ function App() {
         // Enviar los datos del formulario a través de una solicitud
         let email    = plainFormData.email;
         let password = plainFormData.password;
-        axios.post('http://localhost:8080/api/login', {
+        axios.post('http://ec2-3-8-165-26.eu-west-2.compute.amazonaws.com:8080/api/login', {
             email,
             password
         })
@@ -240,7 +240,7 @@ function App() {
         }
 
         // Enviar los datos del formulario a través de una solicitud
-        axios.post('http://localhost:8080/api/register', {
+        axios.post('http://ec2-3-8-165-26.eu-west-2.compute.amazonaws.com:8080/api/register', {
             username,
             email,
             password,
@@ -285,7 +285,7 @@ function App() {
             alert("Copied game code: " + data.codigo_partida);
 
             // Creacion y configuracion del nuevo socket:
-            let socket = io('http://localhost:8080/')
+            let socket = io('http://ec2-3-8-165-26.eu-west-2.compute.amazonaws.com:8080/')
             socket.on('error', (err) => { console.log('SOCKET ERROR: ', err)})
             socket.on('new_player', (socket_data) => {
                 setLobby(prevStatus => {
@@ -348,7 +348,7 @@ function App() {
         console.log("JOINING GAME DATA: ", data)
         if (data.status === 'success') {
             // Creacion y configuracion del nuevo socket:
-            let socket   = io('http://localhost:8080/')
+            let socket   = io('http://ec2-3-8-165-26.eu-west-2.compute.amazonaws.com:8080/')
             socket.on('error', (err) => { console.log('SOCKET ERROR:', err) })
             socket.on('new_player', (socket_data) => {
                 setLobby(prevStatus => {
